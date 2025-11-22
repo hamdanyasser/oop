@@ -36,6 +36,7 @@ public class ProductDao {
                         rs.getInt("stock")
                 );
                 p.setDiscount(rs.getDouble("discount"));
+                p.setAgeRating(rs.getString("age_rating"));
                 loadPlatformsForProduct(p, conn);
                 loadGenresForProduct(p, conn);
                 list.add(p);
@@ -88,6 +89,7 @@ public class ProductDao {
                         rs.getInt("stock")
                 );
                 p.setDiscount(rs.getDouble("discount"));
+                p.setAgeRating(rs.getString("age_rating"));
                 loadPlatformsForProduct(p, conn);
                 loadGenresForProduct(p, conn);
                 list.add(p);
@@ -140,6 +142,7 @@ public class ProductDao {
                         rs.getInt("stock")
                 );
                 p.setDiscount(rs.getDouble("discount"));
+                p.setAgeRating(rs.getString("age_rating"));
                 loadPlatformsForProduct(p, conn);
                 loadGenresForProduct(p, conn);
                 list.add(p);
@@ -257,7 +260,15 @@ public class ProductDao {
 
 
     public Optional<Product> getById(int id) {
-        String sql = "SELECT * FROM products WHERE id=?";
+        String sql = """
+            SELECT p.*,
+                   COALESCE(pr.discount, 0) AS discount
+            FROM products p
+            LEFT JOIN promotions pr
+            ON (pr.product_id = p.id OR pr.category = p.category)
+            AND CURDATE() BETWEEN pr.start_date AND pr.end_date
+            WHERE p.id = ?
+            """;
         try (Connection conn = DBConnection.getInstance();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -275,16 +286,34 @@ public class ProductDao {
     }
 
     public void insert(Product p) {
-        String sql = "INSERT INTO products(name,category,price,description,imagePath,stock) VALUES(?,?,?,?,?,?)";
+        String sql = "INSERT INTO products(name,category,price,description,imagePath,stock,age_rating) VALUES(?,?,?,?,?,?,?)";
         try (Connection conn = DBConnection.getInstance();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, p.getName());
             ps.setString(2, p.getCategory());
             ps.setDouble(3, p.getPrice());
             ps.setString(4, p.getDescription());
             ps.setString(5, p.getImagePath());
             ps.setInt(6, p.getStock());
+            ps.setString(7, p.getAgeRating());
             ps.executeUpdate();
+
+            // Get generated product ID
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                int productId = rs.getInt(1);
+                p.setId(productId);
+
+                // Save platform associations
+                if (p.getPlatformIds() != null && !p.getPlatformIds().isEmpty()) {
+                    savePlatformAssociations(productId, p.getPlatformIds(), conn);
+                }
+
+                // Save genre associations
+                if (p.getGenreIds() != null && !p.getGenreIds().isEmpty()) {
+                    saveGenreAssociations(productId, p.getGenreIds(), conn);
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -293,7 +322,7 @@ public class ProductDao {
     public void update(Product p) {
         String sql = """
                 UPDATE products
-                SET name=?, category=?, price=?, description=?, imagePath=?, stock=?
+                SET name=?, category=?, price=?, description=?, imagePath=?, stock=?, age_rating=?
                 WHERE id=?
                 """;
         try (Connection conn = DBConnection.getInstance();
@@ -304,8 +333,21 @@ public class ProductDao {
             ps.setString(4, p.getDescription());
             ps.setString(5, p.getImagePath());
             ps.setInt(6, p.getStock());
-            ps.setInt(7, p.getId());
+            ps.setString(7, p.getAgeRating());
+            ps.setInt(8, p.getId());
             ps.executeUpdate();
+
+            // Update platform associations
+            deletePlatformAssociations(p.getId(), conn);
+            if (p.getPlatformIds() != null && !p.getPlatformIds().isEmpty()) {
+                savePlatformAssociations(p.getId(), p.getPlatformIds(), conn);
+            }
+
+            // Update genre associations
+            deleteGenreAssociations(p.getId(), conn);
+            if (p.getGenreIds() != null && !p.getGenreIds().isEmpty()) {
+                saveGenreAssociations(p.getId(), p.getGenreIds(), conn);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -334,6 +376,56 @@ public class ProductDao {
         }
     }
 
+    /**
+     * Save platform associations for a product
+     */
+    private void savePlatformAssociations(int productId, List<Integer> platformIds, Connection conn) throws SQLException {
+        String sql = "INSERT INTO product_platforms (product_id, platform_id) VALUES (?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (Integer platformId : platformIds) {
+                ps.setInt(1, productId);
+                ps.setInt(2, platformId);
+                ps.executeUpdate();
+            }
+        }
+    }
+
+    /**
+     * Delete all platform associations for a product
+     */
+    private void deletePlatformAssociations(int productId, Connection conn) throws SQLException {
+        String sql = "DELETE FROM product_platforms WHERE product_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, productId);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Save genre associations for a product
+     */
+    private void saveGenreAssociations(int productId, List<Integer> genreIds, Connection conn) throws SQLException {
+        String sql = "INSERT INTO product_genres (product_id, genre_id) VALUES (?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (Integer genreId : genreIds) {
+                ps.setInt(1, productId);
+                ps.setInt(2, genreId);
+                ps.executeUpdate();
+            }
+        }
+    }
+
+    /**
+     * Delete all genre associations for a product
+     */
+    private void deleteGenreAssociations(int productId, Connection conn) throws SQLException {
+        String sql = "DELETE FROM product_genres WHERE product_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, productId);
+            ps.executeUpdate();
+        }
+    }
+
     private Product map(ResultSet rs) throws SQLException {
         Product p = new Product(
                 rs.getInt("id"),
@@ -345,6 +437,7 @@ public class ProductDao {
                 rs.getInt("stock")
         );
         p.setDiscount(rs.getDouble("discount"));
+        p.setAgeRating(rs.getString("age_rating"));
         return p;
     }
 }
