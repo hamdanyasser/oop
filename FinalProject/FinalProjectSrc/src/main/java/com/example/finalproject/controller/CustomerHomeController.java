@@ -4,6 +4,7 @@ import com.example.finalproject.HelloApplication;
 import com.example.finalproject.dao.ProductDao;
 import com.example.finalproject.dao.WishlistDao;
 import com.example.finalproject.model.Product;
+import com.example.finalproject.model.Platform;
 import com.example.finalproject.model.ShoppingCart;
 import com.example.finalproject.security.AuthGuard;
 import com.example.finalproject.security.Session;
@@ -37,6 +38,8 @@ public class CustomerHomeController {
     private Label pageLabel;
     private TextField searchField;
     private ComboBox<String> categoryChoice;
+    private ComboBox<String> platformChoice;
+    private List<Platform> allPlatforms;
     private List<Product> filteredProducts;
     private ComboBox<String> sortChoice;
 
@@ -74,12 +77,14 @@ public class CustomerHomeController {
 
         // Initialize
         loadProducts();
+        loadPlatforms();
         categoryChoice.getItems().addAll("All", "Console", "PC", "Accessory", "Game", "Controller");
         categoryChoice.setValue("All");
 
         // Listeners
         searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
         categoryChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        platformChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
 
         return root;
     }
@@ -175,6 +180,14 @@ public class CustomerHomeController {
         categoryChoice.setPrefWidth(180);
         categoryChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
 
+        Label platformIcon = new Label("🎮");
+        platformIcon.setStyle("-fx-font-size: 18px;");
+
+        platformChoice = new ComboBox<>();
+        platformChoice.setPrefWidth(200);
+        platformChoice.setPromptText("All Platforms");
+        platformChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
+
         Button resetBtn = new Button("↺ Reset");
         resetBtn.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; " +
                 "-fx-background-radius: 8; -fx-padding: 8 15; -fx-font-weight: 600;");
@@ -184,7 +197,7 @@ public class CustomerHomeController {
                 "-fx-background-radius: 8; -fx-padding: 8 15; -fx-font-weight: 600;"));
         resetBtn.setOnAction(e -> onReset());
 
-        filterBar.getChildren().addAll(searchIcon, searchField, filterIcon, categoryChoice, resetBtn);
+        filterBar.getChildren().addAll(searchIcon, searchField, filterIcon, categoryChoice, platformIcon, platformChoice, resetBtn);
         return filterBar;
     }
 
@@ -233,11 +246,14 @@ public class CustomerHomeController {
     private void applyFilters() {
         String keyword = searchField.getText().toLowerCase().trim();
         String category = categoryChoice.getValue();
+        String platform = platformChoice.getValue();
         String sortOption = sortChoice.getValue();
 
         // FILTER PRODUCTS
         filteredProducts = allProducts.stream()
                 .filter(p -> (category.equals("All") || p.getCategory().equalsIgnoreCase(category)))
+                .filter(p -> (platform == null || platform.equals("All Platforms") ||
+                        p.getPlatforms().contains(platform)))
                 .filter(p -> p.getName().toLowerCase().contains(keyword) ||
                         p.getCategory().toLowerCase().contains(keyword))
                 .collect(java.util.stream.Collectors.toList());
@@ -269,6 +285,8 @@ public class CustomerHomeController {
     private void onReset() {
         searchField.clear();
         categoryChoice.setValue("All");
+        platformChoice.setValue("All Platforms");
+        sortChoice.setValue("None");
         applyFilters();
     }
 
@@ -276,6 +294,15 @@ public class CustomerHomeController {
         allProducts = productService.getAll();
         filteredProducts = new ArrayList<>(allProducts);
         showPage(currentPage, filteredProducts);
+    }
+
+    private void loadPlatforms() {
+        allPlatforms = productDao.getAllPlatforms();
+        platformChoice.getItems().add("All Platforms");
+        for (Platform platform : allPlatforms) {
+            platformChoice.getItems().add(platform.getName());
+        }
+        platformChoice.setValue("All Platforms");
     }
 
     private void showPage(int page, List<Product> list) {
@@ -357,6 +384,23 @@ public class CustomerHomeController {
         categoryLabel.setStyle("-fx-background-color: #e9ecef; -fx-text-fill: #495057; " +
                 "-fx-padding: 4 10; -fx-background-radius: 12; -fx-font-size: 11px;");
 
+        // Platform tags
+        FlowPane platformTags = new FlowPane();
+        platformTags.setHgap(4);
+        platformTags.setVgap(4);
+        platformTags.setAlignment(Pos.CENTER);
+        platformTags.setMaxWidth(210);
+
+        if (p.getPlatforms() != null && !p.getPlatforms().isEmpty()) {
+            for (String platform : p.getPlatforms()) {
+                Label platformLabel = new Label(getplatformIcon(platform));
+                platformLabel.setStyle("-fx-background-color: #667eea; -fx-text-fill: white; " +
+                        "-fx-padding: 3 8; -fx-background-radius: 8; -fx-font-size: 10px; -fx-font-weight: 600;");
+                platformLabel.setTooltip(new Tooltip(platform));
+                platformTags.getChildren().add(platformLabel);
+            }
+        }
+
         // Price section
         VBox priceBox = new VBox(3);
         priceBox.setAlignment(Pos.CENTER);
@@ -389,9 +433,26 @@ public class CustomerHomeController {
         Label clickHint = new Label("👆 Click to view details");
         clickHint.setStyle("-fx-text-fill: #667eea; -fx-font-size: 12px; -fx-font-style: italic;");
 
-        card.getChildren().addAll(imageContainer, nameLabel, categoryLabel, priceBox, infoBox, clickHint);
+        card.getChildren().addAll(imageContainer, nameLabel, categoryLabel, platformTags, priceBox, infoBox, clickHint);
 
         return card;
+    }
+
+    private String getplatformIcon(String platformName) {
+        // Return abbreviated platform names or icons
+        return switch (platformName) {
+            case "PlayStation 5" -> "PS5";
+            case "PlayStation 4" -> "PS4";
+            case "Xbox Series X/S" -> "XBS";
+            case "Xbox One" -> "XBO";
+            case "Nintendo Switch" -> "NSW";
+            case "PC (Windows)" -> "WIN";
+            case "PC (Steam)" -> "STM";
+            case "PC (Epic Games)" -> "EGS";
+            case "Steam Deck" -> "SDK";
+            case "Meta Quest" -> "VR";
+            default -> platformName.substring(0, Math.min(3, platformName.length())).toUpperCase();
+        };
     }
 
     private void openProductDetails(Product p) {

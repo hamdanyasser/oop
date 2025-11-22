@@ -1,6 +1,7 @@
 package com.example.finalproject.dao;
 
 import com.example.finalproject.model.Product;
+import com.example.finalproject.model.Platform;
 import java.sql.*;
 import java.util.*;
 
@@ -10,7 +11,7 @@ public class ProductDao {
         List<Product> list = new ArrayList<>();
 
         String sql = """
-        SELECT p.*, 
+        SELECT p.*,
                COALESCE(pr.discount, 0) AS discount
         FROM products p
         LEFT JOIN promotions pr
@@ -34,6 +35,7 @@ public class ProductDao {
                         rs.getInt("stock")
                 );
                 p.setDiscount(rs.getDouble("discount"));
+                loadPlatformsForProduct(p, conn);
                 list.add(p);
             }
 
@@ -44,6 +46,109 @@ public class ProductDao {
         return list;
     }
 
+    /**
+     * Get products filtered by platform
+     * @param platformId The platform ID to filter by (null for all products)
+     * @return List of products available on the specified platform
+     */
+    public List<Product> getProductsByPlatform(Integer platformId) {
+        if (platformId == null) {
+            return getAllProducts();
+        }
+
+        List<Product> list = new ArrayList<>();
+
+        String sql = """
+        SELECT DISTINCT p.*,
+               COALESCE(pr.discount, 0) AS discount
+        FROM products p
+        INNER JOIN product_platforms pp ON p.id = pp.product_id
+        LEFT JOIN promotions pr
+        ON (pr.product_id = p.id OR pr.category = p.category)
+        AND CURDATE() BETWEEN pr.start_date AND pr.end_date
+        WHERE pp.platform_id = ?
+        ORDER BY p.id DESC
+        """;
+
+        try (Connection conn = DBConnection.getInstance();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, platformId);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Product p = new Product(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("category"),
+                        rs.getDouble("price"),
+                        rs.getString("description"),
+                        rs.getString("imagePath"),
+                        rs.getInt("stock")
+                );
+                p.setDiscount(rs.getDouble("discount"));
+                loadPlatformsForProduct(p, conn);
+                list.add(p);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    /**
+     * Load platforms for a product
+     */
+    private void loadPlatformsForProduct(Product product, Connection conn) {
+        String sql = """
+            SELECT pl.id, pl.name
+            FROM platforms pl
+            INNER JOIN product_platforms pp ON pl.id = pp.platform_id
+            WHERE pp.product_id = ?
+            ORDER BY pl.name
+            """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, product.getId());
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                product.addPlatform(rs.getInt("id"), rs.getString("name"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Get all available platforms
+     */
+    public List<Platform> getAllPlatforms() {
+        List<Platform> platforms = new ArrayList<>();
+        String sql = "SELECT * FROM platforms ORDER BY type, name";
+
+        try (Connection conn = DBConnection.getInstance();
+             Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+
+            while (rs.next()) {
+                Platform platform = new Platform(
+                    rs.getInt("id"),
+                    rs.getString("name"),
+                    rs.getString("type"),
+                    rs.getString("manufacturer"),
+                    rs.getString("icon_path")
+                );
+                platforms.add(platform);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return platforms;
+    }
+
 
     public Optional<Product> getById(int id) {
         String sql = "SELECT * FROM products WHERE id=?";
@@ -51,7 +156,11 @@ public class ProductDao {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) return Optional.of(map(rs));
+            if (rs.next()) {
+                Product p = map(rs);
+                loadPlatformsForProduct(p, conn);
+                return Optional.of(p);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

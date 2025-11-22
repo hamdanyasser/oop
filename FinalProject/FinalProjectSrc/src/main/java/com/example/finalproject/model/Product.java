@@ -1,5 +1,8 @@
 package com.example.finalproject.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Product {
     private int id;
     private String name;
@@ -11,7 +14,14 @@ public class Product {
 
     private double discount;
 
-    public Product() {}
+    // Platform compatibility
+    private List<String> platforms;
+    private List<Integer> platformIds;
+
+    public Product() {
+        this.platforms = new ArrayList<>();
+        this.platformIds = new ArrayList<>();
+    }
 
     public Product(int id, String name, String category, double price, String description, String imagePath, int stock) {
         this.id = id;
@@ -21,6 +31,8 @@ public class Product {
         this.description = description;
         this.imagePath = imagePath;
         this.stock = stock;
+        this.platforms = new ArrayList<>();
+        this.platformIds = new ArrayList<>();
     }
 
     // --- Getters & Setters ---
@@ -48,6 +60,29 @@ public class Product {
 
     public int getStock() { return stock; }
     public void setStock(int stock) { this.stock = stock; }
+
+    public List<String> getPlatforms() { return platforms; }
+    public void setPlatforms(List<String> platforms) { this.platforms = platforms; }
+
+    public List<Integer> getPlatformIds() { return platformIds; }
+    public void setPlatformIds(List<Integer> platformIds) { this.platformIds = platformIds; }
+
+    public String getPlatformsAsString() {
+        if (platforms == null || platforms.isEmpty()) {
+            return "N/A";
+        }
+        return String.join(", ", platforms);
+    }
+
+    public void addPlatform(int platformId, String platformName) {
+        if (this.platformIds == null) this.platformIds = new ArrayList<>();
+        if (this.platforms == null) this.platforms = new ArrayList<>();
+        if (!this.platformIds.contains(platformId)) {
+            this.platformIds.add(platformId);
+            this.platforms.add(platformName);
+        }
+    }
+
     public double getEffectivePrice() {
         return price * (1 - (discount / 100.0));
     }
