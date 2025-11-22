@@ -282,15 +282,12 @@ public class CheckoutController {
                 finalTotal = Math.max(0, originalTotal - discount);
             }
 
-            // Apply gift card if used (calculate actual amount to deduct)
-            double actualGiftCardDeduction = 0;
+            // Calculate gift card discount (but DON'T deduct from database yet!)
+            double giftCardDiscountAmount = 0;
             if (appliedGiftCardCode != null && !appliedGiftCardCode.isEmpty() && giftCardBalance > 0) {
-                // Calculate how much to actually deduct (min of balance and remaining total)
-                double amountToDeduct = Math.min(giftCardBalance, finalTotal);
-                actualGiftCardDeduction = giftCardService.applyGiftCard(appliedGiftCardCode, amountToDeduct);
-                finalTotal = Math.max(0, finalTotal - actualGiftCardDeduction);
-                System.out.println("✅ Applied gift card " + appliedGiftCardCode + ": -$" +
-                    String.format("%.2f", actualGiftCardDeduction));
+                // Calculate how much will be deducted (min of balance and remaining total)
+                giftCardDiscountAmount = Math.min(giftCardBalance, finalTotal);
+                finalTotal = Math.max(0, finalTotal - giftCardDiscountAmount);
             }
 
             Order order = new Order();
@@ -314,6 +311,13 @@ public class CheckoutController {
                     System.out.println(String.format("✅ Updated stock for %s: %d → %d",
                         freshProduct.getName(), freshProduct.getStock() + qty, newStock));
                 }
+            }
+
+            // Now deduct gift card AFTER stock successfully updated
+            if (appliedGiftCardCode != null && !appliedGiftCardCode.isEmpty() && giftCardDiscountAmount > 0) {
+                double actualDeduction = giftCardService.applyGiftCard(appliedGiftCardCode, giftCardDiscountAmount);
+                System.out.println("✅ Applied gift card " + appliedGiftCardCode + ": -$" +
+                    String.format("%.2f", actualDeduction));
             }
 
             // Redeem points if used
