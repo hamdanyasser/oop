@@ -41,8 +41,9 @@ public class CheckoutController {
     // Gift card fields
     private TextField giftCardField;
     private Label giftCardBalanceLabel;
+    private Button removeGiftCardBtn;
     private String appliedGiftCardCode = null;
-    private double giftCardDiscount = 0;
+    private double giftCardBalance = 0; // Store balance, not discount (we recalculate discount dynamically)
 
     private final CartService cartService = CartService.getInstance();
     private final OrderDao orderDao = new OrderDao();
@@ -258,10 +259,12 @@ public class CheckoutController {
                 finalTotal = Math.max(0, originalTotal - discount);
             }
 
-            // Apply gift card if used
+            // Apply gift card if used (calculate actual amount to deduct)
             double actualGiftCardDeduction = 0;
-            if (appliedGiftCardCode != null && !appliedGiftCardCode.isEmpty()) {
-                actualGiftCardDeduction = giftCardService.applyGiftCard(appliedGiftCardCode, finalTotal);
+            if (appliedGiftCardCode != null && !appliedGiftCardCode.isEmpty() && giftCardBalance > 0) {
+                // Calculate how much to actually deduct (min of balance and remaining total)
+                double amountToDeduct = Math.min(giftCardBalance, finalTotal);
+                actualGiftCardDeduction = giftCardService.applyGiftCard(appliedGiftCardCode, amountToDeduct);
                 finalTotal = Math.max(0, finalTotal - actualGiftCardDeduction);
                 System.out.println("✅ Applied gift card " + appliedGiftCardCode + ": -$" +
                     String.format("%.2f", actualGiftCardDeduction));
@@ -407,18 +410,18 @@ public class CheckoutController {
         title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #ffc107;");
         header.getChildren().addAll(icon, title);
 
-        // Input field and button
+        // Input field and buttons
         HBox inputBox = new HBox(10);
         inputBox.setAlignment(Pos.CENTER_LEFT);
 
         giftCardField = new TextField();
         giftCardField.setPromptText("Enter gift card code (e.g., GAME-XXXX-XXXX-XXXX)");
-        giftCardField.setPrefWidth(350);
+        giftCardField.setPrefWidth(300);
         giftCardField.setStyle("-fx-font-size: 14px; -fx-padding: 10; -fx-background-radius: 8; " +
                 "-fx-border-color: #dee2e6; -fx-border-radius: 8;");
 
         Button applyBtn = new Button("Apply");
-        applyBtn.setPrefWidth(100);
+        applyBtn.setPrefWidth(80);
         applyBtn.setStyle("-fx-background-color: #ffc107; -fx-text-fill: white; " +
                 "-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10;");
         applyBtn.setOnMouseEntered(e -> applyBtn.setStyle("-fx-background-color: #e0a800; -fx-text-fill: white; " +
@@ -427,7 +430,18 @@ public class CheckoutController {
                 "-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10;"));
         applyBtn.setOnAction(e -> onApplyGiftCard());
 
-        inputBox.getChildren().addAll(giftCardField, applyBtn);
+        removeGiftCardBtn = new Button("Remove");
+        removeGiftCardBtn.setPrefWidth(80);
+        removeGiftCardBtn.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; " +
+                "-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10;");
+        removeGiftCardBtn.setOnMouseEntered(e -> removeGiftCardBtn.setStyle("-fx-background-color: #c82333; -fx-text-fill: white; " +
+                "-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10;"));
+        removeGiftCardBtn.setOnMouseExited(e -> removeGiftCardBtn.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; " +
+                "-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10;"));
+        removeGiftCardBtn.setOnAction(e -> onRemoveGiftCard());
+        removeGiftCardBtn.setVisible(false);
+
+        inputBox.getChildren().addAll(giftCardField, applyBtn, removeGiftCardBtn);
 
         // Balance/status label
         giftCardBalanceLabel = new Label("");
@@ -451,52 +465,90 @@ public class CheckoutController {
             giftCardBalanceLabel.setText("❌ Invalid or empty gift card code");
             giftCardBalanceLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #dc3545; -fx-font-weight: bold;");
             appliedGiftCardCode = null;
-            giftCardDiscount = 0;
+            giftCardBalance = 0;
             updateTotal();
             return;
         }
 
-        // Get gift card info
-        String info = giftCardService.getGiftCardInfo(code.trim().toUpperCase());
+        // Get gift card info and balance
         double balance = giftCardService.getBalance(code.trim().toUpperCase());
-
-        // Calculate how much will be applied
-        double currentTotal = originalTotal;
-        if (pointsToRedeem > 0) {
-            double pointsDiscount = loyaltyService.calculateDiscount(pointsToRedeem);
-            currentTotal = Math.max(0, originalTotal - pointsDiscount);
-        }
-
-        double willApply = Math.min(balance, currentTotal);
 
         // Apply the gift card
         appliedGiftCardCode = code.trim().toUpperCase();
-        giftCardDiscount = willApply;
+        giftCardBalance = balance;
 
-        giftCardBalanceLabel.setText(String.format("✅ %s | Will apply: $%.2f to your order", info, willApply));
-        giftCardBalanceLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #28a745; -fx-font-weight: bold;");
-
+        // Update UI
         giftCardField.setDisable(true);
+        removeGiftCardBtn.setVisible(true);
+        updateGiftCardLabel();
         updateTotal();
 
         ToastNotification.success("Gift card applied successfully!");
+    }
+
+    private void onRemoveGiftCard() {
+        appliedGiftCardCode = null;
+        giftCardBalance = 0;
+        giftCardField.setText("");
+        giftCardField.setDisable(false);
+        removeGiftCardBtn.setVisible(false);
+        giftCardBalanceLabel.setText("");
+        updateTotal();
+        ToastNotification.info("Gift card removed");
+    }
+
+    private void updateGiftCardLabel() {
+        if (appliedGiftCardCode != null && giftCardBalance > 0) {
+            double currentTotal = originalTotal;
+            if (pointsToRedeem > 0) {
+                double pointsDiscount = loyaltyService.calculateDiscount(pointsToRedeem);
+                currentTotal = Math.max(0, originalTotal - pointsDiscount);
+            }
+            double willApply = Math.min(giftCardBalance, currentTotal);
+            giftCardBalanceLabel.setText(String.format("✅ Balance: $%.2f | Applying: $%.2f to your order",
+                giftCardBalance, willApply));
+            giftCardBalanceLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #28a745; -fx-font-weight: bold;");
+        }
     }
 
     private void updateTotal() {
         double total = originalTotal;
 
         // Apply loyalty points discount
+        double pointsDiscount = 0;
         if (pointsToRedeem > 0) {
-            double pointsDiscount = loyaltyService.calculateDiscount(pointsToRedeem);
+            pointsDiscount = loyaltyService.calculateDiscount(pointsToRedeem);
             total = Math.max(0, total - pointsDiscount);
         }
 
-        // Apply gift card discount
-        if (giftCardDiscount > 0) {
+        // Apply gift card discount (dynamically calculated)
+        double giftCardDiscount = 0;
+        if (appliedGiftCardCode != null && giftCardBalance > 0) {
+            giftCardDiscount = Math.min(giftCardBalance, total);
             total = Math.max(0, total - giftCardDiscount);
         }
 
-        totalLabel.setText(String.format("$%.2f", total));
+        // Update gift card label if applied (to reflect new discount amount)
+        if (appliedGiftCardCode != null) {
+            updateGiftCardLabel();
+        }
+
+        // Update total label with breakdown if discounts applied
+        if (pointsDiscount > 0 || giftCardDiscount > 0) {
+            StringBuilder breakdown = new StringBuilder();
+            breakdown.append(String.format("$%.2f", total));
+            breakdown.append(String.format("\n(Subtotal: $%.2f", originalTotal));
+            if (pointsDiscount > 0) {
+                breakdown.append(String.format(" - Points: $%.2f", pointsDiscount));
+            }
+            if (giftCardDiscount > 0) {
+                breakdown.append(String.format(" - Gift: $%.2f", giftCardDiscount));
+            }
+            breakdown.append(")");
+            totalLabel.setText(breakdown.toString());
+        } else {
+            totalLabel.setText(String.format("$%.2f", originalTotal));
+        }
     }
 
     private void showStyledAlert(String title, String message, Alert.AlertType type) {

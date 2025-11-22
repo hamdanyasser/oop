@@ -378,6 +378,17 @@ public class ProductFormController {
             double price = Double.parseDouble(priceField.getText().trim());
             int stock = Integer.parseInt(stockField.getText().trim());
 
+            // Validate price and stock
+            if (price < 0) {
+                showMessage("⚠️ Price cannot be negative.", false);
+                return;
+            }
+
+            if (stock < 0) {
+                showMessage("⚠️ Stock quantity cannot be negative.", false);
+                return;
+            }
+
             // Collect product type
             String productType = productTypeBox.getValue();
             if (productType == null || productType.isEmpty()) {

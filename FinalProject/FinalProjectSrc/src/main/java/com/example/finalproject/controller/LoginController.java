@@ -221,10 +221,28 @@ public class LoginController {
 
     public void onLogin() {
         msgLabel.setText("");
+        msgLabel.setStyle("-fx-text-fill: #dc3545; -fx-font-size: 13px; -fx-font-weight: 600;");
+
+        String email = emailField.getText().trim();
+        String password = passwordField.getText().trim();
+
+        // Client-side validation
+        if (email.isEmpty() || password.isEmpty()) {
+            msgLabel.setText("⚠️ Please enter both email and password");
+            ToastNotification.error("All fields are required");
+            return;
+        }
+
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            msgLabel.setText("⚠️ Please enter a valid email address");
+            ToastNotification.error("Invalid email format");
+            return;
+        }
+
         loadingOverlay.show("Signing in...");
 
         try {
-            String token = authService.login(emailField.getText().trim(), passwordField.getText().trim());
+            String token = authService.login(email, password);
             Session.setToken(token);
             String role = JwtService.getRole(token);
 
