@@ -4,6 +4,8 @@ import com.example.finalproject.HelloApplication;
 import com.example.finalproject.security.JwtService;
 import com.example.finalproject.security.Session;
 import com.example.finalproject.service.AuthService;
+import com.example.finalproject.util.LoadingOverlay;
+import com.example.finalproject.util.ToastNotification;
 import javafx.animation.FadeTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -17,6 +19,7 @@ public class LoginController {
     private PasswordField passwordField;
     private Label msgLabel;
     private ProgressIndicator progressIndicator;
+    private LoadingOverlay loadingOverlay;
 
     private final AuthService authService = new AuthService();
 
@@ -137,6 +140,10 @@ public class LoginController {
         outerBox.getChildren().add(authCard);
         root.getChildren().add(outerBox);
 
+        // Add loading overlay
+        loadingOverlay = new LoadingOverlay();
+        root.getChildren().add(loadingOverlay.getOverlay());
+
         // Add fade-in animation
         FadeTransition fadeIn = new FadeTransition(Duration.millis(500), authCard);
         fadeIn.setFromValue(0.0);
@@ -214,18 +221,22 @@ public class LoginController {
 
     public void onLogin() {
         msgLabel.setText("");
-        progressIndicator.setVisible(true);
+        loadingOverlay.show("Signing in...");
 
         try {
             String token = authService.login(emailField.getText().trim(), passwordField.getText().trim());
             Session.setToken(token);
             String role = JwtService.getRole(token);
 
+            loadingOverlay.updateMessage("✅ Login successful!");
+            ToastNotification.success("Welcome back! Logging you in...");
+
             msgLabel.setStyle("-fx-text-fill: #28a745; -fx-font-size: 13px; -fx-font-weight: 600;");
             msgLabel.setText("✅ Login successful!");
 
             javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(Duration.seconds(0.8));
             pause.setOnFinished(e -> {
+                loadingOverlay.hide();
                 if ("ADMIN".equals(role))
                     HelloApplication.setRoot(new AdminProductsController());
                 else
@@ -234,10 +245,10 @@ public class LoginController {
             pause.play();
 
         } catch (Exception e) {
+            loadingOverlay.hide();
+            ToastNotification.error(e.getMessage());
             msgLabel.setStyle("-fx-text-fill: #dc3545; -fx-font-size: 13px; -fx-font-weight: 600;");
             msgLabel.setText("❌ " + e.getMessage());
-        } finally {
-            progressIndicator.setVisible(false);
         }
     }
 

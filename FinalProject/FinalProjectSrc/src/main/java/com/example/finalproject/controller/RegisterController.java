@@ -1,8 +1,13 @@
 package com.example.finalproject.controller;
 
 import com.example.finalproject.HelloApplication;
+import com.example.finalproject.dao.UserDao;
+import com.example.finalproject.model.User;
+import com.example.finalproject.security.JwtService;
 import com.example.finalproject.security.Session;
 import com.example.finalproject.service.AuthService;
+import com.example.finalproject.service.EmailNotificationService;
+import com.example.finalproject.util.LoadingOverlay;
 import javafx.animation.FadeTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -17,8 +22,11 @@ public class RegisterController {
     private PasswordField passwordField;
     private Label msgLabel;
     private ProgressIndicator progressIndicator;
+    private LoadingOverlay loadingOverlay;
 
     private final AuthService authService = new AuthService();
+    private final UserDao userDao = new UserDao();
+    private final EmailNotificationService emailNotificationService = new EmailNotificationService();
 
     public Parent createView() {
         StackPane root = new StackPane();
@@ -134,6 +142,10 @@ public class RegisterController {
         outerBox.getChildren().add(authCard);
         root.getChildren().add(outerBox);
 
+        // Add loading overlay
+        loadingOverlay = new LoadingOverlay();
+        root.getChildren().add(loadingOverlay.getOverlay());
+
         // Add fade-in animation
         FadeTransition fadeIn = new FadeTransition(Duration.millis(500), authCard);
         fadeIn.setFromValue(0.0);
@@ -242,26 +254,36 @@ public class RegisterController {
         }
 
         // Show loading
-        progressIndicator.setVisible(true);
+        loadingOverlay.show("Creating your account...");
 
         try {
             String token = authService.register(name, email, password, address);
 
+            loadingOverlay.updateMessage("✅ Account created!");
+
             msgLabel.setStyle("-fx-text-fill: #28a745; -fx-font-size: 13px; -fx-font-weight: 600;");
             msgLabel.setText("✅ Account created successfully!");
+
+            // Send welcome email
+            int userId = JwtService.getUserId(token);
+            User newUser = userDao.getUserById(userId).orElse(null);
+            if (newUser != null) {
+                emailNotificationService.sendWelcomeEmail(newUser);
+                System.out.println("✅ Welcome email sent to: " + newUser.getEmail());
+            }
 
             // Delay for user to see success message
             javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(Duration.seconds(1));
             pause.setOnFinished(e -> {
+                loadingOverlay.hide();
                 Session.setToken(token);
                 HelloApplication.setRoot(new CustomerHomeController());
             });
             pause.play();
 
         } catch (Exception e) {
+            loadingOverlay.hide();
             showError("❌ " + e.getMessage());
-        } finally {
-            progressIndicator.setVisible(false);
         }
     }
 

@@ -2,13 +2,21 @@ package com.example.finalproject.controller;
 
 import com.example.finalproject.HelloApplication;
 import com.example.finalproject.dao.OrderDao;
+import com.example.finalproject.dao.ProductDao;
+import com.example.finalproject.dao.UserDao;
 import com.example.finalproject.model.Order;
 import com.example.finalproject.model.OrderItem;
 import com.example.finalproject.model.Product;
+import com.example.finalproject.model.User;
 import com.example.finalproject.security.AuthGuard;
 import com.example.finalproject.security.JwtService;
 import com.example.finalproject.security.Session;
 import com.example.finalproject.service.CartService;
+import com.example.finalproject.service.DigitalCodeService;
+import com.example.finalproject.service.EmailNotificationService;
+import com.example.finalproject.service.LoyaltyService;
+import com.example.finalproject.service.GiftCardService;
+import com.example.finalproject.util.ToastNotification;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -24,9 +32,26 @@ public class CheckoutController {
 
     private Label totalLabel;
     private VBox itemsList;
+    private CheckBox usePointsCheckbox;
+    private Slider pointsSlider;
+    private Label pointsDiscountLabel;
+    private int pointsToRedeem = 0;
+    private double originalTotal = 0;
+
+    // Gift card fields
+    private TextField giftCardField;
+    private Label giftCardBalanceLabel;
+    private String appliedGiftCardCode = null;
+    private double giftCardDiscount = 0;
 
     private final CartService cartService = CartService.getInstance();
     private final OrderDao orderDao = new OrderDao();
+    private final ProductDao productDao = new ProductDao();
+    private final UserDao userDao = new UserDao();
+    private final DigitalCodeService digitalCodeService = new DigitalCodeService();
+    private final EmailNotificationService emailNotificationService = new EmailNotificationService();
+    private final LoyaltyService loyaltyService = new LoyaltyService();
+    private final GiftCardService giftCardService = new GiftCardService();
 
     public Parent createView() {
         AuthGuard.requireLogin();
@@ -124,7 +149,20 @@ public class CheckoutController {
         Separator separator = new Separator();
         separator.setPadding(new Insets(10, 0, 10, 0));
 
+        // Loyalty points redemption section
+        VBox redemptionSection = createRedemptionSection();
+
+        Separator separator2 = new Separator();
+        separator2.setPadding(new Insets(10, 0, 10, 0));
+
+        // Gift card redemption section
+        VBox giftCardSection = createGiftCardSection();
+
+        Separator separator3 = new Separator();
+        separator3.setPadding(new Insets(10, 0, 10, 0));
+
         // Total section
+        originalTotal = cartService.getTotal();
         HBox totalBox = new HBox();
         totalBox.setAlignment(Pos.CENTER_RIGHT);
         totalBox.setPadding(new Insets(15, 0, 0, 0));
@@ -132,7 +170,7 @@ public class CheckoutController {
         Label totalTextLabel = new Label("Total Amount:");
         totalTextLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
-        totalLabel = new Label(String.format("$%.2f", cartService.getTotal()));
+        totalLabel = new Label(String.format("$%.2f", originalTotal));
         totalLabel.setStyle("-fx-font-size: 28px; -fx-text-fill: #667eea; -fx-font-weight: bold; -fx-padding: 0 0 0 15;");
 
         totalBox.getChildren().addAll(totalTextLabel, totalLabel);
@@ -166,7 +204,7 @@ public class CheckoutController {
 
         buttonBox.getChildren().addAll(confirmBtn, backBtn);
 
-        card.getChildren().addAll(header, itemsList, separator, totalBox, buttonBox);
+        card.getChildren().addAll(header, itemsList, separator, redemptionSection, separator2, giftCardSection, separator3, totalBox, buttonBox);
         return card;
     }
 
@@ -213,25 +251,252 @@ public class CheckoutController {
                 orderItems.add(new OrderItem(0, 0, p.getId(), qty, unit));
             }
 
+            // Calculate final total with points redemption
+            double finalTotal = originalTotal;
+            if (pointsToRedeem > 0) {
+                double discount = loyaltyService.calculateDiscount(pointsToRedeem);
+                finalTotal = Math.max(0, originalTotal - discount);
+            }
+
+            // Apply gift card if used
+            double actualGiftCardDeduction = 0;
+            if (appliedGiftCardCode != null && !appliedGiftCardCode.isEmpty()) {
+                actualGiftCardDeduction = giftCardService.applyGiftCard(appliedGiftCardCode, finalTotal);
+                finalTotal = Math.max(0, finalTotal - actualGiftCardDeduction);
+                System.out.println("✅ Applied gift card " + appliedGiftCardCode + ": -$" +
+                    String.format("%.2f", actualGiftCardDeduction));
+            }
+
             Order order = new Order();
             order.setUserId(userId);
             order.setItems(orderItems);
-            order.setTotal(cartService.getTotal());
+            order.setTotal(finalTotal);
             order.setStatus("PENDING");
             orderDao.saveOrder(order);
 
+            // Redeem points if used
+            if (pointsToRedeem > 0) {
+                loyaltyService.redeemPoints(userId, pointsToRedeem, order.getId());
+                System.out.println("✅ Redeemed " + pointsToRedeem + " loyalty points for $" +
+                    String.format("%.2f", loyaltyService.calculateDiscount(pointsToRedeem)) + " discount");
+            }
+
+            // Generate and send digital codes for gift cards and digital products
+            boolean hasDigitalItems = false;
+            for (OrderItem item : order.getItems()) {
+                Product product = productDao.getById(item.getProductId()).orElse(null);
+                if (product != null && product.isDigital()) {
+                    hasDigitalItems = true;
+                    digitalCodeService.createAndSendCodes(
+                        order.getId(),
+                        item.getId(),
+                        product.getId(),
+                        userId,
+                        item.getQuantity()
+                    );
+                    System.out.println("✅ Generated and sent " + item.getQuantity() + " code(s) for: " + product.getName());
+                }
+            }
+
+            // Send order confirmation email
+            User user = userDao.getUserById(userId).orElse(null);
+            if (user != null) {
+                emailNotificationService.sendOrderConfirmationEmail(user, order);
+                System.out.println("✅ Order confirmation email sent to: " + user.getEmail());
+            }
+
+            // Award loyalty points
+            int pointsEarned = loyaltyService.awardPoints(userId, order.getTotal(), order.getId());
+            System.out.println("✅ Awarded " + pointsEarned + " loyalty points to user " + userId);
+
             cartService.clear();
 
-            showStyledAlert("Success", "✅ Order placed successfully!", Alert.AlertType.INFORMATION);
+            String successMessage = hasDigitalItems
+                ? "Order placed! Digital codes sent to your email."
+                : "Order placed successfully!";
+            ToastNotification.success(successMessage);
+
+            // Show points earned notification
+            if (pointsEarned > 0) {
+                ToastNotification.info(String.format("You earned %d loyalty points! 💎", pointsEarned));
+            }
+
             HelloApplication.setRoot(new CustomerHomeController());
         } catch (SQLException e) {
             e.printStackTrace();
-            showStyledAlert("Error", "❌ Error saving order: " + e.getMessage(), Alert.AlertType.ERROR);
+            ToastNotification.error("Error saving order: " + e.getMessage());
         }
     }
 
     private void onBack() {
         HelloApplication.setRoot(new CartController());
+    }
+
+    private VBox createRedemptionSection() {
+        VBox section = new VBox(15);
+        section.setPadding(new Insets(20));
+        section.setStyle("-fx-background-color: #f0f3ff; -fx-background-radius: 10; " +
+                "-fx-border-color: #667eea; -fx-border-width: 1; -fx-border-radius: 10;");
+
+        // Get user's points
+        int userId = JwtService.getUserId(Session.getToken());
+        int availablePoints = loyaltyService.getPoints(userId);
+        double maxDiscount = loyaltyService.calculateDiscount(availablePoints);
+
+        // Header
+        HBox header = new HBox(10);
+        header.setAlignment(Pos.CENTER_LEFT);
+        Label icon = new Label("💎");
+        icon.setStyle("-fx-font-size: 20px;");
+        Label title = new Label("Use Loyalty Points");
+        title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #667eea;");
+        header.getChildren().addAll(icon, title);
+
+        // Points balance display
+        Label balanceLabel = new Label(String.format("Available: %,d points (up to $%.2f discount)", availablePoints, maxDiscount));
+        balanceLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #6c757d;");
+
+        // Checkbox to enable redemption
+        usePointsCheckbox = new CheckBox("I want to use my points for this order");
+        usePointsCheckbox.setStyle("-fx-font-size: 14px; -fx-text-fill: #2c3e50;");
+
+        // Slider for point selection
+        pointsSlider = new Slider(0, availablePoints, 0);
+        pointsSlider.setBlockIncrement(100);
+        pointsSlider.setMajorTickUnit(Math.max(500, availablePoints / 4));
+        pointsSlider.setShowTickMarks(true);
+        pointsSlider.setShowTickLabels(true);
+        pointsSlider.setDisable(true);
+
+        // Discount label
+        pointsDiscountLabel = new Label("Discount: $0.00");
+        pointsDiscountLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #28a745;");
+
+        // Event listeners
+        usePointsCheckbox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            pointsSlider.setDisable(!newVal);
+            if (!newVal) {
+                pointsSlider.setValue(0);
+                updateTotal();
+            }
+        });
+
+        pointsSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
+            pointsToRedeem = newVal.intValue();
+            double discount = loyaltyService.calculateDiscount(pointsToRedeem);
+            pointsDiscountLabel.setText(String.format("Discount: -$%.2f", discount));
+            updateTotal();
+        });
+
+        section.getChildren().addAll(header, balanceLabel, usePointsCheckbox, pointsSlider, pointsDiscountLabel);
+        return section;
+    }
+
+    private VBox createGiftCardSection() {
+        VBox section = new VBox(15);
+        section.setPadding(new Insets(20));
+        section.setStyle("-fx-background-color: #fff9e6; -fx-background-radius: 10; " +
+                "-fx-border-color: #ffc107; -fx-border-width: 1; -fx-border-radius: 10;");
+
+        // Header
+        HBox header = new HBox(10);
+        header.setAlignment(Pos.CENTER_LEFT);
+        Label icon = new Label("🎁");
+        icon.setStyle("-fx-font-size: 20px;");
+        Label title = new Label("Apply Gift Card");
+        title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #ffc107;");
+        header.getChildren().addAll(icon, title);
+
+        // Input field and button
+        HBox inputBox = new HBox(10);
+        inputBox.setAlignment(Pos.CENTER_LEFT);
+
+        giftCardField = new TextField();
+        giftCardField.setPromptText("Enter gift card code (e.g., GAME-XXXX-XXXX-XXXX)");
+        giftCardField.setPrefWidth(350);
+        giftCardField.setStyle("-fx-font-size: 14px; -fx-padding: 10; -fx-background-radius: 8; " +
+                "-fx-border-color: #dee2e6; -fx-border-radius: 8;");
+
+        Button applyBtn = new Button("Apply");
+        applyBtn.setPrefWidth(100);
+        applyBtn.setStyle("-fx-background-color: #ffc107; -fx-text-fill: white; " +
+                "-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10;");
+        applyBtn.setOnMouseEntered(e -> applyBtn.setStyle("-fx-background-color: #e0a800; -fx-text-fill: white; " +
+                "-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10;"));
+        applyBtn.setOnMouseExited(e -> applyBtn.setStyle("-fx-background-color: #ffc107; -fx-text-fill: white; " +
+                "-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10;"));
+        applyBtn.setOnAction(e -> onApplyGiftCard());
+
+        inputBox.getChildren().addAll(giftCardField, applyBtn);
+
+        // Balance/status label
+        giftCardBalanceLabel = new Label("");
+        giftCardBalanceLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #6c757d;");
+
+        section.getChildren().addAll(header, inputBox, giftCardBalanceLabel);
+        return section;
+    }
+
+    private void onApplyGiftCard() {
+        String code = giftCardField.getText();
+
+        if (code == null || code.trim().isEmpty()) {
+            giftCardBalanceLabel.setText("⚠️ Please enter a gift card code");
+            giftCardBalanceLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #dc3545; -fx-font-weight: bold;");
+            return;
+        }
+
+        // Validate gift card
+        if (!giftCardService.isValid(code.trim().toUpperCase())) {
+            giftCardBalanceLabel.setText("❌ Invalid or empty gift card code");
+            giftCardBalanceLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #dc3545; -fx-font-weight: bold;");
+            appliedGiftCardCode = null;
+            giftCardDiscount = 0;
+            updateTotal();
+            return;
+        }
+
+        // Get gift card info
+        String info = giftCardService.getGiftCardInfo(code.trim().toUpperCase());
+        double balance = giftCardService.getBalance(code.trim().toUpperCase());
+
+        // Calculate how much will be applied
+        double currentTotal = originalTotal;
+        if (pointsToRedeem > 0) {
+            double pointsDiscount = loyaltyService.calculateDiscount(pointsToRedeem);
+            currentTotal = Math.max(0, originalTotal - pointsDiscount);
+        }
+
+        double willApply = Math.min(balance, currentTotal);
+
+        // Apply the gift card
+        appliedGiftCardCode = code.trim().toUpperCase();
+        giftCardDiscount = willApply;
+
+        giftCardBalanceLabel.setText(String.format("✅ %s | Will apply: $%.2f to your order", info, willApply));
+        giftCardBalanceLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #28a745; -fx-font-weight: bold;");
+
+        giftCardField.setDisable(true);
+        updateTotal();
+
+        ToastNotification.success("Gift card applied successfully!");
+    }
+
+    private void updateTotal() {
+        double total = originalTotal;
+
+        // Apply loyalty points discount
+        if (pointsToRedeem > 0) {
+            double pointsDiscount = loyaltyService.calculateDiscount(pointsToRedeem);
+            total = Math.max(0, total - pointsDiscount);
+        }
+
+        // Apply gift card discount
+        if (giftCardDiscount > 0) {
+            total = Math.max(0, total - giftCardDiscount);
+        }
+
+        totalLabel.setText(String.format("$%.2f", total));
     }
 
     private void showStyledAlert(String title, String message, Alert.AlertType type) {

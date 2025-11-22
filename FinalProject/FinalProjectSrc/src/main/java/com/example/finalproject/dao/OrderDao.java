@@ -156,6 +156,33 @@ public class OrderDao {
         return list;
     }
 
+    /**
+     * Get all orders for a specific user
+     */
+    public List<Order> getOrdersByUserId(int userId) {
+        List<Order> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getInstance();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM orders WHERE user_id=? ORDER BY created_at DESC")) {
+            ps.setInt(1, userId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Order order = new Order(
+                        rs.getInt("id"),
+                        rs.getInt("user_id"),
+                        rs.getDouble("total"),
+                        rs.getString("status"),
+                        rs.getTimestamp("created_at")
+                );
+                // Load order items
+                order.setItems(findItemsByOrder(order.getId()));
+                list.add(order);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     // ✅ FIXED: When deleting, restore product stock
     public void delete(int id) {
         try (Connection conn = DBConnection.getInstance()) {

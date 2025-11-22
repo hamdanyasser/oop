@@ -1,9 +1,12 @@
 package com.example.finalproject;
 
 import com.example.finalproject.controller.LoginController;
+import com.example.finalproject.service.ThemeManager;
+import com.example.finalproject.util.ToastNotification;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 public class HelloApplication extends Application {
@@ -54,8 +57,18 @@ public class HelloApplication extends Application {
             }
 
             if (root != null) {
-                Scene scene = new Scene(root);
-                scene.getStylesheets().add(HelloApplication.class.getResource("view/style.css").toExternalForm());
+                // Wrap root in StackPane if not already one (for toast notifications)
+                Parent finalRoot = root;
+                if (!(root instanceof StackPane)) {
+                    StackPane wrapper = new StackPane(root);
+                    finalRoot = wrapper;
+                }
+
+                Scene scene = new Scene(finalRoot);
+                // Apply theme using ThemeManager (automatically loads saved preference)
+                ThemeManager.getInstance().setScene(scene);
+                // Initialize toast notification system
+                ToastNotification.initialize(scene);
                 mainStage.setScene(scene);
                 mainStage.centerOnScreen();
             }

@@ -4,12 +4,15 @@ import com.example.finalproject.HelloApplication;
 import com.example.finalproject.dao.ProductDao;
 import com.example.finalproject.dao.WishlistDao;
 import com.example.finalproject.model.Product;
+import com.example.finalproject.model.Platform;
+import com.example.finalproject.model.Genre;
 import com.example.finalproject.model.ShoppingCart;
 import com.example.finalproject.security.AuthGuard;
 import com.example.finalproject.security.Session;
 import com.example.finalproject.service.ProductService;
 import com.example.finalproject.service.CartService;
 import com.example.finalproject.service.ReviewService;
+import com.example.finalproject.service.LoyaltyService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -37,8 +40,18 @@ public class CustomerHomeController {
     private Label pageLabel;
     private TextField searchField;
     private ComboBox<String> categoryChoice;
+    private ComboBox<String> platformChoice;
+    private ComboBox<String> genreChoice;
+    private ComboBox<String> ageRatingChoice;
+    private ComboBox<String> priceRangeChoice;
+    private List<Platform> allPlatforms;
+    private List<Genre> allGenres;
     private List<Product> filteredProducts;
     private ComboBox<String> sortChoice;
+    private Label resultsCountLabel;
+    private Label activeFiltersLabel;
+    private final ReviewService reviewService = new ReviewService();
+    private final LoyaltyService loyaltyService = new LoyaltyService();
 
     public Parent createView() {
         AuthGuard.requireLogin();
@@ -49,7 +62,7 @@ public class CustomerHomeController {
 
         // Top bar
         VBox topSection = new VBox();
-        topSection.getChildren().addAll(createTopBar(), createFilterBar(), createSortBar());
+        topSection.getChildren().addAll(createTopBar(), createFilterBar(), createSortBar(), createStatisticsCards());
 
         root.setTop(topSection);
 
@@ -74,12 +87,26 @@ public class CustomerHomeController {
 
         // Initialize
         loadProducts();
+        loadPlatforms();
+        loadGenres();
         categoryChoice.getItems().addAll("All", "Console", "PC", "Accessory", "Game", "Controller");
         categoryChoice.setValue("All");
+
+        // Initialize age rating filter
+        ageRatingChoice.getItems().addAll("All Ratings", "E (Everyone)", "E10+ (Everyone 10+)", "T (Teen)", "M (Mature 17+)", "AO (Adults Only)");
+        ageRatingChoice.setValue("All Ratings");
+
+        // Initialize price range filter
+        priceRangeChoice.getItems().addAll("All Prices", "$0 - $20", "$20 - $40", "$40 - $60", "$60 - $100", "$100 - $500", "$500+");
+        priceRangeChoice.setValue("All Prices");
 
         // Listeners
         searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
         categoryChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        platformChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        genreChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        ageRatingChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        priceRangeChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
 
         return root;
     }
@@ -98,6 +125,7 @@ public class CustomerHomeController {
                 "None",
                 "Price: Low → High",
                 "Price: High → Low",
+                "Rating: High → Low",
                 "Newest → Oldest",
                 "Oldest → Newest"
         );
@@ -108,9 +136,129 @@ public class CustomerHomeController {
         sortChoice.getSelectionModel().selectedItemProperty()
                 .addListener((obs, oldVal, newVal) -> applyFilters());
 
-        sortBar.getChildren().addAll(sortLabel, sortChoice);
+        // Spacer to push active filters badge to the right
+        Pane spacer = new Pane();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        // Active filters indicator
+        activeFiltersLabel = new Label("🎯 0 Filters Active");
+        activeFiltersLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #28a745; " +
+                "-fx-padding: 8 12; -fx-background-color: #e8f5e9; -fx-background-radius: 8;");
+        activeFiltersLabel.setVisible(false); // Hidden by default
+
+        sortBar.getChildren().addAll(sortLabel, sortChoice, spacer, activeFiltersLabel);
 
         return sortBar;
+    }
+
+    /**
+     * Create statistics cards showing key metrics
+     */
+    private HBox createStatisticsCards() {
+        HBox statsContainer = new HBox(20);
+        statsContainer.setAlignment(Pos.CENTER);
+        statsContainer.setPadding(new Insets(20, 30, 15, 30));
+        statsContainer.setStyle("-fx-background-color: transparent;");
+
+        // Get theme
+        boolean isDark = com.example.finalproject.service.ThemeManager.getInstance().isDarkMode();
+
+        // Card styling based on theme
+        String cardStyle;
+        String iconStyle;
+        String labelStyle;
+        String valueStyle;
+
+        if (isDark) {
+            cardStyle = "-fx-background-color: #2d2d2d; -fx-background-radius: 16; " +
+                    "-fx-border-color: #404040; -fx-border-width: 1; -fx-border-radius: 16; " +
+                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 3); " +
+                    "-fx-padding: 20;";
+            iconStyle = "-fx-font-size: 32px;";
+            labelStyle = "-fx-font-size: 13px; -fx-text-fill: #b0b0b0; -fx-font-weight: 600;";
+            valueStyle = "-fx-font-size: 28px; -fx-text-fill: #e0e0e0; -fx-font-weight: bold;";
+        } else {
+            cardStyle = "-fx-background-color: white; -fx-background-radius: 16; " +
+                    "-fx-border-color: #e1e4e8; -fx-border-width: 1; -fx-border-radius: 16; " +
+                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3); " +
+                    "-fx-padding: 20;";
+            iconStyle = "-fx-font-size: 32px;";
+            labelStyle = "-fx-font-size: 13px; -fx-text-fill: #6c757d; -fx-font-weight: 600;";
+            valueStyle = "-fx-font-size: 28px; -fx-text-fill: #2c3e50; -fx-font-weight: bold;";
+        }
+
+        // Calculate statistics
+        int totalProducts = allProducts != null ? allProducts.size() : 0;
+        int totalPlatforms = allPlatforms != null ? allPlatforms.size() : 0;
+        int totalGenres = allGenres != null ? allGenres.size() : 0;
+
+        // Count unique categories
+        long totalCategories = 0;
+        if (allProducts != null) {
+            totalCategories = allProducts.stream()
+                    .map(p -> p.getCategory())
+                    .distinct()
+                    .count();
+        }
+
+        // Create cards
+        VBox card1 = createStatCard("📦", "Total Products", String.valueOf(totalProducts),
+                cardStyle, iconStyle, labelStyle, valueStyle, "#667eea");
+        VBox card2 = createStatCard("🎮", "Platforms", String.valueOf(totalPlatforms),
+                cardStyle, iconStyle, labelStyle, valueStyle, "#28a745");
+        VBox card3 = createStatCard("🎯", "Genres", String.valueOf(totalGenres),
+                cardStyle, iconStyle, labelStyle, valueStyle, "#17a2b8");
+        VBox card4 = createStatCard("🏷️", "Categories", String.valueOf(totalCategories),
+                cardStyle, iconStyle, labelStyle, valueStyle, "#ffc107");
+
+        statsContainer.getChildren().addAll(card1, card2, card3, card4);
+
+        return statsContainer;
+    }
+
+    /**
+     * Helper method to create individual stat card
+     */
+    private VBox createStatCard(String icon, String label, String value,
+                                 String cardStyle, String iconStyle,
+                                 String labelStyle, String valueStyle,
+                                 String accentColor) {
+        VBox card = new VBox(8);
+        card.setAlignment(Pos.CENTER);
+        card.setPrefWidth(240);
+        card.setPrefHeight(120);
+        card.setStyle(cardStyle);
+
+        // Icon with colored background circle
+        StackPane iconContainer = new StackPane();
+        iconContainer.setPrefSize(60, 60);
+        iconContainer.setStyle("-fx-background-color: " + accentColor + "20; " +
+                "-fx-background-radius: 30;");
+
+        Label iconLabel = new Label(icon);
+        iconLabel.setStyle(iconStyle);
+        iconContainer.getChildren().add(iconLabel);
+
+        // Value
+        Label valueLabel = new Label(value);
+        valueLabel.setStyle(valueStyle + " -fx-text-fill: " + accentColor + ";");
+
+        // Label
+        Label textLabel = new Label(label);
+        textLabel.setStyle(labelStyle);
+
+        card.getChildren().addAll(iconContainer, valueLabel, textLabel);
+
+        // Hover effect
+        card.setOnMouseEntered(e -> {
+            card.setStyle(cardStyle + " -fx-translate-y: -3; " +
+                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 15, 0, 0, 5);");
+        });
+        card.setOnMouseExited(e -> {
+            card.setStyle(cardStyle);
+        });
+
+        return card;
     }
 
     private HBox createTopBar() {
@@ -127,6 +275,43 @@ public class CustomerHomeController {
 
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        // Loyalty points badge
+        int userPoints = loyaltyService.getPoints(Session.getUserId());
+        String pointsTier = loyaltyService.getPointsTier(userPoints);
+        HBox pointsBadge = new HBox(8);
+        pointsBadge.setAlignment(Pos.CENTER);
+        pointsBadge.setPadding(new Insets(8, 15, 8, 15));
+        pointsBadge.setStyle("-fx-background-color: rgba(255,255,255,0.2); " +
+                "-fx-background-radius: 20; -fx-border-color: rgba(255,255,255,0.3); " +
+                "-fx-border-width: 1; -fx-border-radius: 20;");
+
+        Label pointsIcon = new Label("💎");
+        pointsIcon.setStyle("-fx-font-size: 18px;");
+
+        Label pointsLabel = new Label(String.format("%,d Points", userPoints));
+        pointsLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;");
+
+        Label tierLabel = new Label(pointsTier);
+        tierLabel.setStyle("-fx-text-fill: rgba(255,255,255,0.9); -fx-font-size: 11px;");
+
+        VBox pointsInfo = new VBox(2);
+        pointsInfo.setAlignment(Pos.CENTER_LEFT);
+        pointsInfo.getChildren().addAll(pointsLabel, tierLabel);
+
+        pointsBadge.getChildren().addAll(pointsIcon, pointsInfo);
+
+        // Hover effect
+        pointsBadge.setOnMouseEntered(e -> {
+            pointsBadge.setStyle("-fx-background-color: rgba(255,255,255,0.3); " +
+                    "-fx-background-radius: 20; -fx-border-color: rgba(255,255,255,0.5); " +
+                    "-fx-border-width: 1; -fx-border-radius: 20; -fx-cursor: hand;");
+        });
+        pointsBadge.setOnMouseExited(e -> {
+            pointsBadge.setStyle("-fx-background-color: rgba(255,255,255,0.2); " +
+                    "-fx-background-radius: 20; -fx-border-color: rgba(255,255,255,0.3); " +
+                    "-fx-border-width: 1; -fx-border-radius: 20;");
+        });
 
         Button cartBtn = createHeaderButton("🛒 Cart");
         cartBtn.setOnAction(e -> onViewCart());
@@ -149,7 +334,7 @@ public class CustomerHomeController {
                 "-fx-background-radius: 8; -fx-padding: 10 20; -fx-font-weight: 600;"));
         logoutBtn.setOnAction(e -> onLogout());
 
-        topBar.getChildren().addAll(iconLabel, titleLabel, spacer, cartBtn, wishlistBtn, ordersBtn, profileBtn, logoutBtn);
+        topBar.getChildren().addAll(iconLabel, titleLabel, spacer, pointsBadge, cartBtn, wishlistBtn, ordersBtn, profileBtn, logoutBtn);
         return topBar;
     }
 
@@ -175,6 +360,38 @@ public class CustomerHomeController {
         categoryChoice.setPrefWidth(180);
         categoryChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
 
+        Label platformIcon = new Label("🎮");
+        platformIcon.setStyle("-fx-font-size: 18px;");
+
+        platformChoice = new ComboBox<>();
+        platformChoice.setPrefWidth(200);
+        platformChoice.setPromptText("All Platforms");
+        platformChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
+
+        Label genreIcon = new Label("🎯");
+        genreIcon.setStyle("-fx-font-size: 18px;");
+
+        genreChoice = new ComboBox<>();
+        genreChoice.setPrefWidth(180);
+        genreChoice.setPromptText("All Genres");
+        genreChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
+
+        Label ratingIcon = new Label("🔞");
+        ratingIcon.setStyle("-fx-font-size: 18px;");
+
+        ageRatingChoice = new ComboBox<>();
+        ageRatingChoice.setPrefWidth(160);
+        ageRatingChoice.setPromptText("All Ratings");
+        ageRatingChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
+
+        Label priceIcon = new Label("💰");
+        priceIcon.setStyle("-fx-font-size: 18px;");
+
+        priceRangeChoice = new ComboBox<>();
+        priceRangeChoice.setPrefWidth(140);
+        priceRangeChoice.setPromptText("All Prices");
+        priceRangeChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
+
         Button resetBtn = new Button("↺ Reset");
         resetBtn.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; " +
                 "-fx-background-radius: 8; -fx-padding: 8 15; -fx-font-weight: 600;");
@@ -184,7 +401,16 @@ public class CustomerHomeController {
                 "-fx-background-radius: 8; -fx-padding: 8 15; -fx-font-weight: 600;"));
         resetBtn.setOnAction(e -> onReset());
 
-        filterBar.getChildren().addAll(searchIcon, searchField, filterIcon, categoryChoice, resetBtn);
+        // Spacer to push results count to the right
+        Pane spacer = new Pane();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        // Results count label
+        resultsCountLabel = new Label("Showing 0 of 0 products");
+        resultsCountLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #667eea; " +
+                "-fx-padding: 8 12; -fx-background-color: #f0f3ff; -fx-background-radius: 8;");
+
+        filterBar.getChildren().addAll(searchIcon, searchField, filterIcon, categoryChoice, platformIcon, platformChoice, genreIcon, genreChoice, ratingIcon, ageRatingChoice, priceIcon, priceRangeChoice, resetBtn, spacer, resultsCountLabel);
         return filterBar;
     }
 
@@ -233,16 +459,51 @@ public class CustomerHomeController {
     private void applyFilters() {
         String keyword = searchField.getText().toLowerCase().trim();
         String category = categoryChoice.getValue();
+        String platform = platformChoice.getValue();
+        String genre = genreChoice.getValue();
+        String ageRating = ageRatingChoice.getValue();
+        String priceRange = priceRangeChoice.getValue();
         String sortOption = sortChoice.getValue();
+
+        // Extract rating code from display string (e.g., "M (Mature 17+)" -> "M")
+        String ratingCode = null;
+        if (ageRating != null && !ageRating.equals("All Ratings")) {
+            ratingCode = ageRating.split(" ")[0]; // Get first part (E, E10+, T, M, AO)
+        }
+
+        String finalRatingCode = ratingCode;
+
+        // Parse price range
+        double minPrice = 0;
+        double maxPrice = Double.MAX_VALUE;
+        if (priceRange != null && !priceRange.equals("All Prices")) {
+            if (priceRange.equals("$500+")) {
+                minPrice = 500;
+                maxPrice = Double.MAX_VALUE;
+            } else {
+                String[] parts = priceRange.replace("$", "").split(" - ");
+                minPrice = Double.parseDouble(parts[0]);
+                maxPrice = Double.parseDouble(parts[1]);
+            }
+        }
+
+        double finalMinPrice = minPrice;
+        double finalMaxPrice = maxPrice;
 
         // FILTER PRODUCTS
         filteredProducts = allProducts.stream()
                 .filter(p -> (category.equals("All") || p.getCategory().equalsIgnoreCase(category)))
+                .filter(p -> (platform == null || platform.equals("All Platforms") ||
+                        p.getPlatforms().contains(platform)))
+                .filter(p -> (genre == null || genre.equals("All Genres") ||
+                        p.getGenres().contains(genre)))
+                .filter(p -> (finalRatingCode == null ||
+                        (p.getAgeRating() != null && p.getAgeRating().equals(finalRatingCode))))
+                .filter(p -> p.getEffectivePrice() >= finalMinPrice && p.getEffectivePrice() <= finalMaxPrice)
                 .filter(p -> p.getName().toLowerCase().contains(keyword) ||
                         p.getCategory().toLowerCase().contains(keyword))
                 .collect(java.util.stream.Collectors.toList());
 
-        // SORT PRODUCTS
         // SORT PRODUCTS
         switch (sortOption) {
             case "Price: Low → High" ->
@@ -251,7 +512,11 @@ public class CustomerHomeController {
             case "Price: High → Low" ->
                     filteredProducts.sort((a, b) -> Double.compare(b.getPrice(), a.getPrice()));
 
-
+            case "Rating: High → Low" ->
+                    filteredProducts.sort((a, b) -> Double.compare(
+                            reviewService.getAverageRating(b.getId()),
+                            reviewService.getAverageRating(a.getId())
+                    ));
 
             case "Newest → Oldest" ->
                     filteredProducts.sort((a, b) -> Integer.compare(b.getId(), a.getId()));
@@ -260,15 +525,69 @@ public class CustomerHomeController {
                     filteredProducts.sort((a, b) -> Integer.compare(a.getId(), b.getId()));
         }
 
+        // Update results count
+        if (resultsCountLabel != null) {
+            resultsCountLabel.setText(String.format("Showing %d of %d products",
+                    filteredProducts.size(), allProducts.size()));
+        }
+
+        // Update active filters indicator
+        updateActiveFiltersIndicator();
 
         currentPage = 1;
         showPage(currentPage, filteredProducts);
+    }
+
+    /**
+     * Count and display active filters
+     */
+    private void updateActiveFiltersIndicator() {
+        if (activeFiltersLabel == null) return;
+
+        int activeFilters = 0;
+
+        // Count each active filter
+        if (searchField.getText() != null && !searchField.getText().trim().isEmpty()) {
+            activeFilters++;
+        }
+        if (categoryChoice.getValue() != null && !categoryChoice.getValue().equals("All")) {
+            activeFilters++;
+        }
+        if (platformChoice.getValue() != null && !platformChoice.getValue().equals("All Platforms")) {
+            activeFilters++;
+        }
+        if (genreChoice.getValue() != null && !genreChoice.getValue().equals("All Genres")) {
+            activeFilters++;
+        }
+        if (ageRatingChoice.getValue() != null && !ageRatingChoice.getValue().equals("All Ratings")) {
+            activeFilters++;
+        }
+        if (priceRangeChoice.getValue() != null && !priceRangeChoice.getValue().equals("All Prices")) {
+            activeFilters++;
+        }
+        if (sortChoice.getValue() != null && !sortChoice.getValue().equals("None")) {
+            activeFilters++;
+        }
+
+        // Update label visibility and text
+        if (activeFilters > 0) {
+            activeFiltersLabel.setText(String.format("🎯 %d Filter%s Active",
+                    activeFilters, activeFilters == 1 ? "" : "s"));
+            activeFiltersLabel.setVisible(true);
+        } else {
+            activeFiltersLabel.setVisible(false);
+        }
     }
 
 
     private void onReset() {
         searchField.clear();
         categoryChoice.setValue("All");
+        platformChoice.setValue("All Platforms");
+        genreChoice.setValue("All Genres");
+        ageRatingChoice.setValue("All Ratings");
+        priceRangeChoice.setValue("All Prices");
+        sortChoice.setValue("None");
         applyFilters();
     }
 
@@ -276,6 +595,24 @@ public class CustomerHomeController {
         allProducts = productService.getAll();
         filteredProducts = new ArrayList<>(allProducts);
         showPage(currentPage, filteredProducts);
+    }
+
+    private void loadPlatforms() {
+        allPlatforms = productDao.getAllPlatforms();
+        platformChoice.getItems().add("All Platforms");
+        for (Platform platform : allPlatforms) {
+            platformChoice.getItems().add(platform.getName());
+        }
+        platformChoice.setValue("All Platforms");
+    }
+
+    private void loadGenres() {
+        allGenres = productDao.getAllGenres();
+        genreChoice.getItems().add("All Genres");
+        for (Genre genre : allGenres) {
+            genreChoice.getItems().add(genre.getName());
+        }
+        genreChoice.setValue("All Genres");
     }
 
     private void showPage(int page, List<Product> list) {
@@ -352,10 +689,68 @@ public class CustomerHomeController {
         nameLabel.setMaxWidth(210);
         nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px; -fx-text-fill: #2c3e50; -fx-text-alignment: center;");
 
-        // Category badge
+        // Category and Age Rating badges
+        HBox badgeBox = new HBox(6);
+        badgeBox.setAlignment(Pos.CENTER);
+
         Label categoryLabel = new Label(p.getCategory());
         categoryLabel.setStyle("-fx-background-color: #e9ecef; -fx-text-fill: #495057; " +
                 "-fx-padding: 4 10; -fx-background-radius: 12; -fx-font-size: 11px;");
+        badgeBox.getChildren().add(categoryLabel);
+
+        // Age rating badge (only for games with ratings)
+        if (p.getAgeRating() != null && !p.getAgeRating().isEmpty()) {
+            Label ratingLabel = new Label(p.getAgeRating());
+            String ratingColor = getRatingColor(p.getAgeRating());
+            ratingLabel.setStyle("-fx-background-color: " + ratingColor + "; -fx-text-fill: white; " +
+                    "-fx-padding: 4 10; -fx-background-radius: 12; -fx-font-size: 11px; -fx-font-weight: bold;");
+            ratingLabel.setTooltip(new Tooltip(getRatingDescription(p.getAgeRating())));
+            badgeBox.getChildren().add(ratingLabel);
+        }
+
+        // Platform tags
+        FlowPane platformTags = new FlowPane();
+        platformTags.setHgap(4);
+        platformTags.setVgap(4);
+        platformTags.setAlignment(Pos.CENTER);
+        platformTags.setMaxWidth(210);
+
+        if (p.getPlatforms() != null && !p.getPlatforms().isEmpty()) {
+            for (String platform : p.getPlatforms()) {
+                Label platformLabel = new Label(getplatformIcon(platform));
+                platformLabel.setStyle("-fx-background-color: #667eea; -fx-text-fill: white; " +
+                        "-fx-padding: 3 8; -fx-background-radius: 8; -fx-font-size: 10px; -fx-font-weight: 600;");
+                platformLabel.setTooltip(new Tooltip(platform));
+                platformTags.getChildren().add(platformLabel);
+            }
+        }
+
+        // Genre tags
+        FlowPane genreTags = new FlowPane();
+        genreTags.setHgap(4);
+        genreTags.setVgap(4);
+        genreTags.setAlignment(Pos.CENTER);
+        genreTags.setMaxWidth(210);
+
+        if (p.getGenres() != null && !p.getGenres().isEmpty()) {
+            int genreCount = 0;
+            for (String genre : p.getGenres()) {
+                if (genreCount >= 3) break; // Show max 3 genres
+                Label genreLabel = new Label(genre);
+                genreLabel.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; " +
+                        "-fx-padding: 3 8; -fx-background-radius: 8; -fx-font-size: 10px; -fx-font-weight: 600;");
+                genreLabel.setTooltip(new Tooltip(genre));
+                genreTags.getChildren().add(genreLabel);
+                genreCount++;
+            }
+            if (p.getGenres().size() > 3) {
+                Label moreLabel = new Label("+" + (p.getGenres().size() - 3));
+                moreLabel.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; " +
+                        "-fx-padding: 3 8; -fx-background-radius: 8; -fx-font-size: 10px; -fx-font-weight: 600;");
+                moreLabel.setTooltip(new Tooltip("More genres: " + String.join(", ", p.getGenres().subList(3, p.getGenres().size()))));
+                genreTags.getChildren().add(moreLabel);
+            }
+        }
 
         // Price section
         VBox priceBox = new VBox(3);
@@ -389,9 +784,50 @@ public class CustomerHomeController {
         Label clickHint = new Label("👆 Click to view details");
         clickHint.setStyle("-fx-text-fill: #667eea; -fx-font-size: 12px; -fx-font-style: italic;");
 
-        card.getChildren().addAll(imageContainer, nameLabel, categoryLabel, priceBox, infoBox, clickHint);
+        card.getChildren().addAll(imageContainer, nameLabel, badgeBox, platformTags, genreTags, priceBox, infoBox, clickHint);
 
         return card;
+    }
+
+    private String getplatformIcon(String platformName) {
+        // Return abbreviated platform names or icons
+        return switch (platformName) {
+            case "PlayStation 5" -> "PS5";
+            case "PlayStation 4" -> "PS4";
+            case "Xbox Series X/S" -> "XBS";
+            case "Xbox One" -> "XBO";
+            case "Nintendo Switch" -> "NSW";
+            case "PC (Windows)" -> "WIN";
+            case "PC (Steam)" -> "STM";
+            case "PC (Epic Games)" -> "EGS";
+            case "Steam Deck" -> "SDK";
+            case "Meta Quest" -> "VR";
+            default -> platformName.substring(0, Math.min(3, platformName.length())).toUpperCase();
+        };
+    }
+
+    private String getRatingColor(String rating) {
+        // Return color based on ESRB rating
+        return switch (rating) {
+            case "E" -> "#4CAF50"; // Green - Everyone
+            case "E10+" -> "#8BC34A"; // Light Green - Everyone 10+
+            case "T" -> "#FFC107"; // Amber - Teen
+            case "M" -> "#FF5722"; // Red-Orange - Mature
+            case "AO" -> "#D32F2F"; // Dark Red - Adults Only
+            default -> "#9E9E9E"; // Gray - Unknown
+        };
+    }
+
+    private String getRatingDescription(String rating) {
+        // Return full description for tooltip
+        return switch (rating) {
+            case "E" -> "Everyone - Content suitable for all ages";
+            case "E10+" -> "Everyone 10+ - Content suitable for ages 10 and up";
+            case "T" -> "Teen - Content suitable for ages 13 and up";
+            case "M" -> "Mature 17+ - Content suitable for ages 17 and up";
+            case "AO" -> "Adults Only 18+ - Content suitable only for adults";
+            default -> "Rating: " + rating;
+        };
     }
 
     private void openProductDetails(Product p) {
