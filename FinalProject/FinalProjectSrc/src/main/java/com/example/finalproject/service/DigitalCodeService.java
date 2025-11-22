@@ -117,6 +117,12 @@ public class DigitalCodeService {
                 digitalCode.setRedeemed(false);
                 digitalCode.setSentAt(new Timestamp(System.currentTimeMillis()));
 
+                // Set gift card balance
+                if (product.isGiftCard()) {
+                    digitalCode.setOriginalValue(product.getPrice());
+                    digitalCode.setBalance(product.getPrice());
+                }
+
                 // Save to database
                 digitalCodeDao.insert(digitalCode);
 

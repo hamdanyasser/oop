@@ -183,6 +183,8 @@ CREATE TABLE IF NOT EXISTS digital_codes (
   redeemed_at TIMESTAMP NULL,
   sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  original_value DOUBLE DEFAULT 0 COMMENT 'Original gift card value (for gift cards only)',
+  balance DOUBLE DEFAULT 0 COMMENT 'Current gift card balance (for gift cards only)',
   FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -469,5 +471,5 @@ ON DUPLICATE KEY UPDATE id=id;
 -- ========================================
 -- END OF SCHEMA
 -- Last Updated: 2025-11-22
--- Version: 1.5 (Added Loyalty Points System)
+-- Version: 1.6 (Added Gift Card Balance Tracking)
 -- ========================================

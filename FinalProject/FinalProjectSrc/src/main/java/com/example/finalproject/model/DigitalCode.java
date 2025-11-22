@@ -17,6 +17,8 @@ public class DigitalCode {
     private Timestamp redeemedAt;
     private Timestamp sentAt;
     private Timestamp createdAt;
+    private double originalValue; // Original gift card value
+    private double balance; // Current gift card balance
 
     // Constructors
     public DigitalCode() {}
@@ -70,4 +72,10 @@ public class DigitalCode {
 
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+
+    public double getOriginalValue() { return originalValue; }
+    public void setOriginalValue(double originalValue) { this.originalValue = originalValue; }
+
+    public double getBalance() { return balance; }
+    public void setBalance(double balance) { this.balance = balance; }
 }
