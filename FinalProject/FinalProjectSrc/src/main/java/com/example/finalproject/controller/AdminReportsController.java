@@ -3,15 +3,14 @@ package com.example.finalproject.controller;
 import com.example.finalproject.HelloApplication;
 import com.example.finalproject.dao.ReportDao;
 import com.example.finalproject.model.TopProduct;
+import com.example.finalproject.model.CategorySale;
 import com.example.finalproject.security.AuthGuard;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.chart.BarChart;
-import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
+import javafx.scene.chart.*;import javafx.scene.chart.PieChart;
+import javafx.scene.chart.LineChart;
 import javafx.scene.control.*;
 import com.example.finalproject.security.Session;
 import javafx.scene.layout.*;
@@ -22,7 +21,11 @@ import java.util.List;
 public class AdminReportsController {
 
     private Label totalRevenueLabel;
+    private Label totalOrdersLabel;
+    private Label totalCustomersLabel;
     private BarChart<String, Number> salesChart;
+    private LineChart<String, Number> revenueLineChart;
+    private PieChart categoryPieChart;
     private TableView<TopProduct> topProductsTable;
     private TableColumn<TopProduct, String> colProduct;
     private TableColumn<TopProduct, Integer> colQty;
@@ -53,8 +56,15 @@ public class AdminReportsController {
         // Stats cards row
         HBox statsRow = createStatsCards();
 
-        // Chart card
-        VBox chartCard = createChartCard();
+        // Charts row - Line chart and Pie chart side by side
+        HBox chartsRow = new HBox(20);
+        chartsRow.setAlignment(Pos.CENTER);
+        VBox lineChartCard = createLineChartCard();
+        VBox pieChartCard = createPieChartCard();
+        chartsRow.getChildren().addAll(lineChartCard, pieChartCard);
+
+        // Bar chart card (existing)
+        VBox barChartCard = createBarChartCard();
 
         // Top products card
         VBox productsCard = createProductsCard();
@@ -62,7 +72,7 @@ public class AdminReportsController {
         // Action buttons
         HBox actionBar = createActionBar();
 
-        centerBox.getChildren().addAll(statsRow, chartCard, productsCard, actionBar);
+        centerBox.getChildren().addAll(statsRow, chartsRow, barChartCard, productsCard, actionBar);
         scrollPane.setContent(centerBox);
         root.setCenter(scrollPane);
 
@@ -119,13 +129,19 @@ public class AdminReportsController {
         statsRow.setAlignment(Pos.CENTER);
 
         // Total Revenue Card
-        VBox revenueCard = createStatCard("💰", "Total Revenue", "$0.00", "#667eea");
+        VBox revenueCard = createStatCard("💰", "Total Revenue", "$0.00", "#667eea", "revenue");
 
-        statsRow.getChildren().add(revenueCard);
+        // Total Orders Card
+        VBox ordersCard = createStatCard("📦", "Total Orders", "0", "#28a745", "orders");
+
+        // Total Customers Card
+        VBox customersCard = createStatCard("👥", "Total Customers", "0", "#ffc107", "customers");
+
+        statsRow.getChildren().addAll(revenueCard, ordersCard, customersCard);
         return statsRow;
     }
 
-    private VBox createStatCard(String icon, String title, String value, String color) {
+    private VBox createStatCard(String icon, String title, String value, String color, String type) {
         VBox card = new VBox(10);
         card.setAlignment(Pos.CENTER);
         card.setPadding(new Insets(25));
@@ -140,19 +156,26 @@ public class AdminReportsController {
         Label titleLabel = new Label(title);
         titleLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #6c757d; -fx-font-weight: 600;");
 
-        // Create and store reference to value label
-        totalRevenueLabel = new Label(value);
-        totalRevenueLabel.setStyle("-fx-font-size: 32px; -fx-text-fill: " + color + "; -fx-font-weight: bold;");
+        // Create and store reference to value label based on type
+        Label valueLabel = new Label(value);
+        valueLabel.setStyle("-fx-font-size: 32px; -fx-text-fill: " + color + "; -fx-font-weight: bold;");
 
-        card.getChildren().addAll(iconLabel, titleLabel, totalRevenueLabel);
+        // Store references
+        switch (type) {
+            case "revenue": totalRevenueLabel = valueLabel; break;
+            case "orders": totalOrdersLabel = valueLabel; break;
+            case "customers": totalCustomersLabel = valueLabel; break;
+        }
+
+        card.getChildren().addAll(iconLabel, titleLabel, valueLabel);
         return card;
     }
 
-    private VBox createChartCard() {
+    private VBox createBarChartCard() {
         VBox card = new VBox(15);
         card.setMaxWidth(1000);
         card.setPadding(new Insets(25));
-        card.setStyle("-fx-background-color: gray; -fx-background-radius: 16; " +
+        card.setStyle("-fx-background-color: white; -fx-background-radius: 16; " +
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
 
@@ -194,11 +217,79 @@ public class AdminReportsController {
         return card;
     }
 
+    private VBox createLineChartCard() {
+        VBox card = new VBox(15);
+        card.setMaxWidth(480);
+        card.setPadding(new Insets(25));
+        card.setStyle("-fx-background-color: white; -fx-background-radius: 16; " +
+                "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
+
+        // Header
+        HBox header = new HBox(10);
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        Label iconLabel = new Label("📊");
+        iconLabel.setStyle("-fx-font-size: 24px;");
+
+        Label titleLabel = new Label("Revenue Trend");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+        header.getChildren().addAll(iconLabel, titleLabel);
+
+        // Chart
+        CategoryAxis xAxis = new CategoryAxis();
+        xAxis.setLabel("Date");
+        xAxis.setTickLabelRotation(45);
+
+        NumberAxis yAxis = new NumberAxis();
+        yAxis.setLabel("Revenue ($)");
+
+        revenueLineChart = new LineChart<>(xAxis, yAxis);
+        revenueLineChart.setPrefHeight(300);
+        revenueLineChart.setLegendVisible(true);
+        revenueLineChart.setStyle("-fx-background-color: transparent;");
+        revenueLineChart.setCreateSymbols(true);
+
+        card.getChildren().addAll(header, revenueLineChart);
+        return card;
+    }
+
+    private VBox createPieChartCard() {
+        VBox card = new VBox(15);
+        card.setMaxWidth(480);
+        card.setPadding(new Insets(25));
+        card.setStyle("-fx-background-color: white; -fx-background-radius: 16; " +
+                "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
+
+        // Header
+        HBox header = new HBox(10);
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        Label iconLabel = new Label("🥧");
+        iconLabel.setStyle("-fx-font-size: 24px;");
+
+        Label titleLabel = new Label("Sales by Category");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+        header.getChildren().addAll(iconLabel, titleLabel);
+
+        // Chart
+        categoryPieChart = new PieChart();
+        categoryPieChart.setPrefHeight(300);
+        categoryPieChart.setLegendVisible(true);
+        categoryPieChart.setStyle("-fx-background-color: transparent;");
+
+        card.getChildren().addAll(header, categoryPieChart);
+        return card;
+    }
+
     private VBox createProductsCard() {
         VBox card = new VBox(15);
         card.setMaxWidth(1000);
         card.setPadding(new Insets(25));
-        card.setStyle("-fx-background-color: gray; -fx-background-radius: 16; " +
+        card.setStyle("-fx-background-color: white; -fx-background-radius: 16; " +
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
 
@@ -284,12 +375,36 @@ public class AdminReportsController {
         double total = dao.getTotalRevenue();
         totalRevenueLabel.setText("$" + String.format("%.2f", total));
 
-        // Daily sales chart
+        // Total orders
+        int totalOrders = dao.getTotalOrders();
+        totalOrdersLabel.setText(String.valueOf(totalOrders));
+
+        // Total customers
+        int totalCustomers = dao.getTotalCustomers();
+        totalCustomersLabel.setText(String.valueOf(totalCustomers));
+
+        // Daily sales bar chart
         salesChart.getData().clear();
         XYChart.Series<String, Number> series = new XYChart.Series<>();
         dao.getDailySales().forEach(s -> series.getData().add(new XYChart.Data<>(s.getDate(), s.getRevenue())));
         series.setName("Daily Revenue");
         salesChart.getData().add(series);
+
+        // Revenue line chart
+        revenueLineChart.getData().clear();
+        XYChart.Series<String, Number> lineSeries = new XYChart.Series<>();
+        dao.getDailySales().forEach(s -> lineSeries.getData().add(new XYChart.Data<>(s.getDate(), s.getRevenue())));
+        lineSeries.setName("Revenue Trend");
+        revenueLineChart.getData().add(lineSeries);
+
+        // Category pie chart
+        categoryPieChart.getData().clear();
+        dao.getCategorySales().forEach(cs ->
+            categoryPieChart.getData().add(new PieChart.Data(
+                cs.getCategory() + " ($" + String.format("%.0f", cs.getRevenue()) + ")",
+                cs.getRevenue()
+            ))
+        );
 
         // Top-selling products
         topProductsTable.setItems(FXCollections.observableArrayList(dao.getTopSellingProducts()));
