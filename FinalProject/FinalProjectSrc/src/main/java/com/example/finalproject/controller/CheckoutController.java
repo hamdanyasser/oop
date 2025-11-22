@@ -45,6 +45,9 @@ public class CheckoutController {
     private String appliedGiftCardCode = null;
     private double giftCardBalance = 0; // Store balance, not discount (we recalculate discount dynamically)
 
+    // Checkout button
+    private Button confirmBtn;
+
     private final CartService cartService = CartService.getInstance();
     private final OrderDao orderDao = new OrderDao();
     private final ProductDao productDao = new ProductDao();
@@ -181,7 +184,7 @@ public class CheckoutController {
         buttonBox.setAlignment(Pos.CENTER);
         buttonBox.setPadding(new Insets(20, 0, 0, 0));
 
-        Button confirmBtn = new Button("✅ Confirm & Place Order");
+        confirmBtn = new Button("✅ Confirm & Place Order");
         confirmBtn.setPrefWidth(400);
         confirmBtn.setPrefHeight(50);
         confirmBtn.setStyle("-fx-background-color: linear-gradient(to right, #28a745, #20c997); " +
@@ -235,12 +238,19 @@ public class CheckoutController {
     }
 
     private void onConfirmOrder() {
+        // CRITICAL: Prevent duplicate submissions by disabling button immediately
+        confirmBtn.setDisable(true);
+        String originalText = confirmBtn.getText();
+        confirmBtn.setText("⏳ Processing Order...");
+
         try {
             int userId = JwtService.getUserId(Session.getToken());
             Map<Product, Integer> cartItems = cartService.getItems();
 
             if (cartItems.isEmpty()) {
                 showStyledAlert("Empty Cart", "Your cart is empty!", Alert.AlertType.WARNING);
+                confirmBtn.setDisable(false);
+                confirmBtn.setText(originalText);
                 return;
             }
 
@@ -255,6 +265,8 @@ public class CheckoutController {
                     showStyledAlert("Product Not Found",
                         "Product '" + p.getName() + "' no longer exists!",
                         Alert.AlertType.ERROR);
+                    confirmBtn.setDisable(false);
+                    confirmBtn.setText(originalText);
                     return;
                 }
 
@@ -263,6 +275,8 @@ public class CheckoutController {
                         String.format("Only %d units of '%s' available (you requested %d)",
                             freshProduct.getStock(), p.getName(), requestedQty),
                         Alert.AlertType.WARNING);
+                    confirmBtn.setDisable(false);
+                    confirmBtn.setText(originalText);
                     return;
                 }
             }
@@ -371,6 +385,9 @@ public class CheckoutController {
         } catch (SQLException e) {
             e.printStackTrace();
             ToastNotification.error("Error saving order: " + e.getMessage());
+            // Re-enable button on error so user can retry
+            confirmBtn.setDisable(false);
+            confirmBtn.setText(originalText);
         }
     }
 
