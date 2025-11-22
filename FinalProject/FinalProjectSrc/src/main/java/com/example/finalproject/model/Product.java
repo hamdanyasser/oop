@@ -22,6 +22,9 @@ public class Product {
     private List<String> genres;
     private List<Integer> genreIds;
 
+    // Age rating (ESRB: E, E10+, T, M, AO or PEGI: 3, 7, 12, 16, 18)
+    private String ageRating;
+
     public Product() {
         this.platforms = new ArrayList<>();
         this.platformIds = new ArrayList<>();
@@ -112,6 +115,9 @@ public class Product {
             this.genres.add(genreName);
         }
     }
+
+    public String getAgeRating() { return ageRating; }
+    public void setAgeRating(String ageRating) { this.ageRating = ageRating; }
 
     public double getEffectivePrice() {
         return price * (1 - (discount / 100.0));

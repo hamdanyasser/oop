@@ -41,6 +41,7 @@ public class CustomerHomeController {
     private ComboBox<String> categoryChoice;
     private ComboBox<String> platformChoice;
     private ComboBox<String> genreChoice;
+    private ComboBox<String> ageRatingChoice;
     private List<Platform> allPlatforms;
     private List<Genre> allGenres;
     private List<Product> filteredProducts;
@@ -85,11 +86,16 @@ public class CustomerHomeController {
         categoryChoice.getItems().addAll("All", "Console", "PC", "Accessory", "Game", "Controller");
         categoryChoice.setValue("All");
 
+        // Initialize age rating filter
+        ageRatingChoice.getItems().addAll("All Ratings", "E (Everyone)", "E10+ (Everyone 10+)", "T (Teen)", "M (Mature 17+)", "AO (Adults Only)");
+        ageRatingChoice.setValue("All Ratings");
+
         // Listeners
         searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
         categoryChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
         platformChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
         genreChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        ageRatingChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
 
         return root;
     }
@@ -201,6 +207,14 @@ public class CustomerHomeController {
         genreChoice.setPromptText("All Genres");
         genreChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
 
+        Label ratingIcon = new Label("🔞");
+        ratingIcon.setStyle("-fx-font-size: 18px;");
+
+        ageRatingChoice = new ComboBox<>();
+        ageRatingChoice.setPrefWidth(160);
+        ageRatingChoice.setPromptText("All Ratings");
+        ageRatingChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
+
         Button resetBtn = new Button("↺ Reset");
         resetBtn.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; " +
                 "-fx-background-radius: 8; -fx-padding: 8 15; -fx-font-weight: 600;");
@@ -210,7 +224,7 @@ public class CustomerHomeController {
                 "-fx-background-radius: 8; -fx-padding: 8 15; -fx-font-weight: 600;"));
         resetBtn.setOnAction(e -> onReset());
 
-        filterBar.getChildren().addAll(searchIcon, searchField, filterIcon, categoryChoice, platformIcon, platformChoice, genreIcon, genreChoice, resetBtn);
+        filterBar.getChildren().addAll(searchIcon, searchField, filterIcon, categoryChoice, platformIcon, platformChoice, genreIcon, genreChoice, ratingIcon, ageRatingChoice, resetBtn);
         return filterBar;
     }
 
@@ -261,7 +275,16 @@ public class CustomerHomeController {
         String category = categoryChoice.getValue();
         String platform = platformChoice.getValue();
         String genre = genreChoice.getValue();
+        String ageRating = ageRatingChoice.getValue();
         String sortOption = sortChoice.getValue();
+
+        // Extract rating code from display string (e.g., "M (Mature 17+)" -> "M")
+        String ratingCode = null;
+        if (ageRating != null && !ageRating.equals("All Ratings")) {
+            ratingCode = ageRating.split(" ")[0]; // Get first part (E, E10+, T, M, AO)
+        }
+
+        String finalRatingCode = ratingCode;
 
         // FILTER PRODUCTS
         filteredProducts = allProducts.stream()
@@ -270,6 +293,8 @@ public class CustomerHomeController {
                         p.getPlatforms().contains(platform)))
                 .filter(p -> (genre == null || genre.equals("All Genres") ||
                         p.getGenres().contains(genre)))
+                .filter(p -> (finalRatingCode == null ||
+                        (p.getAgeRating() != null && p.getAgeRating().equals(finalRatingCode))))
                 .filter(p -> p.getName().toLowerCase().contains(keyword) ||
                         p.getCategory().toLowerCase().contains(keyword))
                 .collect(java.util.stream.Collectors.toList());
@@ -303,6 +328,7 @@ public class CustomerHomeController {
         categoryChoice.setValue("All");
         platformChoice.setValue("All Platforms");
         genreChoice.setValue("All Genres");
+        ageRatingChoice.setValue("All Ratings");
         sortChoice.setValue("None");
         applyFilters();
     }
@@ -405,10 +431,24 @@ public class CustomerHomeController {
         nameLabel.setMaxWidth(210);
         nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px; -fx-text-fill: #2c3e50; -fx-text-alignment: center;");
 
-        // Category badge
+        // Category and Age Rating badges
+        HBox badgeBox = new HBox(6);
+        badgeBox.setAlignment(Pos.CENTER);
+
         Label categoryLabel = new Label(p.getCategory());
         categoryLabel.setStyle("-fx-background-color: #e9ecef; -fx-text-fill: #495057; " +
                 "-fx-padding: 4 10; -fx-background-radius: 12; -fx-font-size: 11px;");
+        badgeBox.getChildren().add(categoryLabel);
+
+        // Age rating badge (only for games with ratings)
+        if (p.getAgeRating() != null && !p.getAgeRating().isEmpty()) {
+            Label ratingLabel = new Label(p.getAgeRating());
+            String ratingColor = getRatingColor(p.getAgeRating());
+            ratingLabel.setStyle("-fx-background-color: " + ratingColor + "; -fx-text-fill: white; " +
+                    "-fx-padding: 4 10; -fx-background-radius: 12; -fx-font-size: 11px; -fx-font-weight: bold;");
+            ratingLabel.setTooltip(new Tooltip(getRatingDescription(p.getAgeRating())));
+            badgeBox.getChildren().add(ratingLabel);
+        }
 
         // Platform tags
         FlowPane platformTags = new FlowPane();
@@ -486,7 +526,7 @@ public class CustomerHomeController {
         Label clickHint = new Label("👆 Click to view details");
         clickHint.setStyle("-fx-text-fill: #667eea; -fx-font-size: 12px; -fx-font-style: italic;");
 
-        card.getChildren().addAll(imageContainer, nameLabel, categoryLabel, platformTags, genreTags, priceBox, infoBox, clickHint);
+        card.getChildren().addAll(imageContainer, nameLabel, badgeBox, platformTags, genreTags, priceBox, infoBox, clickHint);
 
         return card;
     }
@@ -505,6 +545,30 @@ public class CustomerHomeController {
             case "Steam Deck" -> "SDK";
             case "Meta Quest" -> "VR";
             default -> platformName.substring(0, Math.min(3, platformName.length())).toUpperCase();
+        };
+    }
+
+    private String getRatingColor(String rating) {
+        // Return color based on ESRB rating
+        return switch (rating) {
+            case "E" -> "#4CAF50"; // Green - Everyone
+            case "E10+" -> "#8BC34A"; // Light Green - Everyone 10+
+            case "T" -> "#FFC107"; // Amber - Teen
+            case "M" -> "#FF5722"; // Red-Orange - Mature
+            case "AO" -> "#D32F2F"; // Dark Red - Adults Only
+            default -> "#9E9E9E"; // Gray - Unknown
+        };
+    }
+
+    private String getRatingDescription(String rating) {
+        // Return full description for tooltip
+        return switch (rating) {
+            case "E" -> "Everyone - Content suitable for all ages";
+            case "E10+" -> "Everyone 10+ - Content suitable for ages 10 and up";
+            case "T" -> "Teen - Content suitable for ages 13 and up";
+            case "M" -> "Mature 17+ - Content suitable for ages 17 and up";
+            case "AO" -> "Adults Only 18+ - Content suitable only for adults";
+            default -> "Rating: " + rating;
         };
     }
 

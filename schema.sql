@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS products (
   price DOUBLE NOT NULL,
   description TEXT,
   imagePath VARCHAR(255),
-  stock INT DEFAULT 0
+  stock INT DEFAULT 0,
+  age_rating VARCHAR(10) DEFAULT NULL COMMENT 'ESRB: E, E10+, T, M, AO or PEGI: 3, 7, 12, 16, 18'
 );
 
 -- ========================================
@@ -236,41 +237,41 @@ INSERT IGNORE INTO genres (name, description, icon_path) VALUES
 ('Survival', 'Resource management and survival games', 'icons/survival.png');
 
 -- Sample Products
-INSERT INTO products (name, category, price, description, imagePath, stock) VALUES
+INSERT INTO products (name, category, price, description, imagePath, stock, age_rating) VALUES
 -- 🎮 Consoles
-('PlayStation 5', 'Console', 499.99, 'Next-gen Sony console with ultra-fast SSD and 4K gaming.', 'uploads/ps5.jpg', 25),
-('Xbox Series X', 'Console', 479.99, 'Powerful Microsoft console with 1TB SSD and HDR support.', 'uploads/xbox_series_x.jpg', 18),
-('Nintendo Switch OLED', 'Console', 349.99, 'Hybrid handheld console with vibrant OLED display.', 'uploads/switch_oled.jpg', 20),
-('Steam Deck', 'Console', 399.99, 'Portable gaming PC powered by SteamOS.', 'uploads/steam_deck.jpg', 15),
-('PlayStation 4 Slim', 'Console', 299.99, 'Reliable 1080p gaming console with 500GB HDD.', 'uploads/ps4_slim.jpg', 12),
+('PlayStation 5', 'Console', 499.99, 'Next-gen Sony console with ultra-fast SSD and 4K gaming.', 'uploads/ps5.jpg', 25, NULL),
+('Xbox Series X', 'Console', 479.99, 'Powerful Microsoft console with 1TB SSD and HDR support.', 'uploads/xbox_series_x.jpg', 18, NULL),
+('Nintendo Switch OLED', 'Console', 349.99, 'Hybrid handheld console with vibrant OLED display.', 'uploads/switch_oled.jpg', 20, NULL),
+('Steam Deck', 'Console', 399.99, 'Portable gaming PC powered by SteamOS.', 'uploads/steam_deck.jpg', 15, NULL),
+('PlayStation 4 Slim', 'Console', 299.99, 'Reliable 1080p gaming console with 500GB HDD.', 'uploads/ps4_slim.jpg', 12, NULL),
 
 -- 💻 PC Gear
-('Gaming PC Tower RTX4070', 'PC', 1599.00, 'High-end gaming rig with RTX 4070 and Ryzen 7 CPU.', 'uploads/gaming_pc.jpg', 8),
-('Alienware Aurora R16', 'PC', 2299.00, 'Premium Alienware gaming desktop with liquid cooling.', 'uploads/alienware_r16.jpg', 6),
-('Asus ROG Strix Laptop', 'PC', 1299.00, '17-inch gaming laptop with 144Hz screen.', 'uploads/asus_rog.jpg', 10),
-('Logitech G Pro Keyboard', 'Accessory', 149.99, 'Mechanical keyboard with RGB lighting.', 'uploads/logitech_gpro_keyboard.jpg', 40),
-('Razer DeathAdder Mouse', 'Accessory', 59.99, 'Ergonomic RGB mouse for FPS gamers.', 'uploads/razer_mouse.jpg', 50),
+('Gaming PC Tower RTX4070', 'PC', 1599.00, 'High-end gaming rig with RTX 4070 and Ryzen 7 CPU.', 'uploads/gaming_pc.jpg', 8, NULL),
+('Alienware Aurora R16', 'PC', 2299.00, 'Premium Alienware gaming desktop with liquid cooling.', 'uploads/alienware_r16.jpg', 6, NULL),
+('Asus ROG Strix Laptop', 'PC', 1299.00, '17-inch gaming laptop with 144Hz screen.', 'uploads/asus_rog.jpg', 10, NULL),
+('Logitech G Pro Keyboard', 'Accessory', 149.99, 'Mechanical keyboard with RGB lighting.', 'uploads/logitech_gpro_keyboard.jpg', 40, NULL),
+('Razer DeathAdder Mouse', 'Accessory', 59.99, 'Ergonomic RGB mouse for FPS gamers.', 'uploads/razer_mouse.jpg', 50, NULL),
 
 -- 🎧 Accessories
-('HyperX Cloud II Headset', 'Accessory', 99.99, 'Comfortable surround sound gaming headset.', 'uploads/hyperx_cloud_ii.jpg', 35),
-('Elgato Stream Deck', 'Accessory', 149.99, 'Customizable streaming control panel.', 'uploads/elgato_streamdeck.jpg', 15),
-('Samsung Odyssey G9', 'Accessory', 1299.00, 'Ultra-wide curved 49" QLED gaming monitor.', 'uploads/odyssey_g9.jpg', 7),
-('Corsair RM850 PSU', 'Accessory', 139.00, '850W modular power supply for gaming PCs.', 'uploads/corsair_rm850.jpg', 20),
-('ASUS TUF Motherboard', 'Accessory', 179.00, 'Durable gaming motherboard with RGB lighting.', 'uploads/tuf_mobo.jpg', 12),
+('HyperX Cloud II Headset', 'Accessory', 99.99, 'Comfortable surround sound gaming headset.', 'uploads/hyperx_cloud_ii.jpg', 35, NULL),
+('Elgato Stream Deck', 'Accessory', 149.99, 'Customizable streaming control panel.', 'uploads/elgato_streamdeck.jpg', 15, NULL),
+('Samsung Odyssey G9', 'Accessory', 1299.00, 'Ultra-wide curved 49" QLED gaming monitor.', 'uploads/odyssey_g9.jpg', 7, NULL),
+('Corsair RM850 PSU', 'Accessory', 139.00, '850W modular power supply for gaming PCs.', 'uploads/corsair_rm850.jpg', 20, NULL),
+('ASUS TUF Motherboard', 'Accessory', 179.00, 'Durable gaming motherboard with RGB lighting.', 'uploads/tuf_mobo.jpg', 12, NULL),
 
--- 🕹 Games
-('Call of Duty: MW3', 'Game', 69.99, 'The iconic shooter franchise returns with intense multiplayer.', 'uploads/mw3.jpg', 100),
-('EA Sports FC 25', 'Game', 59.99, 'Next-gen football simulation with dynamic AI.', 'uploads/fc25.jpg', 120),
-('Spider-Man 2', 'Game', 69.99, 'Open-world superhero adventure on PS5.', 'uploads/spiderman2.jpg', 90),
-('Elden Ring', 'Game', 59.99, 'Open world action RPG developed by FromSoftware.', 'uploads/elden_ring.jpg', 70),
-('Cyberpunk 2077', 'Game', 49.99, 'Futuristic RPG with ray tracing and mod support.', 'uploads/cyberpunk2077.jpg', 85),
+-- 🕹 Games (with ESRB ratings)
+('Call of Duty: MW3', 'Game', 69.99, 'The iconic shooter franchise returns with intense multiplayer.', 'uploads/mw3.jpg', 100, 'M'),
+('EA Sports FC 25', 'Game', 59.99, 'Next-gen football simulation with dynamic AI.', 'uploads/fc25.jpg', 120, 'E'),
+('Spider-Man 2', 'Game', 69.99, 'Open-world superhero adventure on PS5.', 'uploads/spiderman2.jpg', 90, 'T'),
+('Elden Ring', 'Game', 59.99, 'Open world action RPG developed by FromSoftware.', 'uploads/elden_ring.jpg', 70, 'M'),
+('Cyberpunk 2077', 'Game', 49.99, 'Futuristic RPG with ray tracing and mod support.', 'uploads/cyberpunk2077.jpg', 85, 'M'),
 
 -- 🎮 Controllers
-('DualSense PS5 Controller', 'Controller', 69.99, 'Haptic feedback and adaptive triggers.', 'uploads/dualsense.jpg', 80),
-('Xbox Elite Series 2', 'Controller', 179.99, 'High-end customizable Xbox controller.', 'uploads/xbox_elite2.jpg', 60),
-('Nintendo Pro Controller', 'Controller', 69.99, 'Wireless controller for Switch with long battery life.', 'uploads/nintendo_pro.jpg', 45),
-('Razer Wolverine V2', 'Controller', 99.99, 'Wired controller with RGB lighting and remappable buttons.', 'uploads/razer_wolverine.jpg', 50),
-('8BitDo SN30 Pro', 'Controller', 49.99, 'Retro wireless controller compatible with PC & Switch.', 'uploads/8bitdo_sn30.jpg', 40)
+('DualSense PS5 Controller', 'Controller', 69.99, 'Haptic feedback and adaptive triggers.', 'uploads/dualsense.jpg', 80, NULL),
+('Xbox Elite Series 2', 'Controller', 179.99, 'High-end customizable Xbox controller.', 'uploads/xbox_elite2.jpg', 60, NULL),
+('Nintendo Pro Controller', 'Controller', 69.99, 'Wireless controller for Switch with long battery life.', 'uploads/nintendo_pro.jpg', 45, NULL),
+('Razer Wolverine V2', 'Controller', 99.99, 'Wired controller with RGB lighting and remappable buttons.', 'uploads/razer_wolverine.jpg', 50, NULL),
+('8BitDo SN30 Pro', 'Controller', 49.99, 'Retro wireless controller compatible with PC & Switch.', 'uploads/8bitdo_sn30.jpg', 40, NULL)
 ON DUPLICATE KEY UPDATE id=id;
 
 -- Product-Platform Mappings
@@ -414,5 +415,5 @@ ON DUPLICATE KEY UPDATE id=id;
 -- ========================================
 -- END OF SCHEMA
 -- Last Updated: 2025-11-22
--- Version: 1.2 (Added Genre/Tag System)
+-- Version: 1.3 (Added Age Rating System)
 -- ========================================
