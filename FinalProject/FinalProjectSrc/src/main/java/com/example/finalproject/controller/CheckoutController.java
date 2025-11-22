@@ -31,6 +31,11 @@ public class CheckoutController {
 
     private Label totalLabel;
     private VBox itemsList;
+    private CheckBox usePointsCheckbox;
+    private Slider pointsSlider;
+    private Label pointsDiscountLabel;
+    private int pointsToRedeem = 0;
+    private double originalTotal = 0;
 
     private final CartService cartService = CartService.getInstance();
     private final OrderDao orderDao = new OrderDao();
@@ -136,7 +141,14 @@ public class CheckoutController {
         Separator separator = new Separator();
         separator.setPadding(new Insets(10, 0, 10, 0));
 
+        // Loyalty points redemption section
+        VBox redemptionSection = createRedemptionSection();
+
+        Separator separator2 = new Separator();
+        separator2.setPadding(new Insets(10, 0, 10, 0));
+
         // Total section
+        originalTotal = cartService.getTotal();
         HBox totalBox = new HBox();
         totalBox.setAlignment(Pos.CENTER_RIGHT);
         totalBox.setPadding(new Insets(15, 0, 0, 0));
@@ -144,7 +156,7 @@ public class CheckoutController {
         Label totalTextLabel = new Label("Total Amount:");
         totalTextLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
-        totalLabel = new Label(String.format("$%.2f", cartService.getTotal()));
+        totalLabel = new Label(String.format("$%.2f", originalTotal));
         totalLabel.setStyle("-fx-font-size: 28px; -fx-text-fill: #667eea; -fx-font-weight: bold; -fx-padding: 0 0 0 15;");
 
         totalBox.getChildren().addAll(totalTextLabel, totalLabel);
@@ -178,7 +190,7 @@ public class CheckoutController {
 
         buttonBox.getChildren().addAll(confirmBtn, backBtn);
 
-        card.getChildren().addAll(header, itemsList, separator, totalBox, buttonBox);
+        card.getChildren().addAll(header, itemsList, separator, redemptionSection, separator2, totalBox, buttonBox);
         return card;
     }
 
@@ -225,12 +237,26 @@ public class CheckoutController {
                 orderItems.add(new OrderItem(0, 0, p.getId(), qty, unit));
             }
 
+            // Calculate final total with points redemption
+            double finalTotal = originalTotal;
+            if (pointsToRedeem > 0) {
+                double discount = loyaltyService.calculateDiscount(pointsToRedeem);
+                finalTotal = Math.max(0, originalTotal - discount);
+            }
+
             Order order = new Order();
             order.setUserId(userId);
             order.setItems(orderItems);
-            order.setTotal(cartService.getTotal());
+            order.setTotal(finalTotal);
             order.setStatus("PENDING");
             orderDao.saveOrder(order);
+
+            // Redeem points if used
+            if (pointsToRedeem > 0) {
+                loyaltyService.redeemPoints(userId, pointsToRedeem, order.getId());
+                System.out.println("✅ Redeemed " + pointsToRedeem + " loyalty points for $" +
+                    String.format("%.2f", loyaltyService.calculateDiscount(pointsToRedeem)) + " discount");
+            }
 
             // Generate and send digital codes for gift cards and digital products
             boolean hasDigitalItems = false;
@@ -281,6 +307,72 @@ public class CheckoutController {
 
     private void onBack() {
         HelloApplication.setRoot(new CartController());
+    }
+
+    private VBox createRedemptionSection() {
+        VBox section = new VBox(15);
+        section.setPadding(new Insets(20));
+        section.setStyle("-fx-background-color: #f0f3ff; -fx-background-radius: 10; " +
+                "-fx-border-color: #667eea; -fx-border-width: 1; -fx-border-radius: 10;");
+
+        // Get user's points
+        int userId = JwtService.getUserId(Session.getToken());
+        int availablePoints = loyaltyService.getPoints(userId);
+        double maxDiscount = loyaltyService.calculateDiscount(availablePoints);
+
+        // Header
+        HBox header = new HBox(10);
+        header.setAlignment(Pos.CENTER_LEFT);
+        Label icon = new Label("💎");
+        icon.setStyle("-fx-font-size: 20px;");
+        Label title = new Label("Use Loyalty Points");
+        title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #667eea;");
+        header.getChildren().addAll(icon, title);
+
+        // Points balance display
+        Label balanceLabel = new Label(String.format("Available: %,d points (up to $%.2f discount)", availablePoints, maxDiscount));
+        balanceLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #6c757d;");
+
+        // Checkbox to enable redemption
+        usePointsCheckbox = new CheckBox("I want to use my points for this order");
+        usePointsCheckbox.setStyle("-fx-font-size: 14px; -fx-text-fill: #2c3e50;");
+
+        // Slider for point selection
+        pointsSlider = new Slider(0, availablePoints, 0);
+        pointsSlider.setBlockIncrement(100);
+        pointsSlider.setMajorTickUnit(Math.max(500, availablePoints / 4));
+        pointsSlider.setShowTickMarks(true);
+        pointsSlider.setShowTickLabels(true);
+        pointsSlider.setDisable(true);
+
+        // Discount label
+        pointsDiscountLabel = new Label("Discount: $0.00");
+        pointsDiscountLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #28a745;");
+
+        // Event listeners
+        usePointsCheckbox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            pointsSlider.setDisable(!newVal);
+            if (!newVal) {
+                pointsSlider.setValue(0);
+                updateTotal();
+            }
+        });
+
+        pointsSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
+            pointsToRedeem = newVal.intValue();
+            double discount = loyaltyService.calculateDiscount(pointsToRedeem);
+            pointsDiscountLabel.setText(String.format("Discount: -$%.2f", discount));
+            updateTotal();
+        });
+
+        section.getChildren().addAll(header, balanceLabel, usePointsCheckbox, pointsSlider, pointsDiscountLabel);
+        return section;
+    }
+
+    private void updateTotal() {
+        double discount = loyaltyService.calculateDiscount(pointsToRedeem);
+        double finalTotal = Math.max(0, originalTotal - discount);
+        totalLabel.setText(String.format("$%.2f", finalTotal));
     }
 
     private void showStyledAlert(String title, String message, Alert.AlertType type) {
