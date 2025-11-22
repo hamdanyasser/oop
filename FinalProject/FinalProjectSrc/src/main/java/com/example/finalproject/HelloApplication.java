@@ -1,6 +1,7 @@
 package com.example.finalproject;
 
 import com.example.finalproject.controller.LoginController;
+import com.example.finalproject.service.ThemeManager;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -55,7 +56,8 @@ public class HelloApplication extends Application {
 
             if (root != null) {
                 Scene scene = new Scene(root);
-                scene.getStylesheets().add(HelloApplication.class.getResource("view/style.css").toExternalForm());
+                // Apply theme using ThemeManager (automatically loads saved preference)
+                ThemeManager.getInstance().setScene(scene);
                 mainStage.setScene(scene);
                 mainStage.centerOnScreen();
             }

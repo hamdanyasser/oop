@@ -5,6 +5,7 @@ import com.example.finalproject.dao.DBConnection;
 import com.example.finalproject.security.AuthGuard;
 import com.example.finalproject.security.JwtService;
 import com.example.finalproject.security.Session;
+import com.example.finalproject.service.ThemeManager;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -52,7 +53,10 @@ public class ProfileSettingsController {
         // Security card
         VBox securityCard = createSecurityCard();
 
-        centerBox.getChildren().addAll(headerBox, profileCard, securityCard);
+        // Preferences card
+        VBox preferencesCard = createPreferencesCard();
+
+        centerBox.getChildren().addAll(headerBox, profileCard, securityCard, preferencesCard);
         scrollPane.setContent(centerBox);
         root.setCenter(scrollPane);
 
@@ -219,6 +223,80 @@ public class ProfileSettingsController {
         card.getChildren().addAll(header, oldPassBox, newPassBox, hintLabel, buttonBox, msgLabel);
 
         return card;
+    }
+
+    private VBox createPreferencesCard() {
+        VBox card = new VBox(20);
+        card.setMaxWidth(600);
+        card.setPadding(new Insets(30));
+        card.setStyle("-fx-background-color: white; -fx-background-radius: 16; " +
+                "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
+
+        // Section header
+        HBox header = new HBox(10);
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        Label iconLabel = new Label("⚙️");
+        iconLabel.setStyle("-fx-font-size: 24px;");
+
+        Label sectionLabel = new Label("Appearance Preferences");
+        sectionLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+        header.getChildren().addAll(iconLabel, sectionLabel);
+
+        // Dark mode toggle
+        HBox themeRow = new HBox(20);
+        themeRow.setAlignment(Pos.CENTER_LEFT);
+        themeRow.setPadding(new Insets(10));
+        themeRow.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 10; " +
+                "-fx-border-color: #e1e4e8; -fx-border-radius: 10; -fx-border-width: 1;");
+
+        VBox themeInfo = new VBox(5);
+        Label themeLabel = new Label("🌙 Dark Mode");
+        themeLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+        Label themeDesc = new Label("Toggle between light and dark theme");
+        themeDesc.setStyle("-fx-font-size: 12px; -fx-text-fill: #6c757d;");
+
+        themeInfo.getChildren().addAll(themeLabel, themeDesc);
+        HBox.setHgrow(themeInfo, Priority.ALWAYS);
+
+        // Toggle button
+        ThemeManager themeManager = ThemeManager.getInstance();
+        Button toggleBtn = new Button(themeManager.isDarkMode() ? "🌞 Light" : "🌙 Dark");
+        toggleBtn.setPrefWidth(100);
+        toggleBtn.setPrefHeight(40);
+        updateToggleButtonStyle(toggleBtn, themeManager.isDarkMode());
+
+        toggleBtn.setOnAction(e -> {
+            themeManager.toggleTheme();
+            toggleBtn.setText(themeManager.isDarkMode() ? "🌞 Light" : "🌙 Dark");
+            updateToggleButtonStyle(toggleBtn, themeManager.isDarkMode());
+        });
+
+        themeRow.getChildren().addAll(themeInfo, toggleBtn);
+
+        // Info message
+        Label infoLabel = new Label("💡 Theme preference is saved automatically and will persist across sessions");
+        infoLabel.setWrapText(true);
+        infoLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #6c757d; -fx-padding: 0 0 0 10;");
+
+        card.getChildren().addAll(header, themeRow, infoLabel);
+
+        return card;
+    }
+
+    private void updateToggleButtonStyle(Button btn, boolean isDarkMode) {
+        if (isDarkMode) {
+            btn.setStyle("-fx-background-color: #2c3e50; -fx-text-fill: white; " +
+                    "-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 10; " +
+                    "-fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(44,62,80,0.4), 8, 0, 0, 2);");
+        } else {
+            btn.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; " +
+                    "-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 10; " +
+                    "-fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(243,156,18,0.4), 8, 0, 0, 2);");
+        }
     }
 
     private VBox createInputField(String labelText, String id) {
