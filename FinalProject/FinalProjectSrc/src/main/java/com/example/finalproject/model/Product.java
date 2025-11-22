@@ -18,9 +18,15 @@ public class Product {
     private List<String> platforms;
     private List<Integer> platformIds;
 
+    // Genre tags
+    private List<String> genres;
+    private List<Integer> genreIds;
+
     public Product() {
         this.platforms = new ArrayList<>();
         this.platformIds = new ArrayList<>();
+        this.genres = new ArrayList<>();
+        this.genreIds = new ArrayList<>();
     }
 
     public Product(int id, String name, String category, double price, String description, String imagePath, int stock) {
@@ -33,6 +39,8 @@ public class Product {
         this.stock = stock;
         this.platforms = new ArrayList<>();
         this.platformIds = new ArrayList<>();
+        this.genres = new ArrayList<>();
+        this.genreIds = new ArrayList<>();
     }
 
     // --- Getters & Setters ---
@@ -80,6 +88,28 @@ public class Product {
         if (!this.platformIds.contains(platformId)) {
             this.platformIds.add(platformId);
             this.platforms.add(platformName);
+        }
+    }
+
+    public List<String> getGenres() { return genres; }
+    public void setGenres(List<String> genres) { this.genres = genres; }
+
+    public List<Integer> getGenreIds() { return genreIds; }
+    public void setGenreIds(List<Integer> genreIds) { this.genreIds = genreIds; }
+
+    public String getGenresAsString() {
+        if (genres == null || genres.isEmpty()) {
+            return "N/A";
+        }
+        return String.join(", ", genres);
+    }
+
+    public void addGenre(int genreId, String genreName) {
+        if (this.genreIds == null) this.genreIds = new ArrayList<>();
+        if (this.genres == null) this.genres = new ArrayList<>();
+        if (!this.genreIds.contains(genreId)) {
+            this.genreIds.add(genreId);
+            this.genres.add(genreName);
         }
     }
 

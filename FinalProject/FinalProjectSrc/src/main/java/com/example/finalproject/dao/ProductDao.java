@@ -2,6 +2,7 @@ package com.example.finalproject.dao;
 
 import com.example.finalproject.model.Product;
 import com.example.finalproject.model.Platform;
+import com.example.finalproject.model.Genre;
 import java.sql.*;
 import java.util.*;
 
@@ -36,6 +37,7 @@ public class ProductDao {
                 );
                 p.setDiscount(rs.getDouble("discount"));
                 loadPlatformsForProduct(p, conn);
+                loadGenresForProduct(p, conn);
                 list.add(p);
             }
 
@@ -87,6 +89,59 @@ public class ProductDao {
                 );
                 p.setDiscount(rs.getDouble("discount"));
                 loadPlatformsForProduct(p, conn);
+                loadGenresForProduct(p, conn);
+                list.add(p);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    /**
+     * Get products filtered by genre
+     * @param genreId The genre ID to filter by (null for all products)
+     * @return List of products in the specified genre
+     */
+    public List<Product> getProductsByGenre(Integer genreId) {
+        if (genreId == null) {
+            return getAllProducts();
+        }
+
+        List<Product> list = new ArrayList<>();
+
+        String sql = """
+        SELECT DISTINCT p.*,
+               COALESCE(pr.discount, 0) AS discount
+        FROM products p
+        INNER JOIN product_genres pg ON p.id = pg.product_id
+        LEFT JOIN promotions pr
+        ON (pr.product_id = p.id OR pr.category = p.category)
+        AND CURDATE() BETWEEN pr.start_date AND pr.end_date
+        WHERE pg.genre_id = ?
+        ORDER BY p.id DESC
+        """;
+
+        try (Connection conn = DBConnection.getInstance();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, genreId);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Product p = new Product(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("category"),
+                        rs.getDouble("price"),
+                        rs.getString("description"),
+                        rs.getString("imagePath"),
+                        rs.getInt("stock")
+                );
+                p.setDiscount(rs.getDouble("discount"));
+                loadPlatformsForProduct(p, conn);
+                loadGenresForProduct(p, conn);
                 list.add(p);
             }
 
@@ -149,6 +204,57 @@ public class ProductDao {
         return platforms;
     }
 
+    /**
+     * Load genres for a product
+     */
+    private void loadGenresForProduct(Product product, Connection conn) {
+        String sql = """
+            SELECT g.id, g.name
+            FROM genres g
+            INNER JOIN product_genres pg ON g.id = pg.genre_id
+            WHERE pg.product_id = ?
+            ORDER BY g.name
+            """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, product.getId());
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                product.addGenre(rs.getInt("id"), rs.getString("name"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Get all available genres
+     */
+    public List<Genre> getAllGenres() {
+        List<Genre> genres = new ArrayList<>();
+        String sql = "SELECT * FROM genres ORDER BY name";
+
+        try (Connection conn = DBConnection.getInstance();
+             Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+
+            while (rs.next()) {
+                Genre genre = new Genre(
+                    rs.getInt("id"),
+                    rs.getString("name"),
+                    rs.getString("description"),
+                    rs.getString("icon_path")
+                );
+                genres.add(genre);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return genres;
+    }
+
 
     public Optional<Product> getById(int id) {
         String sql = "SELECT * FROM products WHERE id=?";
@@ -159,6 +265,7 @@ public class ProductDao {
             if (rs.next()) {
                 Product p = map(rs);
                 loadPlatformsForProduct(p, conn);
+                loadGenresForProduct(p, conn);
                 return Optional.of(p);
             }
         } catch (Exception e) {

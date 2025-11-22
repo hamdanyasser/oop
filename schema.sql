@@ -58,7 +58,31 @@ CREATE TABLE IF NOT EXISTS product_platforms (
 );
 
 -- ========================================
--- 5. ORDERS TABLE
+-- 5. GENRES TABLE
+-- Game genres (FPS, RPG, Sports, Racing, etc.)
+-- ========================================
+CREATE TABLE IF NOT EXISTS genres (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) UNIQUE NOT NULL,
+  description TEXT,
+  icon_path VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ========================================
+-- 6. PRODUCT_GENRES TABLE
+-- Many-to-Many relationship: Products can have multiple genres
+-- ========================================
+CREATE TABLE IF NOT EXISTS product_genres (
+  product_id INT NOT NULL,
+  genre_id INT NOT NULL,
+  PRIMARY KEY (product_id, genre_id),
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+  FOREIGN KEY (genre_id) REFERENCES genres(id) ON DELETE CASCADE
+);
+
+-- ========================================
+-- 7. ORDERS TABLE
 -- ========================================
 CREATE TABLE IF NOT EXISTS orders (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -70,7 +94,7 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 
 -- ========================================
--- 6. ORDER_ITEMS TABLE
+-- 8. ORDER_ITEMS TABLE
 -- ========================================
 CREATE TABLE IF NOT EXISTS order_items (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -83,7 +107,7 @@ CREATE TABLE IF NOT EXISTS order_items (
 );
 
 -- ========================================
--- 7. REVIEWS TABLE
+-- 9. REVIEWS TABLE
 -- ========================================
 CREATE TABLE IF NOT EXISTS review (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -97,7 +121,7 @@ CREATE TABLE IF NOT EXISTS review (
 );
 
 -- ========================================
--- 8. PROMOTIONS TABLE
+-- 10. PROMOTIONS TABLE
 -- ========================================
 CREATE TABLE IF NOT EXISTS promotions (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -110,7 +134,7 @@ CREATE TABLE IF NOT EXISTS promotions (
 );
 
 -- ========================================
--- 9. WISHLIST TABLE
+-- 11. WISHLIST TABLE
 -- ========================================
 CREATE TABLE IF NOT EXISTS wishlist (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -123,11 +147,13 @@ CREATE TABLE IF NOT EXISTS wishlist (
 );
 
 -- ========================================
--- 10. INDEXES FOR PERFORMANCE
+-- 12. INDEXES FOR PERFORMANCE
 -- ========================================
 CREATE INDEX IF NOT EXISTS idx_product_platforms_product ON product_platforms(product_id);
 CREATE INDEX IF NOT EXISTS idx_product_platforms_platform ON product_platforms(platform_id);
 CREATE INDEX IF NOT EXISTS idx_platforms_type ON platforms(type);
+CREATE INDEX IF NOT EXISTS idx_product_genres_product ON product_genres(product_id);
+CREATE INDEX IF NOT EXISTS idx_product_genres_genre ON product_genres(genre_id);
 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
 CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
@@ -135,16 +161,38 @@ CREATE INDEX IF NOT EXISTS idx_reviews_product ON review(product_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_user ON review(user_id);
 
 -- ========================================
--- 11. VIEWS
+-- 13. VIEWS
 -- ========================================
 CREATE OR REPLACE VIEW v_products_with_platforms AS
 SELECT
   p.*,
-  GROUP_CONCAT(pl.name ORDER BY pl.name SEPARATOR ', ') AS platform_names,
-  GROUP_CONCAT(pl.id ORDER BY pl.name SEPARATOR ',') AS platform_ids
+  GROUP_CONCAT(DISTINCT pl.name ORDER BY pl.name SEPARATOR ', ') AS platform_names,
+  GROUP_CONCAT(DISTINCT pl.id ORDER BY pl.name SEPARATOR ',') AS platform_ids
 FROM products p
 LEFT JOIN product_platforms pp ON p.id = pp.product_id
 LEFT JOIN platforms pl ON pp.platform_id = pl.id
+GROUP BY p.id;
+
+CREATE OR REPLACE VIEW v_products_with_genres AS
+SELECT
+  p.*,
+  GROUP_CONCAT(DISTINCT g.name ORDER BY g.name SEPARATOR ', ') AS genre_names,
+  GROUP_CONCAT(DISTINCT g.id ORDER BY g.name SEPARATOR ',') AS genre_ids
+FROM products p
+LEFT JOIN product_genres pg ON p.id = pg.product_id
+LEFT JOIN genres g ON pg.genre_id = g.id
+GROUP BY p.id;
+
+CREATE OR REPLACE VIEW v_products_complete AS
+SELECT
+  p.*,
+  GROUP_CONCAT(DISTINCT pl.name ORDER BY pl.name SEPARATOR ', ') AS platform_names,
+  GROUP_CONCAT(DISTINCT g.name ORDER BY g.name SEPARATOR ', ') AS genre_names
+FROM products p
+LEFT JOIN product_platforms pp ON p.id = pp.product_id
+LEFT JOIN platforms pl ON pp.platform_id = pl.id
+LEFT JOIN product_genres pg ON p.id = pg.product_id
+LEFT JOIN genres g ON pg.genre_id = g.id
 GROUP BY p.id;
 
 -- ========================================
@@ -168,6 +216,24 @@ INSERT IGNORE INTO platforms (name, type, manufacturer, icon_path) VALUES
 ('PC (Epic Games)', 'PC', 'Epic', 'icons/epic.png'),
 ('Steam Deck', 'HANDHELD', 'Valve', 'icons/steamdeck.png'),
 ('Meta Quest', 'CONSOLE', 'Meta', 'icons/quest.png');
+
+-- Game Genres
+INSERT IGNORE INTO genres (name, description, icon_path) VALUES
+('Action', 'Fast-paced games focused on physical challenges', 'icons/action.png'),
+('Adventure', 'Story-driven exploration games', 'icons/adventure.png'),
+('RPG', 'Role-playing games with character progression', 'icons/rpg.png'),
+('FPS', 'First-person shooter games', 'icons/fps.png'),
+('Sports', 'Athletic and competitive sports games', 'icons/sports.png'),
+('Racing', 'Vehicle racing and driving games', 'icons/racing.png'),
+('Strategy', 'Tactical and strategic gameplay', 'icons/strategy.png'),
+('Simulation', 'Real-world simulation games', 'icons/simulation.png'),
+('Fighting', 'One-on-one combat games', 'icons/fighting.png'),
+('Horror', 'Scary and survival horror games', 'icons/horror.png'),
+('Open World', 'Large explorable game worlds', 'icons/openworld.png'),
+('Multiplayer', 'Online multiplayer focused games', 'icons/multiplayer.png'),
+('Platformer', 'Jump and run platforming games', 'icons/platformer.png'),
+('Puzzle', 'Logic and problem-solving games', 'icons/puzzle.png'),
+('Survival', 'Resource management and survival games', 'icons/survival.png');
 
 -- Sample Products
 INSERT INTO products (name, category, price, description, imagePath, stock) VALUES
@@ -294,6 +360,50 @@ WHERE p.category = 'Console'
   )
 ON DUPLICATE KEY UPDATE product_id=product_id;
 
+-- ========================================
+-- Product-Genre Mappings
+-- ========================================
+
+-- Call of Duty: MW3 - FPS, Action, Multiplayer
+INSERT INTO product_genres (product_id, genre_id)
+SELECT p.id, g.id
+FROM products p, genres g
+WHERE p.name = 'Call of Duty: MW3'
+  AND g.name IN ('FPS', 'Action', 'Multiplayer')
+ON DUPLICATE KEY UPDATE product_id=product_id;
+
+-- EA Sports FC 25 - Sports, Simulation, Multiplayer
+INSERT INTO product_genres (product_id, genre_id)
+SELECT p.id, g.id
+FROM products p, genres g
+WHERE p.name = 'EA Sports FC 25'
+  AND g.name IN ('Sports', 'Simulation', 'Multiplayer')
+ON DUPLICATE KEY UPDATE product_id=product_id;
+
+-- Spider-Man 2 - Action, Adventure, Open World
+INSERT INTO product_genres (product_id, genre_id)
+SELECT p.id, g.id
+FROM products p, genres g
+WHERE p.name = 'Spider-Man 2'
+  AND g.name IN ('Action', 'Adventure', 'Open World')
+ON DUPLICATE KEY UPDATE product_id=product_id;
+
+-- Elden Ring - RPG, Action, Open World
+INSERT INTO product_genres (product_id, genre_id)
+SELECT p.id, g.id
+FROM products p, genres g
+WHERE p.name = 'Elden Ring'
+  AND g.name IN ('RPG', 'Action', 'Open World')
+ON DUPLICATE KEY UPDATE product_id=product_id;
+
+-- Cyberpunk 2077 - RPG, Action, Open World, FPS
+INSERT INTO product_genres (product_id, genre_id)
+SELECT p.id, g.id
+FROM products p, genres g
+WHERE p.name = 'Cyberpunk 2077'
+  AND g.name IN ('RPG', 'Action', 'Open World', 'FPS')
+ON DUPLICATE KEY UPDATE product_id=product_id;
+
 -- Sample Orders
 INSERT INTO orders (user_id, total, status, created_at) VALUES
 (2, 129.99, 'DELIVERED', '2024-11-10 14:20:00'),
@@ -304,5 +414,5 @@ ON DUPLICATE KEY UPDATE id=id;
 -- ========================================
 -- END OF SCHEMA
 -- Last Updated: 2025-11-22
--- Version: 1.1 (Added Platform Compatibility)
+-- Version: 1.2 (Added Genre/Tag System)
 -- ========================================

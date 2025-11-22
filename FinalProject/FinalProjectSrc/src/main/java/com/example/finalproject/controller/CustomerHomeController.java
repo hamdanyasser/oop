@@ -5,6 +5,7 @@ import com.example.finalproject.dao.ProductDao;
 import com.example.finalproject.dao.WishlistDao;
 import com.example.finalproject.model.Product;
 import com.example.finalproject.model.Platform;
+import com.example.finalproject.model.Genre;
 import com.example.finalproject.model.ShoppingCart;
 import com.example.finalproject.security.AuthGuard;
 import com.example.finalproject.security.Session;
@@ -39,7 +40,9 @@ public class CustomerHomeController {
     private TextField searchField;
     private ComboBox<String> categoryChoice;
     private ComboBox<String> platformChoice;
+    private ComboBox<String> genreChoice;
     private List<Platform> allPlatforms;
+    private List<Genre> allGenres;
     private List<Product> filteredProducts;
     private ComboBox<String> sortChoice;
 
@@ -78,6 +81,7 @@ public class CustomerHomeController {
         // Initialize
         loadProducts();
         loadPlatforms();
+        loadGenres();
         categoryChoice.getItems().addAll("All", "Console", "PC", "Accessory", "Game", "Controller");
         categoryChoice.setValue("All");
 
@@ -85,6 +89,7 @@ public class CustomerHomeController {
         searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
         categoryChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
         platformChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        genreChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
 
         return root;
     }
@@ -188,6 +193,14 @@ public class CustomerHomeController {
         platformChoice.setPromptText("All Platforms");
         platformChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
 
+        Label genreIcon = new Label("🎯");
+        genreIcon.setStyle("-fx-font-size: 18px;");
+
+        genreChoice = new ComboBox<>();
+        genreChoice.setPrefWidth(180);
+        genreChoice.setPromptText("All Genres");
+        genreChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
+
         Button resetBtn = new Button("↺ Reset");
         resetBtn.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; " +
                 "-fx-background-radius: 8; -fx-padding: 8 15; -fx-font-weight: 600;");
@@ -197,7 +210,7 @@ public class CustomerHomeController {
                 "-fx-background-radius: 8; -fx-padding: 8 15; -fx-font-weight: 600;"));
         resetBtn.setOnAction(e -> onReset());
 
-        filterBar.getChildren().addAll(searchIcon, searchField, filterIcon, categoryChoice, platformIcon, platformChoice, resetBtn);
+        filterBar.getChildren().addAll(searchIcon, searchField, filterIcon, categoryChoice, platformIcon, platformChoice, genreIcon, genreChoice, resetBtn);
         return filterBar;
     }
 
@@ -247,6 +260,7 @@ public class CustomerHomeController {
         String keyword = searchField.getText().toLowerCase().trim();
         String category = categoryChoice.getValue();
         String platform = platformChoice.getValue();
+        String genre = genreChoice.getValue();
         String sortOption = sortChoice.getValue();
 
         // FILTER PRODUCTS
@@ -254,6 +268,8 @@ public class CustomerHomeController {
                 .filter(p -> (category.equals("All") || p.getCategory().equalsIgnoreCase(category)))
                 .filter(p -> (platform == null || platform.equals("All Platforms") ||
                         p.getPlatforms().contains(platform)))
+                .filter(p -> (genre == null || genre.equals("All Genres") ||
+                        p.getGenres().contains(genre)))
                 .filter(p -> p.getName().toLowerCase().contains(keyword) ||
                         p.getCategory().toLowerCase().contains(keyword))
                 .collect(java.util.stream.Collectors.toList());
@@ -286,6 +302,7 @@ public class CustomerHomeController {
         searchField.clear();
         categoryChoice.setValue("All");
         platformChoice.setValue("All Platforms");
+        genreChoice.setValue("All Genres");
         sortChoice.setValue("None");
         applyFilters();
     }
@@ -303,6 +320,15 @@ public class CustomerHomeController {
             platformChoice.getItems().add(platform.getName());
         }
         platformChoice.setValue("All Platforms");
+    }
+
+    private void loadGenres() {
+        allGenres = productDao.getAllGenres();
+        genreChoice.getItems().add("All Genres");
+        for (Genre genre : allGenres) {
+            genreChoice.getItems().add(genre.getName());
+        }
+        genreChoice.setValue("All Genres");
     }
 
     private void showPage(int page, List<Product> list) {
@@ -401,6 +427,33 @@ public class CustomerHomeController {
             }
         }
 
+        // Genre tags
+        FlowPane genreTags = new FlowPane();
+        genreTags.setHgap(4);
+        genreTags.setVgap(4);
+        genreTags.setAlignment(Pos.CENTER);
+        genreTags.setMaxWidth(210);
+
+        if (p.getGenres() != null && !p.getGenres().isEmpty()) {
+            int genreCount = 0;
+            for (String genre : p.getGenres()) {
+                if (genreCount >= 3) break; // Show max 3 genres
+                Label genreLabel = new Label(genre);
+                genreLabel.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; " +
+                        "-fx-padding: 3 8; -fx-background-radius: 8; -fx-font-size: 10px; -fx-font-weight: 600;");
+                genreLabel.setTooltip(new Tooltip(genre));
+                genreTags.getChildren().add(genreLabel);
+                genreCount++;
+            }
+            if (p.getGenres().size() > 3) {
+                Label moreLabel = new Label("+" + (p.getGenres().size() - 3));
+                moreLabel.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; " +
+                        "-fx-padding: 3 8; -fx-background-radius: 8; -fx-font-size: 10px; -fx-font-weight: 600;");
+                moreLabel.setTooltip(new Tooltip("More genres: " + String.join(", ", p.getGenres().subList(3, p.getGenres().size()))));
+                genreTags.getChildren().add(moreLabel);
+            }
+        }
+
         // Price section
         VBox priceBox = new VBox(3);
         priceBox.setAlignment(Pos.CENTER);
@@ -433,7 +486,7 @@ public class CustomerHomeController {
         Label clickHint = new Label("👆 Click to view details");
         clickHint.setStyle("-fx-text-fill: #667eea; -fx-font-size: 12px; -fx-font-style: italic;");
 
-        card.getChildren().addAll(imageContainer, nameLabel, categoryLabel, platformTags, priceBox, infoBox, clickHint);
+        card.getChildren().addAll(imageContainer, nameLabel, categoryLabel, platformTags, genreTags, priceBox, infoBox, clickHint);
 
         return card;
     }
