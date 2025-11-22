@@ -47,6 +47,9 @@ public class CustomerHomeController {
     private List<Genre> allGenres;
     private List<Product> filteredProducts;
     private ComboBox<String> sortChoice;
+    private Label resultsCountLabel;
+    private Label activeFiltersLabel;
+    private final ReviewService reviewService = new ReviewService();
 
     public Parent createView() {
         AuthGuard.requireLogin();
@@ -120,6 +123,7 @@ public class CustomerHomeController {
                 "None",
                 "Price: Low → High",
                 "Price: High → Low",
+                "Rating: High → Low",
                 "Newest → Oldest",
                 "Oldest → Newest"
         );
@@ -130,7 +134,17 @@ public class CustomerHomeController {
         sortChoice.getSelectionModel().selectedItemProperty()
                 .addListener((obs, oldVal, newVal) -> applyFilters());
 
-        sortBar.getChildren().addAll(sortLabel, sortChoice);
+        // Spacer to push active filters badge to the right
+        Pane spacer = new Pane();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        // Active filters indicator
+        activeFiltersLabel = new Label("🎯 0 Filters Active");
+        activeFiltersLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #28a745; " +
+                "-fx-padding: 8 12; -fx-background-color: #e8f5e9; -fx-background-radius: 8;");
+        activeFiltersLabel.setVisible(false); // Hidden by default
+
+        sortBar.getChildren().addAll(sortLabel, sortChoice, spacer, activeFiltersLabel);
 
         return sortBar;
     }
@@ -238,7 +252,16 @@ public class CustomerHomeController {
                 "-fx-background-radius: 8; -fx-padding: 8 15; -fx-font-weight: 600;"));
         resetBtn.setOnAction(e -> onReset());
 
-        filterBar.getChildren().addAll(searchIcon, searchField, filterIcon, categoryChoice, platformIcon, platformChoice, genreIcon, genreChoice, ratingIcon, ageRatingChoice, priceIcon, priceRangeChoice, resetBtn);
+        // Spacer to push results count to the right
+        Pane spacer = new Pane();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        // Results count label
+        resultsCountLabel = new Label("Showing 0 of 0 products");
+        resultsCountLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #667eea; " +
+                "-fx-padding: 8 12; -fx-background-color: #f0f3ff; -fx-background-radius: 8;");
+
+        filterBar.getChildren().addAll(searchIcon, searchField, filterIcon, categoryChoice, platformIcon, platformChoice, genreIcon, genreChoice, ratingIcon, ageRatingChoice, priceIcon, priceRangeChoice, resetBtn, spacer, resultsCountLabel);
         return filterBar;
     }
 
@@ -333,7 +356,6 @@ public class CustomerHomeController {
                 .collect(java.util.stream.Collectors.toList());
 
         // SORT PRODUCTS
-        // SORT PRODUCTS
         switch (sortOption) {
             case "Price: Low → High" ->
                     filteredProducts.sort((a, b) -> Double.compare(a.getPrice(), b.getPrice()));
@@ -341,7 +363,11 @@ public class CustomerHomeController {
             case "Price: High → Low" ->
                     filteredProducts.sort((a, b) -> Double.compare(b.getPrice(), a.getPrice()));
 
-
+            case "Rating: High → Low" ->
+                    filteredProducts.sort((a, b) -> Double.compare(
+                            reviewService.getAverageRating(b.getId()),
+                            reviewService.getAverageRating(a.getId())
+                    ));
 
             case "Newest → Oldest" ->
                     filteredProducts.sort((a, b) -> Integer.compare(b.getId(), a.getId()));
@@ -350,9 +376,58 @@ public class CustomerHomeController {
                     filteredProducts.sort((a, b) -> Integer.compare(a.getId(), b.getId()));
         }
 
+        // Update results count
+        if (resultsCountLabel != null) {
+            resultsCountLabel.setText(String.format("Showing %d of %d products",
+                    filteredProducts.size(), allProducts.size()));
+        }
+
+        // Update active filters indicator
+        updateActiveFiltersIndicator();
 
         currentPage = 1;
         showPage(currentPage, filteredProducts);
+    }
+
+    /**
+     * Count and display active filters
+     */
+    private void updateActiveFiltersIndicator() {
+        if (activeFiltersLabel == null) return;
+
+        int activeFilters = 0;
+
+        // Count each active filter
+        if (searchField.getText() != null && !searchField.getText().trim().isEmpty()) {
+            activeFilters++;
+        }
+        if (categoryChoice.getValue() != null && !categoryChoice.getValue().equals("All")) {
+            activeFilters++;
+        }
+        if (platformChoice.getValue() != null && !platformChoice.getValue().equals("All Platforms")) {
+            activeFilters++;
+        }
+        if (genreChoice.getValue() != null && !genreChoice.getValue().equals("All Genres")) {
+            activeFilters++;
+        }
+        if (ageRatingChoice.getValue() != null && !ageRatingChoice.getValue().equals("All Ratings")) {
+            activeFilters++;
+        }
+        if (priceRangeChoice.getValue() != null && !priceRangeChoice.getValue().equals("All Prices")) {
+            activeFilters++;
+        }
+        if (sortChoice.getValue() != null && !sortChoice.getValue().equals("None")) {
+            activeFilters++;
+        }
+
+        // Update label visibility and text
+        if (activeFilters > 0) {
+            activeFiltersLabel.setText(String.format("🎯 %d Filter%s Active",
+                    activeFilters, activeFilters == 1 ? "" : "s"));
+            activeFiltersLabel.setVisible(true);
+        } else {
+            activeFiltersLabel.setVisible(false);
+        }
     }
 
 
