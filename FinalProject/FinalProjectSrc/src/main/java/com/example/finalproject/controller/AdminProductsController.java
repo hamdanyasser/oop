@@ -34,7 +34,7 @@ public class AdminProductsController {
     private final ObservableList<Product> productList = FXCollections.observableArrayList();
 
     public Parent createView() {
-        AuthGuard.requireLogin();
+        AuthGuard.requireAdmin();
 
         BorderPane root = new BorderPane();
         root.setPrefSize(1200, 750);
