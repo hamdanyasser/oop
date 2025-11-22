@@ -2,6 +2,7 @@ package com.example.finalproject.controller;
 
 import com.example.finalproject.HelloApplication;
 import com.example.finalproject.dao.OrderDao;
+import com.example.finalproject.dao.ProductDao;
 import com.example.finalproject.model.Order;
 import com.example.finalproject.model.OrderItem;
 import com.example.finalproject.model.Product;
@@ -9,6 +10,7 @@ import com.example.finalproject.security.AuthGuard;
 import com.example.finalproject.security.JwtService;
 import com.example.finalproject.security.Session;
 import com.example.finalproject.service.CartService;
+import com.example.finalproject.service.DigitalCodeService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -27,6 +29,8 @@ public class CheckoutController {
 
     private final CartService cartService = CartService.getInstance();
     private final OrderDao orderDao = new OrderDao();
+    private final ProductDao productDao = new ProductDao();
+    private final DigitalCodeService digitalCodeService = new DigitalCodeService();
 
     public Parent createView() {
         AuthGuard.requireLogin();
@@ -220,9 +224,29 @@ public class CheckoutController {
             order.setStatus("PENDING");
             orderDao.saveOrder(order);
 
+            // Generate and send digital codes for gift cards and digital products
+            boolean hasDigitalItems = false;
+            for (OrderItem item : order.getItems()) {
+                Product product = productDao.getById(item.getProductId()).orElse(null);
+                if (product != null && product.isDigital()) {
+                    hasDigitalItems = true;
+                    digitalCodeService.createAndSendCodes(
+                        order.getId(),
+                        item.getId(),
+                        product.getId(),
+                        userId,
+                        item.getQuantity()
+                    );
+                    System.out.println("✅ Generated and sent " + item.getQuantity() + " code(s) for: " + product.getName());
+                }
+            }
+
             cartService.clear();
 
-            showStyledAlert("Success", "✅ Order placed successfully!", Alert.AlertType.INFORMATION);
+            String successMessage = hasDigitalItems
+                ? "✅ Order placed successfully!\n\n📧 Digital codes have been sent to your email."
+                : "✅ Order placed successfully!";
+            showStyledAlert("Success", successMessage, Alert.AlertType.INFORMATION);
             HelloApplication.setRoot(new CustomerHomeController());
         } catch (SQLException e) {
             e.printStackTrace();
