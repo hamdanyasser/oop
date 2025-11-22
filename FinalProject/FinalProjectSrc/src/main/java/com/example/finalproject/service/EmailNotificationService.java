@@ -10,7 +10,7 @@ import com.example.finalproject.util.EmailSender;
 import java.text.SimpleDateFormat;
 
 /**
- * Centralized service for sending email notifications to users
+ * Centralized service for sending modern HTML email notifications to users
  */
 public class EmailNotificationService {
 
@@ -18,38 +18,231 @@ public class EmailNotificationService {
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy 'at' HH:mm");
 
     /**
+     * Base HTML template wrapper for all emails
+     */
+    private String wrapInTemplate(String content) {
+        return String.format("""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    body {
+                        margin: 0;
+                        padding: 0;
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                        background-color: #f5f7fa;
+                    }
+                    .email-container {
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #ffffff;
+                    }
+                    .header {
+                        background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%);
+                        padding: 40px 30px;
+                        text-align: center;
+                    }
+                    .header h1 {
+                        margin: 0;
+                        color: #ffffff;
+                        font-size: 32px;
+                        font-weight: 700;
+                    }
+                    .header .icon {
+                        font-size: 48px;
+                        margin-bottom: 10px;
+                    }
+                    .content {
+                        padding: 40px 30px;
+                    }
+                    .button {
+                        display: inline-block;
+                        padding: 14px 32px;
+                        background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%);
+                        color: #ffffff !important;
+                        text-decoration: none;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        font-size: 16px;
+                        margin: 20px 0;
+                    }
+                    .button:hover {
+                        opacity: 0.9;
+                    }
+                    .info-box {
+                        background-color: #f0f3ff;
+                        border-left: 4px solid #667eea;
+                        padding: 20px;
+                        margin: 20px 0;
+                        border-radius: 4px;
+                    }
+                    .success-box {
+                        background-color: #e8f5e9;
+                        border-left: 4px solid #28a745;
+                        padding: 20px;
+                        margin: 20px 0;
+                        border-radius: 4px;
+                    }
+                    .warning-box {
+                        background-color: #fff3cd;
+                        border-left: 4px solid #ffc107;
+                        padding: 20px;
+                        margin: 20px 0;
+                        border-radius: 4px;
+                    }
+                    .order-table {
+                        width: 100%%;
+                        border-collapse: collapse;
+                        margin: 20px 0;
+                    }
+                    .order-table th {
+                        background-color: #f8f9fa;
+                        padding: 12px;
+                        text-align: left;
+                        font-weight: 600;
+                        color: #2c3e50;
+                        border-bottom: 2px solid #dee2e6;
+                    }
+                    .order-table td {
+                        padding: 12px;
+                        border-bottom: 1px solid #dee2e6;
+                    }
+                    .total-row {
+                        background-color: #f0f3ff;
+                        font-weight: 700;
+                        font-size: 18px;
+                        color: #667eea;
+                    }
+                    .footer {
+                        background-color: #2c3e50;
+                        color: #ffffff;
+                        padding: 30px;
+                        text-align: center;
+                        font-size: 14px;
+                    }
+                    .footer a {
+                        color: #667eea;
+                        text-decoration: none;
+                    }
+                    .badge {
+                        display: inline-block;
+                        padding: 4px 12px;
+                        border-radius: 12px;
+                        font-size: 12px;
+                        font-weight: 600;
+                        margin-left: 8px;
+                    }
+                    .badge-digital {
+                        background-color: #e3f2fd;
+                        color: #1976d2;
+                    }
+                    .badge-gift {
+                        background-color: #fce4ec;
+                        color: #c2185b;
+                    }
+                    .divider {
+                        height: 1px;
+                        background-color: #dee2e6;
+                        margin: 30px 0;
+                    }
+                    h2 {
+                        color: #2c3e50;
+                        font-size: 24px;
+                        margin-top: 0;
+                    }
+                    p {
+                        color: #6c757d;
+                        line-height: 1.6;
+                        font-size: 15px;
+                    }
+                    ul {
+                        color: #6c757d;
+                        line-height: 1.8;
+                    }
+                    .code-box {
+                        background-color: #f8f9fa;
+                        border: 2px dashed #667eea;
+                        padding: 20px;
+                        text-align: center;
+                        border-radius: 8px;
+                        margin: 20px 0;
+                    }
+                    .code {
+                        font-family: 'Courier New', monospace;
+                        font-size: 20px;
+                        font-weight: 700;
+                        color: #667eea;
+                        letter-spacing: 2px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="email-container">
+                    %s
+                    <div class="footer">
+                        <p style="margin: 0 0 10px 0; color: #ffffff;">
+                            <strong>ShopEase Gaming Store</strong>
+                        </p>
+                        <p style="margin: 0 0 10px 0; color: #95a5a6;">
+                            Your one-stop shop for all gaming needs
+                        </p>
+                        <p style="margin: 0; color: #95a5a6; font-size: 12px;">
+                            This is an automated message, please do not reply to this email.<br>
+                            © 2025 ShopEase. All rights reserved.
+                        </p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """, content);
+    }
+
+    /**
      * Send welcome email to newly registered users
      */
     public boolean sendWelcomeEmail(User user) {
         String subject = "Welcome to ShopEase - Your Gaming Store! 🎮";
 
-        String body = String.format("""
-                Hi %s,
+        String content = String.format("""
+            <div class="header">
+                <div class="icon">🎮</div>
+                <h1>Welcome to ShopEase!</h1>
+            </div>
+            <div class="content">
+                <h2>Hi %s! 👋</h2>
 
-                Welcome to ShopEase! 🎉
+                <p>Welcome to ShopEase! We're thrilled to have you join our gaming community.</p>
 
-                Thank you for creating an account with us. We're excited to have you as part of our gaming community!
+                <div class="success-box">
+                    <strong>🎉 Your account is now active!</strong><br>
+                    You can start exploring our collection of games, accessories, and more.
+                </div>
 
-                Here's what you can do with your account:
-                • Browse thousands of games and accessories
-                • Purchase physical and digital products
-                • Buy gift cards for friends and family
-                • Track your orders and download digital codes
-                • Add items to your wishlist
-                • Leave reviews on products
+                <h3 style="color: #2c3e50; margin-top: 30px;">What you can do with your account:</h3>
+                <ul>
+                    <li><strong>Browse</strong> thousands of games and accessories</li>
+                    <li><strong>Purchase</strong> physical and digital products</li>
+                    <li><strong>Buy</strong> gift cards for friends and family</li>
+                    <li><strong>Track</strong> your orders and download digital codes</li>
+                    <li><strong>Earn</strong> loyalty points with every purchase</li>
+                    <li><strong>Create</strong> wishlists and leave reviews</li>
+                </ul>
 
-                Start exploring our collection and find your next favorite game!
+                <div style="text-align: center;">
+                    <a href="#" class="button">Start Shopping Now</a>
+                </div>
 
-                Happy Gaming! 🎮
+                <div class="divider"></div>
 
-                Best regards,
-                The ShopEase Team
+                <p style="text-align: center; color: #6c757d; font-size: 14px;">
+                    Need help? Contact our support team anytime at support@shopease.com
+                </p>
+            </div>
+            """, user.getUsername());
 
-                ---
-                This is an automated message. Please do not reply to this email.
-                """, user.getUsername());
-
-        return EmailSender.sendEmail(user.getEmail(), subject, body);
+        return EmailSender.sendHtmlEmail(user.getEmail(), subject, wrapInTemplate(content));
     }
 
     /**
@@ -58,16 +251,40 @@ public class EmailNotificationService {
     public boolean sendOrderConfirmationEmail(User user, Order order) {
         String subject = "Order Confirmation #" + order.getId() + " - ShopEase";
 
-        StringBuilder itemsList = new StringBuilder();
+        StringBuilder itemsTable = new StringBuilder();
+        itemsTable.append("""
+            <table class="order-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """);
+
         for (OrderItem item : order.getItems()) {
             Product product = productDao.getById(item.getProductId()).orElse(null);
             if (product != null) {
-                String productType = product.isGiftCard() ? " [Gift Card]"
-                                   : product.isDigital() ? " [Digital]"
-                                   : "";
-                itemsList.append(String.format("  • %s%s\n    Quantity: %d | Price: $%.2f | Subtotal: $%.2f\n\n",
+                String badge = "";
+                if (product.isGiftCard()) {
+                    badge = "<span class='badge badge-gift'>Gift Card</span>";
+                } else if (product.isDigital()) {
+                    badge = "<span class='badge badge-digital'>Digital</span>";
+                }
+
+                itemsTable.append(String.format("""
+                    <tr>
+                        <td><strong>%s</strong>%s</td>
+                        <td>×%d</td>
+                        <td>$%.2f</td>
+                        <td><strong>$%.2f</strong></td>
+                    </tr>
+                    """,
                     product.getName(),
-                    productType,
+                    badge,
                     item.getQuantity(),
                     item.getPrice(),
                     item.getPrice() * item.getQuantity()
@@ -75,47 +292,62 @@ public class EmailNotificationService {
             }
         }
 
-        String body = String.format("""
-                Hi %s,
+        itemsTable.append(String.format("""
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="3" style="text-align: right;"><strong>TOTAL:</strong></td>
+                        <td><strong>$%.2f</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+            """, order.getTotal()));
 
-                Thank you for your order! 🎉
+        String content = String.format("""
+            <div class="header">
+                <div class="icon">✅</div>
+                <h1>Order Confirmed!</h1>
+            </div>
+            <div class="content">
+                <h2>Thank you for your order, %s!</h2>
 
-                ORDER DETAILS
-                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                Order Number: #%d
-                Order Date: %s
-                Order Status: %s
+                <div class="success-box">
+                    <strong>🎉 Your order has been placed successfully!</strong><br>
+                    Order #%d • Placed on %s
+                </div>
 
-                ITEMS ORDERED
-                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                <h3 style="color: #2c3e50;">Order Details</h3>
+
                 %s
-                TOTAL AMOUNT: $%.2f
-                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-                What's Next?
-                • Physical items will be shipped to your address
-                • Digital codes have been sent in a separate email (if applicable)
-                • You can track your order status in your account
+                <div class="info-box">
+                    <h4 style="margin: 0 0 10px 0; color: #667eea;">📦 What's Next?</h4>
+                    <ul style="margin: 10px 0;">
+                        <li>Physical items will be shipped to your address</li>
+                        <li>Digital codes have been sent in a separate email</li>
+                        <li>You can track your order status in your account</li>
+                        <li>You earned loyalty points with this purchase! 💎</li>
+                    </ul>
+                </div>
 
-                Questions? Contact our support team anytime.
+                <div style="text-align: center;">
+                    <a href="#" class="button">View Order Details</a>
+                </div>
 
-                Thank you for shopping with ShopEase!
+                <div class="divider"></div>
 
-                Best regards,
-                The ShopEase Team
-
-                ---
-                This is an automated message. Please do not reply to this email.
-                """,
-                user.getUsername(),
-                order.getId(),
-                dateFormat.format(order.getCreatedAt()),
-                order.getStatus(),
-                itemsList.toString(),
-                order.getTotal()
+                <p style="text-align: center; color: #6c757d; font-size: 14px;">
+                    Questions about your order? Contact us at support@shopease.com
+                </p>
+            </div>
+            """,
+            user.getUsername(),
+            order.getId(),
+            dateFormat.format(order.getCreatedAt()),
+            itemsTable.toString()
         );
 
-        return EmailSender.sendEmail(user.getEmail(), subject, body);
+        return EmailSender.sendHtmlEmail(user.getEmail(), subject, wrapInTemplate(content));
     }
 
     /**
@@ -124,51 +356,59 @@ public class EmailNotificationService {
     public boolean sendShippingNotificationEmail(User user, Order order) {
         String subject = "Your Order #" + order.getId() + " Has Been Delivered! 📦";
 
-        StringBuilder itemsList = new StringBuilder();
+        StringBuilder itemsList = new StringBuilder("<ul>");
         for (OrderItem item : order.getItems()) {
             Product product = productDao.getById(item.getProductId()).orElse(null);
             if (product != null) {
-                itemsList.append(String.format("  • %s (×%d)\n",
+                itemsList.append(String.format("<li><strong>%s</strong> (×%d)</li>",
                     product.getName(),
                     item.getQuantity()
                 ));
             }
         }
+        itemsList.append("</ul>");
 
-        String body = String.format("""
-                Hi %s,
+        String content = String.format("""
+            <div class="header">
+                <div class="icon">📦</div>
+                <h1>Delivered!</h1>
+            </div>
+            <div class="content">
+                <h2>Great news, %s!</h2>
 
-                Great news! Your order has been delivered! 📦✨
+                <div class="success-box">
+                    <strong>✅ Your order has been delivered!</strong><br>
+                    Order #%d • Delivered on %s
+                </div>
 
-                ORDER INFORMATION
-                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                Order Number: #%d
-                Delivery Date: %s
-
-                DELIVERED ITEMS
-                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                <h3 style="color: #2c3e50;">Delivered Items</h3>
                 %s
-                We hope you enjoy your purchase!
 
-                If you have any issues with your order, please contact our support team.
+                <div class="info-box">
+                    <h4 style="margin: 0 0 10px 0; color: #667eea;">💬 Share Your Experience</h4>
+                    <p style="margin: 10px 0;">
+                        We'd love to hear what you think! Your review helps other gamers make informed decisions.
+                    </p>
+                </div>
 
-                Don't forget to leave a review! Your feedback helps other gamers make informed decisions.
+                <div style="text-align: center;">
+                    <a href="#" class="button">Leave a Review</a>
+                </div>
 
-                Thank you for choosing ShopEase!
+                <div class="divider"></div>
 
-                Best regards,
-                The ShopEase Team
-
-                ---
-                This is an automated message. Please do not reply to this email.
-                """,
-                user.getUsername(),
-                order.getId(),
-                new SimpleDateFormat("MMM dd, yyyy").format(System.currentTimeMillis()),
-                itemsList.toString()
+                <p style="text-align: center; color: #6c757d; font-size: 14px;">
+                    Issues with your order? Contact us immediately at support@shopease.com
+                </p>
+            </div>
+            """,
+            user.getUsername(),
+            order.getId(),
+            new SimpleDateFormat("MMM dd, yyyy").format(System.currentTimeMillis()),
+            itemsList.toString()
         );
 
-        return EmailSender.sendEmail(user.getEmail(), subject, body);
+        return EmailSender.sendHtmlEmail(user.getEmail(), subject, wrapInTemplate(content));
     }
 
     /**
@@ -195,38 +435,46 @@ public class EmailNotificationService {
             default -> "📦";
         };
 
-        String body = String.format("""
-                Hi %s,
+        String boxClass = order.getStatus().toUpperCase().equals("CANCELLED") ? "warning-box" : "info-box";
 
-                Your order status has been updated! %s
+        String content = String.format("""
+            <div class="header">
+                <div class="icon">%s</div>
+                <h1>Order Status Update</h1>
+            </div>
+            <div class="content">
+                <h2>Hi %s,</h2>
 
-                ORDER STATUS UPDATE
-                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                Order Number: #%d
-                Previous Status: %s
-                New Status: %s
+                <p>Your order status has been updated:</p>
 
-                %s
+                <div class="%s">
+                    <h4 style="margin: 0 0 10px 0;">Order #%d</h4>
+                    <p style="margin: 5px 0;"><strong>Previous Status:</strong> %s</p>
+                    <p style="margin: 5px 0;"><strong>New Status:</strong> %s</p>
+                    <p style="margin: 15px 0 0 0;">%s</p>
+                </div>
 
-                You can view your complete order details by logging into your account.
+                <div style="text-align: center;">
+                    <a href="#" class="button">Track Your Order</a>
+                </div>
 
-                Thank you for shopping with ShopEase!
+                <div class="divider"></div>
 
-                Best regards,
-                The ShopEase Team
-
-                ---
-                This is an automated message. Please do not reply to this email.
-                """,
-                user.getUsername(),
-                statusIcon,
-                order.getId(),
-                previousStatus,
-                order.getStatus(),
-                statusMessage
+                <p style="text-align: center; color: #6c757d; font-size: 14px;">
+                    Questions? Contact us at support@shopease.com
+                </p>
+            </div>
+            """,
+            statusIcon,
+            user.getUsername(),
+            boxClass,
+            order.getId(),
+            previousStatus,
+            order.getStatus(),
+            statusMessage
         );
 
-        return EmailSender.sendEmail(user.getEmail(), subject, body);
+        return EmailSender.sendHtmlEmail(user.getEmail(), subject, wrapInTemplate(content));
     }
 
     /**
@@ -235,27 +483,34 @@ public class EmailNotificationService {
     public boolean sendPromotionalEmail(User user, String promoTitle, String promoMessage) {
         String subject = "Special Offer from ShopEase - " + promoTitle;
 
-        String body = String.format("""
-                Hi %s,
+        String content = String.format("""
+            <div class="header">
+                <div class="icon">🎁</div>
+                <h1>%s</h1>
+            </div>
+            <div class="content">
+                <h2>Hi %s,</h2>
 
-                %s
+                <p style="font-size: 16px; line-height: 1.8;">%s</p>
 
-                Visit ShopEase to take advantage of this offer!
+                <div style="text-align: center;">
+                    <a href="#" class="button">Shop Now</a>
+                </div>
 
-                Happy Gaming! 🎮
+                <div class="divider"></div>
 
-                Best regards,
-                The ShopEase Team
-
-                ---
-                You're receiving this because you opted in to promotional emails.
-                To unsubscribe, please update your preferences in your account settings.
-                """,
-                user.getUsername(),
-                promoMessage
+                <p style="text-align: center; color: #95a5a6; font-size: 12px;">
+                    You're receiving this because you opted in to promotional emails.<br>
+                    To unsubscribe, please update your preferences in your account settings.
+                </p>
+            </div>
+            """,
+            promoTitle,
+            user.getUsername(),
+            promoMessage.replace("\n", "<br>")
         );
 
-        return EmailSender.sendEmail(user.getEmail(), subject, body);
+        return EmailSender.sendHtmlEmail(user.getEmail(), subject, wrapInTemplate(content));
     }
 
     /**
@@ -264,29 +519,42 @@ public class EmailNotificationService {
     public boolean sendPasswordResetEmail(User user, String resetToken) {
         String subject = "Password Reset Request - ShopEase";
 
-        String body = String.format("""
-                Hi %s,
+        String content = String.format("""
+            <div class="header">
+                <div class="icon">🔐</div>
+                <h1>Password Reset</h1>
+            </div>
+            <div class="content">
+                <h2>Hi %s,</h2>
 
-                We received a request to reset your password for your ShopEase account.
+                <p>We received a request to reset your password for your ShopEase account.</p>
 
-                Your password reset code is: %s
+                <div class="code-box">
+                    <p style="margin: 0 0 10px 0; color: #6c757d; font-size: 14px;">Your password reset code:</p>
+                    <div class="code">%s</div>
+                </div>
 
-                If you didn't request this password reset, please ignore this email.
-                Your password will remain unchanged.
+                <div class="warning-box">
+                    <strong>⚠️ Security Notice</strong><br>
+                    <ul style="margin: 10px 0;">
+                        <li>This code will expire in 24 hours</li>
+                        <li>If you didn't request this, please ignore this email</li>
+                        <li>Never share this code with anyone</li>
+                    </ul>
+                </div>
 
-                For security reasons, this code will expire in 24 hours.
+                <div class="divider"></div>
 
-                Best regards,
-                The ShopEase Team
-
-                ---
-                This is an automated message. Please do not reply to this email.
-                """,
-                user.getUsername(),
-                resetToken
+                <p style="text-align: center; color: #6c757d; font-size: 14px;">
+                    Need help? Contact us at support@shopease.com
+                </p>
+            </div>
+            """,
+            user.getUsername(),
+            resetToken
         );
 
-        return EmailSender.sendEmail(user.getEmail(), subject, body);
+        return EmailSender.sendHtmlEmail(user.getEmail(), subject, wrapInTemplate(content));
     }
 
     /**
@@ -295,27 +563,53 @@ public class EmailNotificationService {
     public boolean sendLowStockAlertEmail(String adminEmail, Product product) {
         String subject = "⚠️ Low Stock Alert - " + product.getName();
 
-        String body = String.format("""
-                ALERT: Low Stock Warning
+        String content = String.format("""
+            <div class="header">
+                <div class="icon">⚠️</div>
+                <h1>Low Stock Alert</h1>
+            </div>
+            <div class="content">
+                <h2>Inventory Alert</h2>
 
-                The following product is running low on stock:
+                <p>The following product is running low on stock:</p>
 
-                Product: %s
-                Category: %s
-                Current Stock: %d
-                Product ID: %d
+                <div class="warning-box">
+                    <table style="width: 100%%;">
+                        <tr>
+                            <td style="padding: 5px 0;"><strong>Product:</strong></td>
+                            <td style="padding: 5px 0;">%s</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px 0;"><strong>Category:</strong></td>
+                            <td style="padding: 5px 0;">%s</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px 0;"><strong>Current Stock:</strong></td>
+                            <td style="padding: 5px 0; color: #dc3545;"><strong>%d units</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px 0;"><strong>Product ID:</strong></td>
+                            <td style="padding: 5px 0;">#%d</td>
+                        </tr>
+                    </table>
+                </div>
 
-                Please restock this item to avoid running out.
+                <div class="info-box">
+                    <strong>📋 Action Required</strong><br>
+                    Please restock this item to avoid running out of inventory.
+                </div>
 
-                ---
-                ShopEase Admin System
-                """,
-                product.getName(),
-                product.getCategory(),
-                product.getStock(),
-                product.getId()
+                <div style="text-align: center;">
+                    <a href="#" class="button">Manage Inventory</a>
+                </div>
+            </div>
+            """,
+            product.getName(),
+            product.getCategory(),
+            product.getStock(),
+            product.getId()
         );
 
-        return EmailSender.sendEmail(adminEmail, subject, body);
+        return EmailSender.sendHtmlEmail(adminEmail, subject, wrapInTemplate(content));
     }
 }
