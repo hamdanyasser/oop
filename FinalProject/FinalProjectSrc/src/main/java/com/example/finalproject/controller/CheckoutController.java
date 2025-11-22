@@ -14,6 +14,7 @@ import com.example.finalproject.security.Session;
 import com.example.finalproject.service.CartService;
 import com.example.finalproject.service.DigitalCodeService;
 import com.example.finalproject.service.EmailNotificationService;
+import com.example.finalproject.service.LoyaltyService;
 import com.example.finalproject.util.ToastNotification;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -37,6 +38,7 @@ public class CheckoutController {
     private final UserDao userDao = new UserDao();
     private final DigitalCodeService digitalCodeService = new DigitalCodeService();
     private final EmailNotificationService emailNotificationService = new EmailNotificationService();
+    private final LoyaltyService loyaltyService = new LoyaltyService();
 
     public Parent createView() {
         AuthGuard.requireLogin();
@@ -254,12 +256,22 @@ public class CheckoutController {
                 System.out.println("✅ Order confirmation email sent to: " + user.getEmail());
             }
 
+            // Award loyalty points
+            int pointsEarned = loyaltyService.awardPoints(userId, order.getTotal(), order.getId());
+            System.out.println("✅ Awarded " + pointsEarned + " loyalty points to user " + userId);
+
             cartService.clear();
 
             String successMessage = hasDigitalItems
                 ? "Order placed! Digital codes sent to your email."
                 : "Order placed successfully!";
             ToastNotification.success(successMessage);
+
+            // Show points earned notification
+            if (pointsEarned > 0) {
+                ToastNotification.info(String.format("You earned %d loyalty points! 💎", pointsEarned));
+            }
+
             HelloApplication.setRoot(new CustomerHomeController());
         } catch (SQLException e) {
             e.printStackTrace();

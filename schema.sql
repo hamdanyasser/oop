@@ -16,11 +16,30 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(100) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   role ENUM('ADMIN', 'CUSTOMER') DEFAULT 'CUSTOMER',
-  address VARCHAR(255)
+  address VARCHAR(255),
+  loyalty_points INT DEFAULT 0 NOT NULL COMMENT 'Customer loyalty points: 10 points = $1 spent, 1000 points = $10 discount'
 );
 
 -- ========================================
--- 2. PRODUCTS TABLE
+-- 2. LOYALTY TRANSACTIONS TABLE
+-- Track history of points earned and spent
+-- ========================================
+CREATE TABLE IF NOT EXISTS loyalty_transactions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  order_id INT NULL COMMENT 'Order that triggered this transaction (if applicable)',
+  points INT NOT NULL COMMENT 'Positive for earned, negative for spent',
+  transaction_type ENUM('EARNED', 'REDEEMED', 'ADJUSTED') NOT NULL,
+  description VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL,
+  INDEX idx_loyalty_user (user_id),
+  INDEX idx_loyalty_date (created_at)
+);
+
+-- ========================================
+-- 3. PRODUCTS TABLE
 -- ========================================
 CREATE TABLE IF NOT EXISTS products (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -450,5 +469,5 @@ ON DUPLICATE KEY UPDATE id=id;
 -- ========================================
 -- END OF SCHEMA
 -- Last Updated: 2025-11-22
--- Version: 1.4 (Added Gift Cards & Digital Product Types)
+-- Version: 1.5 (Added Loyalty Points System)
 -- ========================================

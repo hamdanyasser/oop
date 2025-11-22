@@ -12,6 +12,7 @@ import com.example.finalproject.security.Session;
 import com.example.finalproject.service.ProductService;
 import com.example.finalproject.service.CartService;
 import com.example.finalproject.service.ReviewService;
+import com.example.finalproject.service.LoyaltyService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -50,6 +51,7 @@ public class CustomerHomeController {
     private Label resultsCountLabel;
     private Label activeFiltersLabel;
     private final ReviewService reviewService = new ReviewService();
+    private final LoyaltyService loyaltyService = new LoyaltyService();
 
     public Parent createView() {
         AuthGuard.requireLogin();
@@ -274,6 +276,43 @@ public class CustomerHomeController {
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
+        // Loyalty points badge
+        int userPoints = loyaltyService.getPoints(Session.getUserId());
+        String pointsTier = loyaltyService.getPointsTier(userPoints);
+        HBox pointsBadge = new HBox(8);
+        pointsBadge.setAlignment(Pos.CENTER);
+        pointsBadge.setPadding(new Insets(8, 15, 8, 15));
+        pointsBadge.setStyle("-fx-background-color: rgba(255,255,255,0.2); " +
+                "-fx-background-radius: 20; -fx-border-color: rgba(255,255,255,0.3); " +
+                "-fx-border-width: 1; -fx-border-radius: 20;");
+
+        Label pointsIcon = new Label("💎");
+        pointsIcon.setStyle("-fx-font-size: 18px;");
+
+        Label pointsLabel = new Label(String.format("%,d Points", userPoints));
+        pointsLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;");
+
+        Label tierLabel = new Label(pointsTier);
+        tierLabel.setStyle("-fx-text-fill: rgba(255,255,255,0.9); -fx-font-size: 11px;");
+
+        VBox pointsInfo = new VBox(2);
+        pointsInfo.setAlignment(Pos.CENTER_LEFT);
+        pointsInfo.getChildren().addAll(pointsLabel, tierLabel);
+
+        pointsBadge.getChildren().addAll(pointsIcon, pointsInfo);
+
+        // Hover effect
+        pointsBadge.setOnMouseEntered(e -> {
+            pointsBadge.setStyle("-fx-background-color: rgba(255,255,255,0.3); " +
+                    "-fx-background-radius: 20; -fx-border-color: rgba(255,255,255,0.5); " +
+                    "-fx-border-width: 1; -fx-border-radius: 20; -fx-cursor: hand;");
+        });
+        pointsBadge.setOnMouseExited(e -> {
+            pointsBadge.setStyle("-fx-background-color: rgba(255,255,255,0.2); " +
+                    "-fx-background-radius: 20; -fx-border-color: rgba(255,255,255,0.3); " +
+                    "-fx-border-width: 1; -fx-border-radius: 20;");
+        });
+
         Button cartBtn = createHeaderButton("🛒 Cart");
         cartBtn.setOnAction(e -> onViewCart());
 
@@ -295,7 +334,7 @@ public class CustomerHomeController {
                 "-fx-background-radius: 8; -fx-padding: 10 20; -fx-font-weight: 600;"));
         logoutBtn.setOnAction(e -> onLogout());
 
-        topBar.getChildren().addAll(iconLabel, titleLabel, spacer, cartBtn, wishlistBtn, ordersBtn, profileBtn, logoutBtn);
+        topBar.getChildren().addAll(iconLabel, titleLabel, spacer, pointsBadge, cartBtn, wishlistBtn, ordersBtn, profileBtn, logoutBtn);
         return topBar;
     }
 
