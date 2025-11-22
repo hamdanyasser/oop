@@ -25,6 +25,9 @@ public class Product {
     // Age rating (ESRB: E, E10+, T, M, AO or PEGI: 3, 7, 12, 16, 18)
     private String ageRating;
 
+    // Product type (Physical, Digital, GiftCard)
+    private String productType;
+
     public Product() {
         this.platforms = new ArrayList<>();
         this.platformIds = new ArrayList<>();
@@ -118,6 +121,17 @@ public class Product {
 
     public String getAgeRating() { return ageRating; }
     public void setAgeRating(String ageRating) { this.ageRating = ageRating; }
+
+    public String getProductType() { return productType; }
+    public void setProductType(String productType) { this.productType = productType; }
+
+    public boolean isDigital() {
+        return "Digital".equals(productType) || "GiftCard".equals(productType);
+    }
+
+    public boolean isGiftCard() {
+        return "GiftCard".equals(productType);
+    }
 
     public double getEffectivePrice() {
         return price * (1 - (discount / 100.0));

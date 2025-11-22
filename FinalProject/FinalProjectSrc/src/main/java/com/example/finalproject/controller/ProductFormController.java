@@ -33,6 +33,7 @@ public class ProductFormController {
     private ImageView imageView;
     private ComboBox<String> categoryBox;
     private ComboBox<String> ageRatingBox;
+    private ComboBox<String> productTypeBox;
     private VBox platformCheckboxContainer;
     private VBox genreCheckboxContainer;
     private Map<Integer, CheckBox> platformCheckboxes = new HashMap<>();
@@ -133,10 +134,25 @@ public class ProductFormController {
         categoryBox = new ComboBox<>();
         categoryBox.setPrefWidth(300);
         categoryBox.setPromptText("Select Category");
-        categoryBox.getItems().addAll("Console", "PC", "Accessory", "Game", "Controller");
+        categoryBox.getItems().addAll("Console", "PC", "Accessory", "Game", "Controller", "GiftCard");
         categoryBox.setStyle("-fx-font-size: 14px;");
 
         categoryRow.getChildren().addAll(categoryLabel, categoryBox);
+
+        // Product Type dropdown
+        HBox productTypeRow = new HBox(10);
+        productTypeRow.setAlignment(Pos.CENTER_LEFT);
+        Label productTypeLabel = new Label("Product Type:");
+        productTypeLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: 600; -fx-text-fill: #495057;");
+
+        productTypeBox = new ComboBox<>();
+        productTypeBox.setPrefWidth(300);
+        productTypeBox.setPromptText("Select Product Type");
+        productTypeBox.getItems().addAll("Physical", "Digital", "GiftCard");
+        productTypeBox.setValue("Physical");
+        productTypeBox.setStyle("-fx-font-size: 14px;");
+
+        productTypeRow.getChildren().addAll(productTypeLabel, productTypeBox);
 
         priceField = createStyledTextField("Price (USD)");
         stockField = createStyledTextField("Stock Quantity");
@@ -169,7 +185,7 @@ public class ProductFormController {
         // Genres section
         VBox genresSection = createGenresSection();
 
-        section.getChildren().addAll(nameField, categoryRow, priceField, stockField,
+        section.getChildren().addAll(nameField, categoryRow, productTypeRow, priceField, stockField,
                                      ageRatingRow, descriptionArea, platformsSection, genresSection);
         return section;
     }
@@ -281,6 +297,13 @@ public class ProductFormController {
             stockField.setText(String.valueOf(product.getStock()));
             selectedImagePath = product.getImagePath();
 
+            // Set product type
+            if (product.getProductType() != null && !product.getProductType().isEmpty()) {
+                productTypeBox.setValue(product.getProductType());
+            } else {
+                productTypeBox.setValue("Physical");
+            }
+
             // Set age rating
             if (product.getAgeRating() != null && !product.getAgeRating().isEmpty()) {
                 ageRatingBox.setValue(product.getAgeRating());
@@ -355,6 +378,12 @@ public class ProductFormController {
             double price = Double.parseDouble(priceField.getText().trim());
             int stock = Integer.parseInt(stockField.getText().trim());
 
+            // Collect product type
+            String productType = productTypeBox.getValue();
+            if (productType == null || productType.isEmpty()) {
+                productType = "Physical";
+            }
+
             // Collect age rating
             String ageRating = ageRatingBox.getValue();
             if (ageRating != null && ageRating.isEmpty()) {
@@ -379,6 +408,7 @@ public class ProductFormController {
 
             if (currentProduct == null) {
                 Product newP = new Product(0, name, category, price, desc, selectedImagePath, stock);
+                newP.setProductType(productType);
                 newP.setAgeRating(ageRating);
                 newP.setPlatformIds(selectedPlatformIds);
                 newP.setGenreIds(selectedGenreIds);
@@ -391,6 +421,7 @@ public class ProductFormController {
                 currentProduct.setPrice(price);
                 currentProduct.setStock(stock);
                 currentProduct.setImagePath(selectedImagePath);
+                currentProduct.setProductType(productType);
                 currentProduct.setAgeRating(ageRating);
                 currentProduct.setPlatformIds(selectedPlatformIds);
                 currentProduct.setGenreIds(selectedGenreIds);

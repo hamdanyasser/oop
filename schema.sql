@@ -25,12 +25,13 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS products (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
-  category ENUM('Console', 'PC', 'Accessory', 'Game', 'Controller') NOT NULL DEFAULT 'Game',
+  category ENUM('Console', 'PC', 'Accessory', 'Game', 'Controller', 'GiftCard') NOT NULL DEFAULT 'Game',
   price DOUBLE NOT NULL,
   description TEXT,
   imagePath VARCHAR(255),
   stock INT DEFAULT 0,
-  age_rating VARCHAR(10) DEFAULT NULL COMMENT 'ESRB: E, E10+, T, M, AO or PEGI: 3, 7, 12, 16, 18'
+  age_rating VARCHAR(10) DEFAULT NULL COMMENT 'ESRB: E, E10+, T, M, AO or PEGI: 3, 7, 12, 16, 18',
+  product_type ENUM('Physical', 'Digital', 'GiftCard') NOT NULL DEFAULT 'Physical' COMMENT 'Physical: shipped items, Digital: download codes, GiftCard: redeemable codes'
 );
 
 -- ========================================
@@ -148,7 +149,31 @@ CREATE TABLE IF NOT EXISTS wishlist (
 );
 
 -- ========================================
--- 12. INDEXES FOR PERFORMANCE
+-- 12. DIGITAL CODES TABLE
+-- Track gift cards and digital product codes sent to customers
+-- ========================================
+CREATE TABLE IF NOT EXISTS digital_codes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_id INT NOT NULL,
+  order_item_id INT NOT NULL,
+  product_id INT NOT NULL,
+  user_id INT NOT NULL,
+  code VARCHAR(50) UNIQUE NOT NULL COMMENT 'Unique redemption code',
+  code_type ENUM('GiftCard', 'DigitalDownload') NOT NULL,
+  is_redeemed BOOLEAN DEFAULT FALSE,
+  redeemed_at TIMESTAMP NULL,
+  sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_code (code),
+  INDEX idx_user_codes (user_id),
+  INDEX idx_order_codes (order_id)
+);
+
+-- ========================================
+-- 13. INDEXES FOR PERFORMANCE
 -- ========================================
 CREATE INDEX IF NOT EXISTS idx_product_platforms_product ON product_platforms(product_id);
 CREATE INDEX IF NOT EXISTS idx_product_platforms_platform ON product_platforms(platform_id);
@@ -413,7 +438,17 @@ INSERT INTO orders (user_id, total, status, created_at) VALUES
 ON DUPLICATE KEY UPDATE id=id;
 
 -- ========================================
+-- Sample Gift Cards
+-- ========================================
+INSERT INTO products (name, category, price, description, imagePath, stock, age_rating, product_type) VALUES
+('$10 Gaming Gift Card', 'GiftCard', 10.00, 'Digital gift card code worth $10. Redeemable for any products in our store.', 'uploads/giftcard_10.jpg', 999, NULL, 'GiftCard'),
+('$25 Gaming Gift Card', 'GiftCard', 25.00, 'Digital gift card code worth $25. Redeemable for any products in our store.', 'uploads/giftcard_25.jpg', 999, NULL, 'GiftCard'),
+('$50 Gaming Gift Card', 'GiftCard', 50.00, 'Digital gift card code worth $50. Redeemable for any products in our store.', 'uploads/giftcard_50.jpg', 999, NULL, 'GiftCard'),
+('$100 Gaming Gift Card', 'GiftCard', 100.00, 'Digital gift card code worth $100. Redeemable for any products in our store.', 'uploads/giftcard_100.jpg', 999, NULL, 'GiftCard')
+ON DUPLICATE KEY UPDATE id=id;
+
+-- ========================================
 -- END OF SCHEMA
 -- Last Updated: 2025-11-22
--- Version: 1.3 (Added Age Rating System)
+-- Version: 1.4 (Added Gift Cards & Digital Product Types)
 -- ========================================

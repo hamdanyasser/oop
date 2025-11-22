@@ -37,6 +37,7 @@ public class ProductDao {
                 );
                 p.setDiscount(rs.getDouble("discount"));
                 p.setAgeRating(rs.getString("age_rating"));
+                p.setProductType(rs.getString("product_type"));
                 loadPlatformsForProduct(p, conn);
                 loadGenresForProduct(p, conn);
                 list.add(p);
@@ -90,6 +91,7 @@ public class ProductDao {
                 );
                 p.setDiscount(rs.getDouble("discount"));
                 p.setAgeRating(rs.getString("age_rating"));
+                p.setProductType(rs.getString("product_type"));
                 loadPlatformsForProduct(p, conn);
                 loadGenresForProduct(p, conn);
                 list.add(p);
@@ -143,6 +145,7 @@ public class ProductDao {
                 );
                 p.setDiscount(rs.getDouble("discount"));
                 p.setAgeRating(rs.getString("age_rating"));
+                p.setProductType(rs.getString("product_type"));
                 loadPlatformsForProduct(p, conn);
                 loadGenresForProduct(p, conn);
                 list.add(p);
@@ -286,7 +289,7 @@ public class ProductDao {
     }
 
     public void insert(Product p) {
-        String sql = "INSERT INTO products(name,category,price,description,imagePath,stock,age_rating) VALUES(?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO products(name,category,price,description,imagePath,stock,age_rating,product_type) VALUES(?,?,?,?,?,?,?,?)";
         try (Connection conn = DBConnection.getInstance();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, p.getName());
@@ -296,6 +299,7 @@ public class ProductDao {
             ps.setString(5, p.getImagePath());
             ps.setInt(6, p.getStock());
             ps.setString(7, p.getAgeRating());
+            ps.setString(8, p.getProductType() != null ? p.getProductType() : "Physical");
             ps.executeUpdate();
 
             // Get generated product ID
@@ -322,7 +326,7 @@ public class ProductDao {
     public void update(Product p) {
         String sql = """
                 UPDATE products
-                SET name=?, category=?, price=?, description=?, imagePath=?, stock=?, age_rating=?
+                SET name=?, category=?, price=?, description=?, imagePath=?, stock=?, age_rating=?, product_type=?
                 WHERE id=?
                 """;
         try (Connection conn = DBConnection.getInstance();
@@ -334,7 +338,8 @@ public class ProductDao {
             ps.setString(5, p.getImagePath());
             ps.setInt(6, p.getStock());
             ps.setString(7, p.getAgeRating());
-            ps.setInt(8, p.getId());
+            ps.setString(8, p.getProductType() != null ? p.getProductType() : "Physical");
+            ps.setInt(9, p.getId());
             ps.executeUpdate();
 
             // Update platform associations
@@ -438,6 +443,7 @@ public class ProductDao {
         );
         p.setDiscount(rs.getDouble("discount"));
         p.setAgeRating(rs.getString("age_rating"));
+        p.setProductType(rs.getString("product_type"));
         return p;
     }
 }
