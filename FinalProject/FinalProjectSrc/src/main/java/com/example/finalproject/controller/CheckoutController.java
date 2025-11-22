@@ -244,6 +244,29 @@ public class CheckoutController {
                 return;
             }
 
+            // Validate stock availability before placing order
+            for (var entry : cartItems.entrySet()) {
+                Product p = entry.getKey();
+                int requestedQty = entry.getValue();
+
+                // Get fresh product data from database to check current stock
+                Product freshProduct = productDao.getById(p.getId()).orElse(null);
+                if (freshProduct == null) {
+                    showStyledAlert("Product Not Found",
+                        "Product '" + p.getName() + "' no longer exists!",
+                        Alert.AlertType.ERROR);
+                    return;
+                }
+
+                if (freshProduct.getStock() < requestedQty) {
+                    showStyledAlert("Insufficient Stock",
+                        String.format("Only %d units of '%s' available (you requested %d)",
+                            freshProduct.getStock(), p.getName(), requestedQty),
+                        Alert.AlertType.WARNING);
+                    return;
+                }
+            }
+
             List<OrderItem> orderItems = new ArrayList<>();
             for (var entry : cartItems.entrySet()) {
                 Product p = entry.getKey();
@@ -276,6 +299,22 @@ public class CheckoutController {
             order.setTotal(finalTotal);
             order.setStatus("PENDING");
             orderDao.saveOrder(order);
+
+            // Deduct stock for each product in the order
+            for (var entry : cartItems.entrySet()) {
+                Product p = entry.getKey();
+                int qty = entry.getValue();
+
+                // Get fresh product and update stock
+                Product freshProduct = productDao.getById(p.getId()).orElse(null);
+                if (freshProduct != null) {
+                    int newStock = freshProduct.getStock() - qty;
+                    freshProduct.setStock(Math.max(0, newStock)); // Ensure stock doesn't go negative
+                    productDao.update(freshProduct);
+                    System.out.println(String.format("✅ Updated stock for %s: %d → %d",
+                        freshProduct.getName(), freshProduct.getStock() + qty, newStock));
+                }
+            }
 
             // Redeem points if used
             if (pointsToRedeem > 0) {

@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 public class DBConnection {
-    private static Connection instance;
     private static Properties dbProperties;
 
     private DBConnection() {}
@@ -49,22 +48,24 @@ public class DBConnection {
         return dbProperties;
     }
 
+    /**
+     * Creates a new database connection.
+     * Each call returns a fresh connection that should be closed by the caller.
+     * Use with try-with-resources: try (Connection conn = DBConnection.getInstance()) {...}
+     */
     public static Connection getInstance() throws SQLException {
-        if (instance == null || instance.isClosed()) {
-            try {
-                Class.forName("com.mysql.cj.jdbc.Driver");
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
 
-                Properties config = loadDatabaseConfig();
-                String url = config.getProperty("db.url");
-                String username = config.getProperty("db.username");
-                String password = config.getProperty("db.password");
+            Properties config = loadDatabaseConfig();
+            String url = config.getProperty("db.url");
+            String username = config.getProperty("db.username");
+            String password = config.getProperty("db.password");
 
-                instance = DriverManager.getConnection(url, username, password);
+            return DriverManager.getConnection(url, username, password);
 
-            } catch (ClassNotFoundException e) {
-                throw new SQLException("❌ MySQL Driver not found!", e);
-            }
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("❌ MySQL Driver not found!", e);
         }
-        return instance;
     }
 }

@@ -10,36 +10,45 @@ import java.util.List;
 public class OrderDao {
 
     public void saveOrder(Order order) throws SQLException {
-        Connection conn = DBConnection.getInstance();
+        try (Connection conn = DBConnection.getInstance()) {
+            conn.setAutoCommit(false);
+            try {
+                // Insert order and get generated ID
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "INSERT INTO orders(user_id,total,status) VALUES(?,?,?)",
+                        Statement.RETURN_GENERATED_KEYS)) {
+                    ps.setInt(1, order.getUserId());
+                    ps.setDouble(2, order.getTotal());
+                    ps.setString(3, order.getStatus());
+                    ps.executeUpdate();
 
-        conn.setAutoCommit(false);
-        try {
-            PreparedStatement ps = conn.prepareStatement(
-                    "INSERT INTO orders(user_id,total,status) VALUES(?,?,?)",
-                    Statement.RETURN_GENERATED_KEYS);
-            ps.setInt(1, order.getUserId());
-            ps.setDouble(2, order.getTotal());
-            ps.setString(3, order.getStatus());
-            ps.executeUpdate();
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) order.setId(rs.getInt(1));
+                    try (ResultSet rs = ps.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            order.setId(rs.getInt(1));
+                        }
+                    }
+                }
 
-            PreparedStatement itemStmt = conn.prepareStatement(
-                    "INSERT INTO order_items(order_id,product_id,quantity,price) VALUES(?,?,?,?)");
-            for (OrderItem item : order.getItems()) {
-                itemStmt.setInt(1, order.getId());
-                itemStmt.setInt(2, item.getProductId());
-                itemStmt.setInt(3, item.getQuantity());
-                itemStmt.setDouble(4, item.getPrice());
-                itemStmt.addBatch();
+                // Insert order items
+                try (PreparedStatement itemStmt = conn.prepareStatement(
+                        "INSERT INTO order_items(order_id,product_id,quantity,price) VALUES(?,?,?,?)")) {
+                    for (OrderItem item : order.getItems()) {
+                        itemStmt.setInt(1, order.getId());
+                        itemStmt.setInt(2, item.getProductId());
+                        itemStmt.setInt(3, item.getQuantity());
+                        itemStmt.setDouble(4, item.getPrice());
+                        itemStmt.addBatch();
+                    }
+                    itemStmt.executeBatch();
+                }
+
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
             }
-            itemStmt.executeBatch();
-            conn.commit();
-        } catch (SQLException e) {
-            conn.rollback();
-            throw e;
-        } finally {
-            conn.setAutoCommit(true);
         }
     }
 
