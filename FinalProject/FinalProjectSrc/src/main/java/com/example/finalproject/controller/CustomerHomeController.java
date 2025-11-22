@@ -42,6 +42,7 @@ public class CustomerHomeController {
     private ComboBox<String> platformChoice;
     private ComboBox<String> genreChoice;
     private ComboBox<String> ageRatingChoice;
+    private ComboBox<String> priceRangeChoice;
     private List<Platform> allPlatforms;
     private List<Genre> allGenres;
     private List<Product> filteredProducts;
@@ -90,12 +91,17 @@ public class CustomerHomeController {
         ageRatingChoice.getItems().addAll("All Ratings", "E (Everyone)", "E10+ (Everyone 10+)", "T (Teen)", "M (Mature 17+)", "AO (Adults Only)");
         ageRatingChoice.setValue("All Ratings");
 
+        // Initialize price range filter
+        priceRangeChoice.getItems().addAll("All Prices", "$0 - $20", "$20 - $40", "$40 - $60", "$60 - $100", "$100 - $500", "$500+");
+        priceRangeChoice.setValue("All Prices");
+
         // Listeners
         searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
         categoryChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
         platformChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
         genreChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
         ageRatingChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        priceRangeChoice.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> applyFilters());
 
         return root;
     }
@@ -215,6 +221,14 @@ public class CustomerHomeController {
         ageRatingChoice.setPromptText("All Ratings");
         ageRatingChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
 
+        Label priceIcon = new Label("💰");
+        priceIcon.setStyle("-fx-font-size: 18px;");
+
+        priceRangeChoice = new ComboBox<>();
+        priceRangeChoice.setPrefWidth(140);
+        priceRangeChoice.setPromptText("All Prices");
+        priceRangeChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
+
         Button resetBtn = new Button("↺ Reset");
         resetBtn.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; " +
                 "-fx-background-radius: 8; -fx-padding: 8 15; -fx-font-weight: 600;");
@@ -224,7 +238,7 @@ public class CustomerHomeController {
                 "-fx-background-radius: 8; -fx-padding: 8 15; -fx-font-weight: 600;"));
         resetBtn.setOnAction(e -> onReset());
 
-        filterBar.getChildren().addAll(searchIcon, searchField, filterIcon, categoryChoice, platformIcon, platformChoice, genreIcon, genreChoice, ratingIcon, ageRatingChoice, resetBtn);
+        filterBar.getChildren().addAll(searchIcon, searchField, filterIcon, categoryChoice, platformIcon, platformChoice, genreIcon, genreChoice, ratingIcon, ageRatingChoice, priceIcon, priceRangeChoice, resetBtn);
         return filterBar;
     }
 
@@ -276,6 +290,7 @@ public class CustomerHomeController {
         String platform = platformChoice.getValue();
         String genre = genreChoice.getValue();
         String ageRating = ageRatingChoice.getValue();
+        String priceRange = priceRangeChoice.getValue();
         String sortOption = sortChoice.getValue();
 
         // Extract rating code from display string (e.g., "M (Mature 17+)" -> "M")
@@ -286,6 +301,23 @@ public class CustomerHomeController {
 
         String finalRatingCode = ratingCode;
 
+        // Parse price range
+        double minPrice = 0;
+        double maxPrice = Double.MAX_VALUE;
+        if (priceRange != null && !priceRange.equals("All Prices")) {
+            if (priceRange.equals("$500+")) {
+                minPrice = 500;
+                maxPrice = Double.MAX_VALUE;
+            } else {
+                String[] parts = priceRange.replace("$", "").split(" - ");
+                minPrice = Double.parseDouble(parts[0]);
+                maxPrice = Double.parseDouble(parts[1]);
+            }
+        }
+
+        double finalMinPrice = minPrice;
+        double finalMaxPrice = maxPrice;
+
         // FILTER PRODUCTS
         filteredProducts = allProducts.stream()
                 .filter(p -> (category.equals("All") || p.getCategory().equalsIgnoreCase(category)))
@@ -295,6 +327,7 @@ public class CustomerHomeController {
                         p.getGenres().contains(genre)))
                 .filter(p -> (finalRatingCode == null ||
                         (p.getAgeRating() != null && p.getAgeRating().equals(finalRatingCode))))
+                .filter(p -> p.getEffectivePrice() >= finalMinPrice && p.getEffectivePrice() <= finalMaxPrice)
                 .filter(p -> p.getName().toLowerCase().contains(keyword) ||
                         p.getCategory().toLowerCase().contains(keyword))
                 .collect(java.util.stream.Collectors.toList());
@@ -329,6 +362,7 @@ public class CustomerHomeController {
         platformChoice.setValue("All Platforms");
         genreChoice.setValue("All Genres");
         ageRatingChoice.setValue("All Ratings");
+        priceRangeChoice.setValue("All Prices");
         sortChoice.setValue("None");
         applyFilters();
     }
