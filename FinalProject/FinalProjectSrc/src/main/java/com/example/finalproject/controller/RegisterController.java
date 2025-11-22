@@ -1,8 +1,12 @@
 package com.example.finalproject.controller;
 
 import com.example.finalproject.HelloApplication;
+import com.example.finalproject.dao.UserDao;
+import com.example.finalproject.model.User;
+import com.example.finalproject.security.JwtService;
 import com.example.finalproject.security.Session;
 import com.example.finalproject.service.AuthService;
+import com.example.finalproject.service.EmailNotificationService;
 import javafx.animation.FadeTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -19,6 +23,8 @@ public class RegisterController {
     private ProgressIndicator progressIndicator;
 
     private final AuthService authService = new AuthService();
+    private final UserDao userDao = new UserDao();
+    private final EmailNotificationService emailNotificationService = new EmailNotificationService();
 
     public Parent createView() {
         StackPane root = new StackPane();
@@ -249,6 +255,14 @@ public class RegisterController {
 
             msgLabel.setStyle("-fx-text-fill: #28a745; -fx-font-size: 13px; -fx-font-weight: 600;");
             msgLabel.setText("✅ Account created successfully!");
+
+            // Send welcome email
+            int userId = JwtService.getUserId(token);
+            User newUser = userDao.getUserById(userId).orElse(null);
+            if (newUser != null) {
+                emailNotificationService.sendWelcomeEmail(newUser);
+                System.out.println("✅ Welcome email sent to: " + newUser.getEmail());
+            }
 
             // Delay for user to see success message
             javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(Duration.seconds(1));

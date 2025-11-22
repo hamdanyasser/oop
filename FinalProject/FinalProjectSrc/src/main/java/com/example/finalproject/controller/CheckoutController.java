@@ -3,14 +3,17 @@ package com.example.finalproject.controller;
 import com.example.finalproject.HelloApplication;
 import com.example.finalproject.dao.OrderDao;
 import com.example.finalproject.dao.ProductDao;
+import com.example.finalproject.dao.UserDao;
 import com.example.finalproject.model.Order;
 import com.example.finalproject.model.OrderItem;
 import com.example.finalproject.model.Product;
+import com.example.finalproject.model.User;
 import com.example.finalproject.security.AuthGuard;
 import com.example.finalproject.security.JwtService;
 import com.example.finalproject.security.Session;
 import com.example.finalproject.service.CartService;
 import com.example.finalproject.service.DigitalCodeService;
+import com.example.finalproject.service.EmailNotificationService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -30,7 +33,9 @@ public class CheckoutController {
     private final CartService cartService = CartService.getInstance();
     private final OrderDao orderDao = new OrderDao();
     private final ProductDao productDao = new ProductDao();
+    private final UserDao userDao = new UserDao();
     private final DigitalCodeService digitalCodeService = new DigitalCodeService();
+    private final EmailNotificationService emailNotificationService = new EmailNotificationService();
 
     public Parent createView() {
         AuthGuard.requireLogin();
@@ -239,6 +244,13 @@ public class CheckoutController {
                     );
                     System.out.println("✅ Generated and sent " + item.getQuantity() + " code(s) for: " + product.getName());
                 }
+            }
+
+            // Send order confirmation email
+            User user = userDao.getUserById(userId).orElse(null);
+            if (user != null) {
+                emailNotificationService.sendOrderConfirmationEmail(user, order);
+                System.out.println("✅ Order confirmation email sent to: " + user.getEmail());
             }
 
             cartService.clear();

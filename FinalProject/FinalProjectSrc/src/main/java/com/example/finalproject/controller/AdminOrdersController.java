@@ -2,10 +2,12 @@ package com.example.finalproject.controller;
 
 import com.example.finalproject.HelloApplication;
 import com.example.finalproject.model.Order;
+import com.example.finalproject.model.User;
 import com.example.finalproject.security.AuthGuard;
 import com.example.finalproject.security.Session;
 import com.example.finalproject.service.InvoiceService;
 import com.example.finalproject.service.OrderService;
+import com.example.finalproject.service.EmailNotificationService;
 import com.example.finalproject.util.EmailSender;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -33,6 +35,7 @@ public class AdminOrdersController {
     private final UserDao userDao = new UserDao();
 
     private final OrderService service = new OrderService();
+    private final EmailNotificationService emailNotificationService = new EmailNotificationService();
 
     public Parent createView() {
         AuthGuard.requireLogin();
@@ -345,6 +348,16 @@ public class AdminOrdersController {
 
         if (confirm.showAndWait().get() == ButtonType.OK) {
             service.markDelivered(selected.getId());
+
+            // Send shipping notification email
+            User user = userDao.getUserById(selected.getUserId()).orElse(null);
+            if (user != null) {
+                // Update order status in the object for email
+                selected.setStatus("DELIVERED");
+                emailNotificationService.sendShippingNotificationEmail(user, selected);
+                System.out.println("✅ Shipping notification sent to: " + user.getEmail());
+            }
+
             loadData();
             showStyledAlert("Success", "✅ Order marked as delivered!", Alert.AlertType.INFORMATION);
         }
