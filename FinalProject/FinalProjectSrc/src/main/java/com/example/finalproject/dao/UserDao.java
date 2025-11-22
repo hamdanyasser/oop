@@ -21,15 +21,22 @@ public class UserDao {
     }
 
     public void save(User user) {
-        try (Connection conn = DBConnection.getInstance()) {
-            PreparedStatement ps = conn.prepareStatement(
-                    "INSERT INTO users(name,email,password_hash,role,address) VALUES(?,?,?,?,?)");
+        try (Connection conn = DBConnection.getInstance();
+             PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO users(name,email,password_hash,role,address) VALUES(?,?,?,?,?)",
+                    Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, user.getName());
             ps.setString(2, user.getEmail());
             ps.setString(3, user.getPasswordHash());
             ps.setString(4, user.getRole());
             ps.setString(5, user.getAddress());
             ps.executeUpdate();
+
+            // Get generated ID and update the user object
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                user.setId(rs.getInt(1));
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -83,6 +90,23 @@ public class UserDao {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public Optional<User> getUserById(int userId) {
+        String sql = "SELECT * FROM users WHERE id = ?";
+        try (Connection conn = DBConnection.getInstance();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return Optional.of(mapUser(rs));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Optional.empty();
     }
 
 
