@@ -1,5 +1,6 @@
 package com.example.finalproject.util;
 
+import com.example.finalproject.service.ThemeManager;
 import javafx.animation.FadeTransition;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -11,6 +12,7 @@ import javafx.util.Duration;
 /**
  * Reusable loading overlay with spinner
  * Shows a semi-transparent overlay with loading spinner and message
+ * Adapts to light/dark theme automatically
  */
 public class LoadingOverlay {
 
@@ -32,26 +34,58 @@ public class LoadingOverlay {
         contentBox.setMaxWidth(250);
         contentBox.setMaxHeight(200);
         contentBox.setPadding(new javafx.geometry.Insets(30));
-        contentBox.setStyle("-fx-background-color: white; " +
-                "-fx-background-radius: 16; " +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 5);");
 
         // Create spinner
         spinner = new ProgressIndicator();
         spinner.setPrefSize(60, 60);
-        spinner.setStyle("-fx-progress-color: #667eea;");
 
         // Create message label
         messageLabel = new Label("Loading...");
-        messageLabel.setStyle("-fx-font-size: 16px; " +
-                "-fx-font-weight: bold; " +
-                "-fx-text-fill: #2c3e50; " +
-                "-fx-wrap-text: true; " +
-                "-fx-text-alignment: center;");
         messageLabel.setMaxWidth(200);
 
         contentBox.getChildren().addAll(spinner, messageLabel);
         overlay.getChildren().add(contentBox);
+
+        // Apply initial theme
+        applyTheme();
+    }
+
+    /**
+     * Apply theme-appropriate styling
+     */
+    private void applyTheme() {
+        boolean isDark = ThemeManager.getInstance().isDarkMode();
+
+        if (isDark) {
+            // Dark theme styling
+            contentBox.setStyle("-fx-background-color: #2d2d2d; " +
+                    "-fx-background-radius: 16; " +
+                    "-fx-border-color: #404040; " +
+                    "-fx-border-radius: 16; " +
+                    "-fx-border-width: 1; " +
+                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 20, 0, 0, 5);");
+
+            spinner.setStyle("-fx-progress-color: #4a9eff;");
+
+            messageLabel.setStyle("-fx-font-size: 16px; " +
+                    "-fx-font-weight: bold; " +
+                    "-fx-text-fill: #e0e0e0; " +
+                    "-fx-wrap-text: true; " +
+                    "-fx-text-alignment: center;");
+        } else {
+            // Light theme styling
+            contentBox.setStyle("-fx-background-color: white; " +
+                    "-fx-background-radius: 16; " +
+                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 5);");
+
+            spinner.setStyle("-fx-progress-color: #667eea;");
+
+            messageLabel.setStyle("-fx-font-size: 16px; " +
+                    "-fx-font-weight: bold; " +
+                    "-fx-text-fill: #2c3e50; " +
+                    "-fx-wrap-text: true; " +
+                    "-fx-text-alignment: center;");
+        }
     }
 
     /**
@@ -72,6 +106,7 @@ public class LoadingOverlay {
      * Show loading overlay with custom message
      */
     public void show(String message) {
+        applyTheme(); // Refresh theme before showing
         messageLabel.setText(message);
         overlay.setVisible(true);
         overlay.toFront();

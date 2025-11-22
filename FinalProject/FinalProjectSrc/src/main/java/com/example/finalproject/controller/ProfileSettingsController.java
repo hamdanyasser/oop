@@ -29,7 +29,7 @@ public class ProfileSettingsController {
 
         BorderPane root = new BorderPane();
         root.setPrefSize(900, 700);
-        root.setStyle("-fx-background-color: #f5f7fa;");
+        root.setStyle(getBackgroundStyle());
 
         // Top bar
         HBox topBar = createTopBar();
@@ -113,7 +113,7 @@ public class ProfileSettingsController {
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 15, 0, 0, 5);");
 
         Label welcomeLabel = new Label("Manage Your Profile");
-        welcomeLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #6c757d;");
+        welcomeLabel.setStyle(getSubtitleStyle());
 
         headerBox.getChildren().addAll(avatarLabel, welcomeLabel);
 
@@ -124,9 +124,7 @@ public class ProfileSettingsController {
         VBox card = new VBox(20);
         card.setMaxWidth(600);
         card.setPadding(new Insets(30));
-        card.setStyle("-fx-background-color: white; -fx-background-radius: 16; " +
-                "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
+        card.setStyle(getCardStyle());
 
         // Section header
         HBox header = new HBox(10);
@@ -136,7 +134,7 @@ public class ProfileSettingsController {
         iconLabel.setStyle("-fx-font-size: 24px;");
 
         Label sectionLabel = new Label("Personal Information");
-        sectionLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        sectionLabel.setStyle(getTitleStyle());
 
         header.getChildren().addAll(iconLabel, sectionLabel);
 
@@ -163,9 +161,7 @@ public class ProfileSettingsController {
         VBox card = new VBox(20);
         card.setMaxWidth(600);
         card.setPadding(new Insets(30));
-        card.setStyle("-fx-background-color: white; -fx-background-radius: 16; " +
-                "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
+        card.setStyle(getCardStyle());
 
         // Section header
         HBox header = new HBox(10);
@@ -175,7 +171,7 @@ public class ProfileSettingsController {
         iconLabel.setStyle("-fx-font-size: 24px;");
 
         Label sectionLabel = new Label("Security Settings");
-        sectionLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        sectionLabel.setStyle(getTitleStyle());
 
         header.getChildren().addAll(iconLabel, sectionLabel);
 
@@ -229,9 +225,7 @@ public class ProfileSettingsController {
         VBox card = new VBox(20);
         card.setMaxWidth(600);
         card.setPadding(new Insets(30));
-        card.setStyle("-fx-background-color: white; -fx-background-radius: 16; " +
-                "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
+        card.setStyle(getCardStyle());
 
         // Section header
         HBox header = new HBox(10);
@@ -241,7 +235,7 @@ public class ProfileSettingsController {
         iconLabel.setStyle("-fx-font-size: 24px;");
 
         Label sectionLabel = new Label("Appearance Preferences");
-        sectionLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        sectionLabel.setStyle(getTitleStyle());
 
         header.getChildren().addAll(iconLabel, sectionLabel);
 
@@ -473,5 +467,36 @@ public class ProfileSettingsController {
     private void onLogout() {
         Session.clear();
         HelloApplication.setRoot(new LoginController());
+    }
+
+    // Theme-aware style helpers
+    private String getBackgroundStyle() {
+        boolean isDark = ThemeManager.getInstance().isDarkMode();
+        return isDark ? "-fx-background-color: #1a1a1a;" : "-fx-background-color: #f5f7fa;";
+    }
+
+    private String getCardStyle() {
+        boolean isDark = ThemeManager.getInstance().isDarkMode();
+        if (isDark) {
+            return "-fx-background-color: #2d2d2d; -fx-background-radius: 16; " +
+                    "-fx-border-color: #404040; -fx-border-radius: 16; -fx-border-width: 1; " +
+                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 15, 0, 0, 5);";
+        } else {
+            return "-fx-background-color: white; -fx-background-radius: 16; " +
+                    "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
+                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);";
+        }
+    }
+
+    private String getTitleStyle() {
+        boolean isDark = ThemeManager.getInstance().isDarkMode();
+        String color = isDark ? "#e0e0e0" : "#2c3e50";
+        return "-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: " + color + ";";
+    }
+
+    private String getSubtitleStyle() {
+        boolean isDark = ThemeManager.getInstance().isDarkMode();
+        String color = isDark ? "#b0b0b0" : "#6c757d";
+        return "-fx-font-size: 16px; -fx-text-fill: " + color + ";";
     }
 }
