@@ -60,7 +60,7 @@ public class CustomerHomeController {
 
         // Top bar
         VBox topSection = new VBox();
-        topSection.getChildren().addAll(createTopBar(), createFilterBar(), createSortBar());
+        topSection.getChildren().addAll(createTopBar(), createFilterBar(), createSortBar(), createStatisticsCards());
 
         root.setTop(topSection);
 
@@ -147,6 +147,116 @@ public class CustomerHomeController {
         sortBar.getChildren().addAll(sortLabel, sortChoice, spacer, activeFiltersLabel);
 
         return sortBar;
+    }
+
+    /**
+     * Create statistics cards showing key metrics
+     */
+    private HBox createStatisticsCards() {
+        HBox statsContainer = new HBox(20);
+        statsContainer.setAlignment(Pos.CENTER);
+        statsContainer.setPadding(new Insets(20, 30, 15, 30));
+        statsContainer.setStyle("-fx-background-color: transparent;");
+
+        // Get theme
+        boolean isDark = com.example.finalproject.service.ThemeManager.getInstance().isDarkMode();
+
+        // Card styling based on theme
+        String cardStyle;
+        String iconStyle;
+        String labelStyle;
+        String valueStyle;
+
+        if (isDark) {
+            cardStyle = "-fx-background-color: #2d2d2d; -fx-background-radius: 16; " +
+                    "-fx-border-color: #404040; -fx-border-width: 1; -fx-border-radius: 16; " +
+                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 3); " +
+                    "-fx-padding: 20;";
+            iconStyle = "-fx-font-size: 32px;";
+            labelStyle = "-fx-font-size: 13px; -fx-text-fill: #b0b0b0; -fx-font-weight: 600;";
+            valueStyle = "-fx-font-size: 28px; -fx-text-fill: #e0e0e0; -fx-font-weight: bold;";
+        } else {
+            cardStyle = "-fx-background-color: white; -fx-background-radius: 16; " +
+                    "-fx-border-color: #e1e4e8; -fx-border-width: 1; -fx-border-radius: 16; " +
+                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3); " +
+                    "-fx-padding: 20;";
+            iconStyle = "-fx-font-size: 32px;";
+            labelStyle = "-fx-font-size: 13px; -fx-text-fill: #6c757d; -fx-font-weight: 600;";
+            valueStyle = "-fx-font-size: 28px; -fx-text-fill: #2c3e50; -fx-font-weight: bold;";
+        }
+
+        // Calculate statistics
+        int totalProducts = allProducts != null ? allProducts.size() : 0;
+        int totalPlatforms = allPlatforms != null ? allPlatforms.size() : 0;
+        int totalGenres = allGenres != null ? allGenres.size() : 0;
+
+        // Count unique categories
+        long totalCategories = 0;
+        if (allProducts != null) {
+            totalCategories = allProducts.stream()
+                    .map(p -> p.getCategory())
+                    .distinct()
+                    .count();
+        }
+
+        // Create cards
+        VBox card1 = createStatCard("📦", "Total Products", String.valueOf(totalProducts),
+                cardStyle, iconStyle, labelStyle, valueStyle, "#667eea");
+        VBox card2 = createStatCard("🎮", "Platforms", String.valueOf(totalPlatforms),
+                cardStyle, iconStyle, labelStyle, valueStyle, "#28a745");
+        VBox card3 = createStatCard("🎯", "Genres", String.valueOf(totalGenres),
+                cardStyle, iconStyle, labelStyle, valueStyle, "#17a2b8");
+        VBox card4 = createStatCard("🏷️", "Categories", String.valueOf(totalCategories),
+                cardStyle, iconStyle, labelStyle, valueStyle, "#ffc107");
+
+        statsContainer.getChildren().addAll(card1, card2, card3, card4);
+
+        return statsContainer;
+    }
+
+    /**
+     * Helper method to create individual stat card
+     */
+    private VBox createStatCard(String icon, String label, String value,
+                                 String cardStyle, String iconStyle,
+                                 String labelStyle, String valueStyle,
+                                 String accentColor) {
+        VBox card = new VBox(8);
+        card.setAlignment(Pos.CENTER);
+        card.setPrefWidth(240);
+        card.setPrefHeight(120);
+        card.setStyle(cardStyle);
+
+        // Icon with colored background circle
+        StackPane iconContainer = new StackPane();
+        iconContainer.setPrefSize(60, 60);
+        iconContainer.setStyle("-fx-background-color: " + accentColor + "20; " +
+                "-fx-background-radius: 30;");
+
+        Label iconLabel = new Label(icon);
+        iconLabel.setStyle(iconStyle);
+        iconContainer.getChildren().add(iconLabel);
+
+        // Value
+        Label valueLabel = new Label(value);
+        valueLabel.setStyle(valueStyle + " -fx-text-fill: " + accentColor + ";");
+
+        // Label
+        Label textLabel = new Label(label);
+        textLabel.setStyle(labelStyle);
+
+        card.getChildren().addAll(iconContainer, valueLabel, textLabel);
+
+        // Hover effect
+        card.setOnMouseEntered(e -> {
+            card.setStyle(cardStyle + " -fx-translate-y: -3; " +
+                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 15, 0, 0, 5);");
+        });
+        card.setOnMouseExited(e -> {
+            card.setStyle(cardStyle);
+        });
+
+        return card;
     }
 
     private HBox createTopBar() {
