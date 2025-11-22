@@ -14,6 +14,7 @@ import com.example.finalproject.security.Session;
 import com.example.finalproject.service.CartService;
 import com.example.finalproject.service.DigitalCodeService;
 import com.example.finalproject.service.EmailNotificationService;
+import com.example.finalproject.util.ToastNotification;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -256,13 +257,13 @@ public class CheckoutController {
             cartService.clear();
 
             String successMessage = hasDigitalItems
-                ? "✅ Order placed successfully!\n\n📧 Digital codes have been sent to your email."
-                : "✅ Order placed successfully!";
-            showStyledAlert("Success", successMessage, Alert.AlertType.INFORMATION);
+                ? "Order placed! Digital codes sent to your email."
+                : "Order placed successfully!";
+            ToastNotification.success(successMessage);
             HelloApplication.setRoot(new CustomerHomeController());
         } catch (SQLException e) {
             e.printStackTrace();
-            showStyledAlert("Error", "❌ Error saving order: " + e.getMessage(), Alert.AlertType.ERROR);
+            ToastNotification.error("Error saving order: " + e.getMessage());
         }
     }
 

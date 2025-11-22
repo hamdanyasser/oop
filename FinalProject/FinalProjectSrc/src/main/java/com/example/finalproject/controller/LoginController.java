@@ -5,6 +5,7 @@ import com.example.finalproject.security.JwtService;
 import com.example.finalproject.security.Session;
 import com.example.finalproject.service.AuthService;
 import com.example.finalproject.util.LoadingOverlay;
+import com.example.finalproject.util.ToastNotification;
 import javafx.animation.FadeTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -228,6 +229,7 @@ public class LoginController {
             String role = JwtService.getRole(token);
 
             loadingOverlay.updateMessage("✅ Login successful!");
+            ToastNotification.success("Welcome back! Logging you in...");
 
             msgLabel.setStyle("-fx-text-fill: #28a745; -fx-font-size: 13px; -fx-font-weight: 600;");
             msgLabel.setText("✅ Login successful!");
@@ -244,6 +246,7 @@ public class LoginController {
 
         } catch (Exception e) {
             loadingOverlay.hide();
+            ToastNotification.error(e.getMessage());
             msgLabel.setStyle("-fx-text-fill: #dc3545; -fx-font-size: 13px; -fx-font-weight: 600;");
             msgLabel.setText("❌ " + e.getMessage());
         }

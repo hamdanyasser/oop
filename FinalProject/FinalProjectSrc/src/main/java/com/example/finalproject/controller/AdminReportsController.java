@@ -6,6 +6,7 @@ import com.example.finalproject.model.TopProduct;
 import com.example.finalproject.model.CategorySale;
 import com.example.finalproject.security.AuthGuard;
 import com.example.finalproject.util.LoadingOverlay;
+import com.example.finalproject.util.ToastNotification;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -428,7 +429,7 @@ public class AdminReportsController {
         javafx.application.Platform.runLater(() -> {
             loadData();
             loadingOverlay.hide();
-            showStyledAlert("Success", "✅ Data refreshed successfully!", Alert.AlertType.INFORMATION);
+            ToastNotification.success("Data refreshed successfully!");
         });
     }
 
