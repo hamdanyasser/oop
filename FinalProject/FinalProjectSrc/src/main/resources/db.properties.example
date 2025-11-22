@@ -1,0 +1,7 @@
+# Database Configuration Template
+# Copy this file to db.properties and fill in your actual credentials
+# DO NOT commit db.properties to version control
+
+db.url=jdbc:mysql://localhost:3306/pr1
+db.username=your_username_here
+db.password=your_password_here

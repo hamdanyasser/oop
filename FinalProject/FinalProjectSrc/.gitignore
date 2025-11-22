@@ -36,3 +36,7 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Database Credentials ###
+src/main/resources/db.properties
+db.properties
