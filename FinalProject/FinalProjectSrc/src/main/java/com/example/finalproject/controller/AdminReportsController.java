@@ -5,6 +5,7 @@ import com.example.finalproject.dao.ReportDao;
 import com.example.finalproject.model.TopProduct;
 import com.example.finalproject.model.CategorySale;
 import com.example.finalproject.security.AuthGuard;
+import com.example.finalproject.util.LoadingOverlay;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -30,6 +31,7 @@ public class AdminReportsController {
     private TableColumn<TopProduct, String> colProduct;
     private TableColumn<TopProduct, Integer> colQty;
     private TableColumn<TopProduct, Double> colRevenue;
+    private LoadingOverlay loadingOverlay;
 
     private final ReportDao dao = new ReportDao();
 
@@ -76,10 +78,21 @@ public class AdminReportsController {
         scrollPane.setContent(centerBox);
         root.setCenter(scrollPane);
 
-        // Load data
-        loadData();
+        // Wrap in StackPane for loading overlay
+        StackPane wrapper = new StackPane(root);
 
-        return root;
+        // Add loading overlay
+        loadingOverlay = new LoadingOverlay();
+        wrapper.getChildren().add(loadingOverlay.getOverlay());
+
+        // Load data with loading spinner
+        loadingOverlay.show("Loading analytics data...");
+        javafx.application.Platform.runLater(() -> {
+            loadData();
+            loadingOverlay.hide();
+        });
+
+        return wrapper;
     }
 
     private HBox createTopBar() {
@@ -411,8 +424,12 @@ public class AdminReportsController {
     }
 
     private void onRefresh() {
-        loadData();
-        showStyledAlert("Success", "✅ Data refreshed successfully!", Alert.AlertType.INFORMATION);
+        loadingOverlay.show("Refreshing data...");
+        javafx.application.Platform.runLater(() -> {
+            loadData();
+            loadingOverlay.hide();
+            showStyledAlert("Success", "✅ Data refreshed successfully!", Alert.AlertType.INFORMATION);
+        });
     }
 
     private void onExportCSV() {
