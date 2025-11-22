@@ -33,7 +33,7 @@ public class AdminReviewsController {
     private ObservableList<Review> reviewList;
 
     public Parent createView() {
-        AuthGuard.requireLogin();
+        AuthGuard.requireAdmin();
 
         BorderPane root = new BorderPane();
         root.setPrefSize(900, 650);

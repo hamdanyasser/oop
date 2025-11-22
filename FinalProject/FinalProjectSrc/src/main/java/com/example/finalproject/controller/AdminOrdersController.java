@@ -38,7 +38,7 @@ public class AdminOrdersController {
     private final EmailNotificationService emailNotificationService = new EmailNotificationService();
 
     public Parent createView() {
-        AuthGuard.requireLogin();
+        AuthGuard.requireAdmin();
 
         BorderPane root = new BorderPane();
         root.setPrefSize(1200, 750);

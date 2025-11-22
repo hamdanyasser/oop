@@ -37,7 +37,7 @@ public class AdminReportsController {
     private final ReportDao dao = new ReportDao();
 
     public Parent createView() {
-        AuthGuard.requireLogin();
+        AuthGuard.requireAdmin();
 
         BorderPane root = new BorderPane();
         root.setPrefSize(1100, 750);

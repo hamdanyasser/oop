@@ -36,7 +36,7 @@ public class AdminPromotionsController {
     private final PromotionDao dao = new PromotionDao();
 
     public Parent createView() {
-        AuthGuard.requireLogin();
+        AuthGuard.requireAdmin();
 
         BorderPane root = new BorderPane();
         root.setPrefSize(900, 650);
