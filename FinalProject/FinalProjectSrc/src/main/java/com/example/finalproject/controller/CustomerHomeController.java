@@ -55,6 +55,12 @@ public class CustomerHomeController {
     private final ReviewService reviewService = new ReviewService();
     private final LoyaltyService loyaltyService = new LoyaltyService();
 
+    // Statistics card labels (to update after data loads)
+    private Label statsProductsValue;
+    private Label statsPlatformsValue;
+    private Label statsGenresValue;
+    private Label statsCategoriesValue;
+
     public Parent createView() {
         AuthGuard.requireLogin();
 
@@ -101,6 +107,7 @@ public class CustomerHomeController {
         loadProducts();
         loadPlatforms();
         loadGenres();
+        updateStatistics(); // Update statistics after data is loaded
         categoryChoice.getItems().addAll("All Categories", "Console", "PC", "Accessory", "Game", "Controller");
         categoryChoice.setValue("All Categories");
 
@@ -123,12 +130,22 @@ public class CustomerHomeController {
         return root;
     }
     /**
-     * Create featured products section with horizontal scrolling
+     * Create featured products section with horizontal scrolling - HIDDEN BY DEFAULT
      */
     private VBox createFeaturedProductsSection() {
-        VBox featuredContainer = new VBox(20);
-        featuredContainer.setPadding(new Insets(20, 30, 10, 30));
+        VBox featuredContainer = new VBox(15);
+        featuredContainer.setPadding(new Insets(10, 30, 10, 30));
         featuredContainer.setStyle("-fx-background-color: white; -fx-border-color: #e1e4e8; -fx-border-width: 0 0 1 0;");
+
+        // Toggle button to show/hide featured section
+        Button toggleBtn = new Button("▼ Show Featured Products");
+        toggleBtn.setStyle("-fx-background-color: #667eea; -fx-text-fill: white; " +
+                "-fx-background-radius: 6; -fx-padding: 6 15; -fx-font-size: 12px; -fx-font-weight: 600; -fx-cursor: hand;");
+
+        // Content container (initially hidden)
+        VBox contentContainer = new VBox(15);
+        contentContainer.setVisible(false);
+        contentContainer.setManaged(false);
 
         // Get featured products
         List<Product> bestDeals = allProducts != null ? allProducts.stream()
@@ -149,7 +166,7 @@ public class CustomerHomeController {
                 .limit(5)
                 .collect(Collectors.toList()) : new ArrayList<>();
 
-        // Only show if we have products
+        // Only show toggle if we have products
         if (allProducts == null || allProducts.isEmpty()) {
             featuredContainer.setVisible(false);
             featuredContainer.setManaged(false);
@@ -159,19 +176,35 @@ public class CustomerHomeController {
         // Best Deals Section
         if (!bestDeals.isEmpty()) {
             VBox dealsSection = createFeaturedCategory("🔥 Hot Deals", bestDeals, "#dc3545");
-            featuredContainer.getChildren().add(dealsSection);
+            contentContainer.getChildren().add(dealsSection);
         }
 
         // Top Rated Section
         if (!topRated.isEmpty()) {
             VBox topRatedSection = createFeaturedCategory("⭐ Top Rated", topRated, "#ffc107");
-            featuredContainer.getChildren().add(topRatedSection);
+            contentContainer.getChildren().add(topRatedSection);
         }
 
         // New Arrivals Section
         if (!newArrivals.isEmpty()) {
             VBox newSection = createFeaturedCategory("🆕 New Arrivals", newArrivals, "#28a745");
-            featuredContainer.getChildren().add(newSection);
+            contentContainer.getChildren().add(newSection);
+        }
+
+        // Toggle button action
+        toggleBtn.setOnAction(e -> {
+            boolean isVisible = contentContainer.isVisible();
+            contentContainer.setVisible(!isVisible);
+            contentContainer.setManaged(!isVisible);
+            toggleBtn.setText(isVisible ? "▼ Show Featured Products" : "▲ Hide Featured Products");
+        });
+
+        // Only show toggle button if we have featured products
+        if (contentContainer.getChildren().isEmpty()) {
+            featuredContainer.setVisible(false);
+            featuredContainer.setManaged(false);
+        } else {
+            featuredContainer.getChildren().addAll(toggleBtn, contentContainer);
         }
 
         return featuredContainer;
@@ -187,12 +220,12 @@ public class CustomerHomeController {
         Label titleLabel = new Label(title);
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: " + accentColor + ";");
 
-        // Horizontal scroll pane for products
+        // Horizontal scroll pane for products - more compact
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
-        scrollPane.setPrefHeight(200);
+        scrollPane.setPrefHeight(170);
 
         HBox productRow = new HBox(15);
         productRow.setPadding(new Insets(10, 0, 10, 0));
@@ -325,40 +358,20 @@ public class CustomerHomeController {
     }
 
     /**
-     * Create statistics cards showing key metrics
+     * Create statistics cards showing key metrics - COMPACT VERSION
      */
     private HBox createStatisticsCards() {
-        HBox statsContainer = new HBox(20);
+        HBox statsContainer = new HBox(15);
         statsContainer.setAlignment(Pos.CENTER);
-        statsContainer.setPadding(new Insets(20, 30, 15, 30));
-        statsContainer.setStyle("-fx-background-color: transparent;");
+        statsContainer.setPadding(new Insets(10, 30, 10, 30));
+        statsContainer.setStyle("-fx-background-color: white; -fx-border-color: #e1e4e8; -fx-border-width: 0 0 1 0;");
 
-        // Get theme
-        boolean isDark = com.example.finalproject.service.ThemeManager.getInstance().isDarkMode();
-
-        // Card styling based on theme
-        String cardStyle;
-        String iconStyle;
-        String labelStyle;
-        String valueStyle;
-
-        if (isDark) {
-            cardStyle = "-fx-background-color: #2d2d2d; -fx-background-radius: 16; " +
-                    "-fx-border-color: #404040; -fx-border-width: 1; -fx-border-radius: 16; " +
-                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 3); " +
-                    "-fx-padding: 20;";
-            iconStyle = "-fx-font-size: 32px;";
-            labelStyle = "-fx-font-size: 13px; -fx-text-fill: #b0b0b0; -fx-font-weight: 600;";
-            valueStyle = "-fx-font-size: 28px; -fx-text-fill: #e0e0e0; -fx-font-weight: bold;";
-        } else {
-            cardStyle = "-fx-background-color: white; -fx-background-radius: 16; " +
-                    "-fx-border-color: #e1e4e8; -fx-border-width: 1; -fx-border-radius: 16; " +
-                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3); " +
-                    "-fx-padding: 20;";
-            iconStyle = "-fx-font-size: 32px;";
-            labelStyle = "-fx-font-size: 13px; -fx-text-fill: #6c757d; -fx-font-weight: 600;";
-            valueStyle = "-fx-font-size: 28px; -fx-text-fill: #2c3e50; -fx-font-weight: bold;";
-        }
+        // Compact card styling
+        String cardStyle = "-fx-background-color: #f8f9fa; -fx-background-radius: 8; " +
+                "-fx-padding: 8 15; -fx-border-color: #e1e4e8; -fx-border-width: 1; -fx-border-radius: 8;";
+        String iconStyle = "-fx-font-size: 18px;";
+        String labelStyle = "-fx-font-size: 11px; -fx-text-fill: #6c757d; -fx-font-weight: 600;";
+        String valueStyle = "-fx-font-size: 18px; -fx-font-weight: bold;";
 
         // Calculate statistics
         int totalProducts = allProducts != null ? allProducts.size() : 0;
@@ -374,29 +387,33 @@ public class CustomerHomeController {
                     .count();
         }
 
-        // Create interactive cards with tooltips
-        VBox card1 = createStatCard("📦", "Total Products", String.valueOf(totalProducts),
+        // Create interactive compact cards with tooltips
+        statsProductsValue = new Label(String.valueOf(totalProducts));
+        HBox card1 = createCompactStatCard("📦", "Products", statsProductsValue,
                 cardStyle, iconStyle, labelStyle, valueStyle, "#667eea");
         card1.setOnMouseClicked(e -> {
             onReset(); // Show all products
         });
         Tooltip.install(card1, new Tooltip("Click to view all products"));
 
-        VBox card2 = createStatCard("🎮", "Platforms", String.valueOf(totalPlatforms),
+        statsPlatformsValue = new Label(String.valueOf(totalPlatforms));
+        HBox card2 = createCompactStatCard("🎮", "Platforms", statsPlatformsValue,
                 cardStyle, iconStyle, labelStyle, valueStyle, "#28a745");
         card2.setOnMouseClicked(e -> {
             showPlatformBreakdown();
         });
         Tooltip.install(card2, new Tooltip("Click to see platform breakdown"));
 
-        VBox card3 = createStatCard("🎯", "Genres", String.valueOf(totalGenres),
+        statsGenresValue = new Label(String.valueOf(totalGenres));
+        HBox card3 = createCompactStatCard("🎯", "Genres", statsGenresValue,
                 cardStyle, iconStyle, labelStyle, valueStyle, "#17a2b8");
         card3.setOnMouseClicked(e -> {
             showGenreBreakdown();
         });
         Tooltip.install(card3, new Tooltip("Click to see genre breakdown"));
 
-        VBox card4 = createStatCard("🏷️", "Categories", String.valueOf(totalCategories),
+        statsCategoriesValue = new Label(String.valueOf(totalCategories));
+        HBox card4 = createCompactStatCard("🏷️", "Categories", statsCategoriesValue,
                 cardStyle, iconStyle, labelStyle, valueStyle, "#ffc107");
         card4.setOnMouseClicked(e -> {
             showCategoryBreakdown();
@@ -409,46 +426,42 @@ public class CustomerHomeController {
     }
 
     /**
-     * Helper method to create individual stat card
+     * Helper method to create compact horizontal stat card
      */
-    private VBox createStatCard(String icon, String label, String value,
-                                 String cardStyle, String iconStyle,
-                                 String labelStyle, String valueStyle,
-                                 String accentColor) {
-        VBox card = new VBox(8);
-        card.setAlignment(Pos.CENTER);
-        card.setPrefWidth(240);
-        card.setPrefHeight(120);
-        card.setStyle(cardStyle);
+    private HBox createCompactStatCard(String icon, String label, Label valueLabel,
+                                        String cardStyle, String iconStyle,
+                                        String labelStyle, String valueStyle,
+                                        String accentColor) {
+        HBox card = new HBox(10);
+        card.setAlignment(Pos.CENTER_LEFT);
+        card.setPrefHeight(40);
+        card.setStyle(cardStyle + " -fx-cursor: hand;");
 
-        // Icon with colored background circle
-        StackPane iconContainer = new StackPane();
-        iconContainer.setPrefSize(60, 60);
-        iconContainer.setStyle("-fx-background-color: " + accentColor + "20; " +
-                "-fx-background-radius: 30;");
-
+        // Icon
         Label iconLabel = new Label(icon);
         iconLabel.setStyle(iconStyle);
-        iconContainer.getChildren().add(iconLabel);
 
-        // Value
-        Label valueLabel = new Label(value);
+        // Info container
+        VBox infoBox = new VBox(2);
+        infoBox.setAlignment(Pos.CENTER_LEFT);
+
+        // Value (passed in as parameter to allow updates)
         valueLabel.setStyle(valueStyle + " -fx-text-fill: " + accentColor + ";");
 
         // Label
         Label textLabel = new Label(label);
         textLabel.setStyle(labelStyle);
 
-        card.getChildren().addAll(iconContainer, valueLabel, textLabel);
+        infoBox.getChildren().addAll(valueLabel, textLabel);
+        card.getChildren().addAll(iconLabel, infoBox);
 
         // Hover effect
-        card.setOnMouseEntered(e -> {
-            card.setStyle(cardStyle + " -fx-translate-y: -3; " +
-                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 15, 0, 0, 5);");
-        });
-        card.setOnMouseExited(e -> {
-            card.setStyle(cardStyle);
-        });
+        String originalStyle = cardStyle + " -fx-cursor: hand;";
+        String hoverStyle = "-fx-background-color: " + accentColor + "15; -fx-background-radius: 8; " +
+                "-fx-padding: 8 15; -fx-border-color: " + accentColor + "; -fx-border-width: 1; -fx-border-radius: 8; -fx-cursor: hand;";
+
+        card.setOnMouseEntered(e -> card.setStyle(hoverStyle));
+        card.setOnMouseExited(e -> card.setStyle(originalStyle));
 
         return card;
     }
@@ -811,6 +824,37 @@ public class CustomerHomeController {
         priceRangeChoice.setValue("All Price Ranges");
         sortChoice.setValue("None");
         applyFilters();
+    }
+
+    /**
+     * Update statistics cards with current data
+     */
+    private void updateStatistics() {
+        if (statsProductsValue != null) {
+            int totalProducts = allProducts != null ? allProducts.size() : 0;
+            statsProductsValue.setText(String.valueOf(totalProducts));
+        }
+
+        if (statsPlatformsValue != null) {
+            int totalPlatforms = allPlatforms != null ? allPlatforms.size() : 0;
+            statsPlatformsValue.setText(String.valueOf(totalPlatforms));
+        }
+
+        if (statsGenresValue != null) {
+            int totalGenres = allGenres != null ? allGenres.size() : 0;
+            statsGenresValue.setText(String.valueOf(totalGenres));
+        }
+
+        if (statsCategoriesValue != null) {
+            long totalCategories = 0;
+            if (allProducts != null) {
+                totalCategories = allProducts.stream()
+                        .map(p -> p.getCategory())
+                        .distinct()
+                        .count();
+            }
+            statsCategoriesValue.setText(String.valueOf(totalCategories));
+        }
     }
 
     private void loadProducts() {
