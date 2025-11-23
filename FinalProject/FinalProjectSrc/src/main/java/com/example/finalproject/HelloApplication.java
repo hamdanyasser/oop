@@ -1,7 +1,6 @@
 package com.example.finalproject;
 
 import com.example.finalproject.controller.LoginController;
-import com.example.finalproject.service.ThemeManager;
 import com.example.finalproject.util.ToastNotification;
 import javafx.application.Application;
 import javafx.scene.Parent;
@@ -57,7 +56,7 @@ public class HelloApplication extends Application {
             }
 
             if (root != null) {
-                
+
                 Parent finalRoot = root;
                 if (!(root instanceof StackPane)) {
                     StackPane wrapper = new StackPane(root);
@@ -65,9 +64,7 @@ public class HelloApplication extends Application {
                 }
 
                 Scene scene = new Scene(finalRoot);
-                
-                ThemeManager.getInstance().setScene(scene);
-                
+
                 ToastNotification.initialize(scene);
                 mainStage.setScene(scene);
                 mainStage.centerOnScreen();

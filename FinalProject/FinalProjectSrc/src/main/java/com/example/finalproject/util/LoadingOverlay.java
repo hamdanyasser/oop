@@ -1,6 +1,5 @@
 package com.example.finalproject.util;
 
-import com.example.finalproject.service.ThemeManager;
 import javafx.animation.FadeTransition;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -54,38 +53,17 @@ public class LoadingOverlay {
 
 
     private void applyTheme() {
-        boolean isDark = ThemeManager.getInstance().isDarkMode();
+        contentBox.setStyle("-fx-background-color: white; " +
+                "-fx-background-radius: 16; " +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 5);");
 
-        if (isDark) {
-            
-            contentBox.setStyle("-fx-background-color: #2d2d2d; " +
-                    "-fx-background-radius: 16; " +
-                    "-fx-border-color: #404040; " +
-                    "-fx-border-radius: 16; " +
-                    "-fx-border-width: 1; " +
-                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 20, 0, 0, 5);");
+        spinner.setStyle("-fx-progress-color: #667eea;");
 
-            spinner.setStyle("-fx-progress-color: #4a9eff;");
-
-            messageLabel.setStyle("-fx-font-size: 16px; " +
-                    "-fx-font-weight: bold; " +
-                    "-fx-text-fill: #e0e0e0; " +
-                    "-fx-wrap-text: true; " +
-                    "-fx-text-alignment: center;");
-        } else {
-            
-            contentBox.setStyle("-fx-background-color: white; " +
-                    "-fx-background-radius: 16; " +
-                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 5);");
-
-            spinner.setStyle("-fx-progress-color: #667eea;");
-
-            messageLabel.setStyle("-fx-font-size: 16px; " +
-                    "-fx-font-weight: bold; " +
-                    "-fx-text-fill: #2c3e50; " +
-                    "-fx-wrap-text: true; " +
-                    "-fx-text-alignment: center;");
-        }
+        messageLabel.setStyle("-fx-font-size: 16px; " +
+                "-fx-font-weight: bold; " +
+                "-fx-text-fill: #2c3e50; " +
+                "-fx-wrap-text: true; " +
+                "-fx-text-alignment: center;");
     }
 
     
