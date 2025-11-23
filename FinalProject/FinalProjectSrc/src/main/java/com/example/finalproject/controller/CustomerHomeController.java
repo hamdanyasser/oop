@@ -70,7 +70,7 @@ public class CustomerHomeController {
 
         // Top bar
         VBox topSection = new VBox();
-        topSection.getChildren().addAll(createTopBar(), createFilterBar(), createSortBar(), createStatisticsCards());
+        topSection.getChildren().addAll(createTopBar(), createFilterBar(), createStatisticsCards());
 
         root.setTop(topSection);
 
@@ -138,7 +138,7 @@ public class CustomerHomeController {
         featuredContainer.setStyle("-fx-background-color: white; -fx-border-color: #e1e4e8; -fx-border-width: 0 0 1 0;");
 
         // Toggle button to show/hide featured section
-        Button toggleBtn = new Button("▼ Show Featured Products");
+        Button toggleBtn = new Button("▾ Show Featured Products");
         toggleBtn.setStyle("-fx-background-color: #667eea; -fx-text-fill: white; " +
                 "-fx-background-radius: 6; -fx-padding: 6 15; -fx-font-size: 12px; -fx-font-weight: 600; -fx-cursor: hand;");
 
@@ -196,7 +196,7 @@ public class CustomerHomeController {
             boolean isVisible = contentContainer.isVisible();
             contentContainer.setVisible(!isVisible);
             contentContainer.setManaged(!isVisible);
-            toggleBtn.setText(isVisible ? "▼ Show Featured Products" : "▲ Hide Featured Products");
+            toggleBtn.setText(isVisible ? "▾ Show Featured Products" : "▴ Hide Featured Products");
         });
 
         // Only show toggle button if we have featured products
@@ -316,46 +316,6 @@ public class CustomerHomeController {
         return card;
     }
 
-    private HBox createSortBar() {
-        HBox sortBar = new HBox(15);
-        sortBar.setAlignment(Pos.CENTER_LEFT);
-        sortBar.setPadding(new Insets(5, 30, 10, 30));
-        sortBar.setStyle("-fx-background-color: white; -fx-border-color: #e1e4e8; -fx-border-width: 0 0 1 0;");
-
-        Label sortLabel = new Label("Sort By:");
-        sortLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #6c757d; -fx-font-weight: 600;");
-
-        sortChoice = new ComboBox<>();
-        sortChoice.setPrefWidth(200);
-        sortChoice.getItems().addAll(
-                "None",
-                "Price: Low → High",
-                "Price: High → Low",
-                "Rating: High → Low",
-                "Newest → Oldest",
-                "Oldest → Newest"
-        );
-
-        sortChoice.setValue("None");
-        sortChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
-
-        sortChoice.getSelectionModel().selectedItemProperty()
-                .addListener((obs, oldVal, newVal) -> applyFilters());
-
-        // Spacer to push active filters badge to the right
-        Pane spacer = new Pane();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        // Active filters indicator
-        activeFiltersLabel = new Label("🎯 0 Filters Active");
-        activeFiltersLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #28a745; " +
-                "-fx-padding: 8 12; -fx-background-color: #e8f5e9; -fx-background-radius: 8;");
-        activeFiltersLabel.setVisible(false); // Hidden by default
-
-        sortBar.getChildren().addAll(sortLabel, sortChoice, spacer, activeFiltersLabel);
-
-        return sortBar;
-    }
 
     /**
      * Create statistics cards showing key metrics - COMPACT VERSION
@@ -413,7 +373,7 @@ public class CustomerHomeController {
         Tooltip.install(card3, new Tooltip("Click to see genre breakdown"));
 
         statsCategoriesValue = new Label(String.valueOf(totalCategories));
-        HBox card4 = createCompactStatCard("🏷️", "Categories", statsCategoriesValue,
+        HBox card4 = createCompactStatCard("🏪", "Categories", statsCategoriesValue,
                 cardStyle, iconStyle, labelStyle, valueStyle, "#ffc107");
         card4.setOnMouseClicked(e -> {
             showCategoryBreakdown();
@@ -521,7 +481,7 @@ public class CustomerHomeController {
         Button cartBtn = createHeaderButton("🛒 Cart");
         cartBtn.setOnAction(e -> onViewCart());
 
-        Button wishlistBtn = createHeaderButton("❤️ Wishlist");
+        Button wishlistBtn = createHeaderButton("❤ Wishlist");
         wishlistBtn.setOnAction(e -> onWishlist());
 
         Button ordersBtn = createHeaderButton("📦 Orders");
@@ -571,7 +531,7 @@ public class CustomerHomeController {
         searchContainer.getChildren().addAll(searchField, searchIcon);
 
         // Main filters with icons
-        HBox categoryBox = createFilterWithIcon("🏷️", createStyledComboBox(160, "Category"));
+        HBox categoryBox = createFilterWithIcon("🏪", createStyledComboBox(160, "Category"));
         categoryChoice = (ComboBox<String>) ((HBox) categoryBox.getChildren().get(1)).getChildren().get(0);
 
         HBox platformBox = createFilterWithIcon("🎮", createStyledComboBox(180, "Platform"));
@@ -593,8 +553,33 @@ public class CustomerHomeController {
         HBox priceBox = createFilterWithIcon("💰", createStyledComboBox(130, "Price Range"));
         priceRangeChoice = (ComboBox<String>) ((HBox) priceBox.getChildren().get(1)).getChildren().get(0);
 
+        // Sort By dropdown
+        Label sortLabel = new Label("Sort:");
+        sortLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #6c757d; -fx-font-weight: 600;");
+
+        sortChoice = new ComboBox<>();
+        sortChoice.setPrefWidth(160);
+        sortChoice.setPrefHeight(35);
+        sortChoice.getItems().addAll(
+                "None",
+                "Price: Low → High",
+                "Price: High → Low",
+                "Rating: High → Low",
+                "Newest → Oldest",
+                "Oldest → Newest"
+        );
+        sortChoice.setValue("None");
+        sortChoice.setStyle("-fx-background-radius: 8; -fx-font-size: 13px; " +
+                "-fx-background-color: #f8f9fa; -fx-border-color: #e1e4e8; -fx-border-radius: 8;");
+        sortChoice.getSelectionModel().selectedItemProperty()
+                .addListener((obs, oldVal, newVal) -> applyFilters());
+
+        HBox sortBox = new HBox(8);
+        sortBox.setAlignment(Pos.CENTER_LEFT);
+        sortBox.getChildren().addAll(sortLabel, sortChoice);
+
         // Reset button with better styling
-        Button resetBtn = new Button("↺ Clear All");
+        Button resetBtn = new Button("⟲ Clear All");
         resetBtn.setPrefHeight(35);
         resetBtn.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; " +
                 "-fx-background-radius: 8; -fx-padding: 8 20; -fx-font-weight: 600; -fx-font-size: 13px;");
@@ -604,16 +589,22 @@ public class CustomerHomeController {
                 "-fx-background-radius: 8; -fx-padding: 8 20; -fx-font-weight: 600; -fx-font-size: 13px;"));
         resetBtn.setOnAction(e -> onReset());
 
-        // Spacer to push results count to the right
+        // Spacer to push results count and active filters to the right
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        // Active filters indicator
+        activeFiltersLabel = new Label("🎯 0 Filters Active");
+        activeFiltersLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #28a745; " +
+                "-fx-padding: 6 10; -fx-background-color: #e8f5e9; -fx-background-radius: 8;");
+        activeFiltersLabel.setVisible(false); // Hidden by default
 
         // Results count label
         resultsCountLabel = new Label("Showing 0 of 0 products");
         resultsCountLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #667eea; " +
                 "-fx-padding: 8 12; -fx-background-color: #f0f3ff; -fx-background-radius: 8;");
 
-        filterRow2.getChildren().addAll(ratingBox, priceBox, resetBtn, spacer, resultsCountLabel);
+        filterRow2.getChildren().addAll(ratingBox, priceBox, sortBox, resetBtn, spacer, activeFiltersLabel, resultsCountLabel);
 
         filterContainer.getChildren().addAll(filterRow1, filterRow2);
         return filterContainer;
@@ -1121,7 +1112,7 @@ public class CustomerHomeController {
         int userId = Session.getUserId();
         boolean inWishlist = wishlistDao.isInWishlist(userId, p.getId());
 
-        Button wishlistToggle = new Button(inWishlist ? "❤️" : "🤍");
+        Button wishlistToggle = new Button(inWishlist ? "❤" : "♡");
         wishlistToggle.setPrefWidth(60);
         wishlistToggle.setPrefHeight(35);
         String baseWishlistStyle = inWishlist
@@ -1360,7 +1351,7 @@ public class CustomerHomeController {
         int userId = Session.getUserId();
         boolean inWishlist = wishlistDao.isInWishlist(userId, p.getId());
 
-        Button wishlistBtn = new Button(inWishlist ? "❤️ Remove from Wishlist" : "🤍 Add to Wishlist");
+        Button wishlistBtn = new Button(inWishlist ? "❤ Remove from Wishlist" : "♡ Add to Wishlist");
         wishlistBtn.setPrefWidth(350);
         wishlistBtn.setPrefHeight(45);
         wishlistBtn.setStyle("-fx-background-color: #f8f9fa; -fx-text-fill: #495057; " +
@@ -1369,11 +1360,11 @@ public class CustomerHomeController {
         wishlistBtn.setOnAction(e -> {
             if (wishlistDao.isInWishlist(userId, p.getId())) {
                 wishlistDao.removeFromWishlist(userId, p.getId());
-                wishlistBtn.setText("🤍 Add to Wishlist");
+                wishlistBtn.setText("♡ Add to Wishlist");
                 showStyledAlert("Removed", "Removed from wishlist", Alert.AlertType.INFORMATION);
             } else {
                 wishlistDao.addToWishlist(userId, p.getId());
-                wishlistBtn.setText("❤️ Remove from Wishlist");
+                wishlistBtn.setText("❤ Remove from Wishlist");
                 showStyledAlert("Added", "Added to wishlist!", Alert.AlertType.INFORMATION);
             }
         });
@@ -1430,7 +1421,7 @@ public class CustomerHomeController {
 
         if (wishlistDao.isInWishlist(userId, p.getId())) {
             wishlistDao.removeFromWishlist(userId, p.getId());
-            button.setText("🤍");
+            button.setText("♡");
             String baseStyle = "-fx-background-color: #f8f9fa; -fx-text-fill: #dc3545; " +
                     "-fx-border-color: #dc3545; -fx-border-width: 1; " +
                     "-fx-font-size: 16px; -fx-background-radius: 8; -fx-cursor: hand;";
@@ -1438,11 +1429,11 @@ public class CustomerHomeController {
             showStyledAlert("Removed", "Removed from wishlist", Alert.AlertType.INFORMATION);
         } else {
             wishlistDao.addToWishlist(userId, p.getId());
-            button.setText("❤️");
+            button.setText("❤");
             String baseStyle = "-fx-background-color: #dc3545; -fx-text-fill: white; " +
                     "-fx-font-size: 16px; -fx-background-radius: 8; -fx-cursor: hand;";
             button.setStyle(baseStyle);
-            showStyledAlert("Added to Wishlist! ❤️", p.getName() + " has been added to your wishlist.", Alert.AlertType.INFORMATION);
+            showStyledAlert("Added to Wishlist!", p.getName() + " has been added to your wishlist.", Alert.AlertType.INFORMATION);
         }
     }
 
@@ -1652,7 +1643,7 @@ public class CustomerHomeController {
         content.setPadding(new Insets(20));
         content.setStyle("-fx-background-color: white;");
 
-        Label title = new Label("🏷️ Category Statistics");
+        Label title = new Label("🏪 Category Statistics");
         title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
         // Group products by category
