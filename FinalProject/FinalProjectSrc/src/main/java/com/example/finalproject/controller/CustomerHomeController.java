@@ -481,7 +481,7 @@ public class CustomerHomeController {
         Button cartBtn = createHeaderButton("🛒 Cart");
         cartBtn.setOnAction(e -> onViewCart());
 
-        Button wishlistBtn = createHeaderButton("❤ Wishlist");
+        Button wishlistBtn = createHeaderButton("♥ Wishlist");
         wishlistBtn.setOnAction(e -> onWishlist());
 
         Button ordersBtn = createHeaderButton("📦 Orders");
@@ -1112,7 +1112,7 @@ public class CustomerHomeController {
         int userId = Session.getUserId();
         boolean inWishlist = wishlistDao.isInWishlist(userId, p.getId());
 
-        Button wishlistToggle = new Button(inWishlist ? "❤" : "♡");
+        Button wishlistToggle = new Button(inWishlist ? "♥" : "♡");
         wishlistToggle.setPrefWidth(60);
         wishlistToggle.setPrefHeight(35);
         String baseWishlistStyle = inWishlist
@@ -1351,7 +1351,7 @@ public class CustomerHomeController {
         int userId = Session.getUserId();
         boolean inWishlist = wishlistDao.isInWishlist(userId, p.getId());
 
-        Button wishlistBtn = new Button(inWishlist ? "❤ Remove from Wishlist" : "♡ Add to Wishlist");
+        Button wishlistBtn = new Button(inWishlist ? "♥ Remove from Wishlist" : "♡ Add to Wishlist");
         wishlistBtn.setPrefWidth(350);
         wishlistBtn.setPrefHeight(45);
         wishlistBtn.setStyle("-fx-background-color: #f8f9fa; -fx-text-fill: #495057; " +
@@ -1364,7 +1364,7 @@ public class CustomerHomeController {
                 showStyledAlert("Removed", "Removed from wishlist", Alert.AlertType.INFORMATION);
             } else {
                 wishlistDao.addToWishlist(userId, p.getId());
-                wishlistBtn.setText("❤ Remove from Wishlist");
+                wishlistBtn.setText("♥ Remove from Wishlist");
                 showStyledAlert("Added", "Added to wishlist!", Alert.AlertType.INFORMATION);
             }
         });
@@ -1429,7 +1429,7 @@ public class CustomerHomeController {
             showStyledAlert("Removed", "Removed from wishlist", Alert.AlertType.INFORMATION);
         } else {
             wishlistDao.addToWishlist(userId, p.getId());
-            button.setText("❤");
+            button.setText("♥");
             String baseStyle = "-fx-background-color: #dc3545; -fx-text-fill: white; " +
                     "-fx-font-size: 16px; -fx-background-radius: 8; -fx-cursor: hand;";
             button.setStyle(baseStyle);
