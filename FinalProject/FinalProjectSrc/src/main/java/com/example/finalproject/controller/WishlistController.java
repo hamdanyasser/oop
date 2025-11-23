@@ -55,7 +55,7 @@ public class WishlistController {
         scrollPane.setContent(wishlistGrid);
 
         // Empty state label
-        emptyLabel = new Label("★ Your wishlist is empty\nAdd products you love!");
+        emptyLabel = new Label("♡ Your wishlist is empty\nAdd products you love!");
         emptyLabel.setStyle("-fx-font-size: 20px; -fx-text-fill: #6c757d; -fx-text-alignment: center;");
         emptyLabel.setVisible(false);
 
@@ -74,7 +74,7 @@ public class WishlistController {
         topBar.setAlignment(Pos.CENTER_LEFT);
 
         // Icon and Title
-        Label iconLabel = new Label("★");
+        Label iconLabel = new Label("♡");
         iconLabel.setStyle("-fx-font-size: 24px;");
 
         Label titleLabel = new Label("My Wishlist");
