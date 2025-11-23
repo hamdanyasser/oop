@@ -23,6 +23,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +68,14 @@ public class CustomerHomeController {
 
         root.setTop(topSection);
 
-        // Center - Product Grid
+        // Center - Featured Products + Product Grid
+        VBox centerContent = new VBox(0);
+        centerContent.setStyle("-fx-background-color: transparent;");
+
+        // Featured products section
+        VBox featuredSection = createFeaturedProductsSection();
+
+        // Product Grid
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
         scrollPane.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
@@ -79,7 +88,10 @@ public class CustomerHomeController {
         productGrid.setStyle("-fx-background-color: transparent;");
 
         scrollPane.setContent(productGrid);
-        root.setCenter(scrollPane);
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
+
+        centerContent.getChildren().addAll(featuredSection, scrollPane);
+        root.setCenter(centerContent);
 
         // Bottom - Pagination
         HBox bottomBar = createBottomBar();
@@ -89,16 +101,16 @@ public class CustomerHomeController {
         loadProducts();
         loadPlatforms();
         loadGenres();
-        categoryChoice.getItems().addAll("All", "Console", "PC", "Accessory", "Game", "Controller");
-        categoryChoice.setValue("All");
+        categoryChoice.getItems().addAll("All Categories", "Console", "PC", "Accessory", "Game", "Controller");
+        categoryChoice.setValue("All Categories");
 
         // Initialize age rating filter
-        ageRatingChoice.getItems().addAll("All Ratings", "E (Everyone)", "E10+ (Everyone 10+)", "T (Teen)", "M (Mature 17+)", "AO (Adults Only)");
-        ageRatingChoice.setValue("All Ratings");
+        ageRatingChoice.getItems().addAll("All Age Ratings", "E (Everyone)", "E10+ (Everyone 10+)", "T (Teen)", "M (Mature 17+)", "AO (Adults Only)");
+        ageRatingChoice.setValue("All Age Ratings");
 
         // Initialize price range filter
-        priceRangeChoice.getItems().addAll("All Prices", "$0 - $20", "$20 - $40", "$40 - $60", "$60 - $100", "$100 - $500", "$500+");
-        priceRangeChoice.setValue("All Prices");
+        priceRangeChoice.getItems().addAll("All Price Ranges", "$0 - $20", "$20 - $40", "$40 - $60", "$60 - $100", "$100 - $500", "$500+");
+        priceRangeChoice.setValue("All Price Ranges");
 
         // Listeners
         searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
@@ -110,6 +122,167 @@ public class CustomerHomeController {
 
         return root;
     }
+    /**
+     * Create featured products section with horizontal scrolling
+     */
+    private VBox createFeaturedProductsSection() {
+        VBox featuredContainer = new VBox(20);
+        featuredContainer.setPadding(new Insets(20, 30, 10, 30));
+        featuredContainer.setStyle("-fx-background-color: white; -fx-border-color: #e1e4e8; -fx-border-width: 0 0 1 0;");
+
+        // Get featured products
+        List<Product> bestDeals = allProducts != null ? allProducts.stream()
+                .filter(p -> p.getDiscount() > 0)
+                .sorted((a, b) -> Double.compare(b.getDiscount(), a.getDiscount()))
+                .limit(5)
+                .collect(Collectors.toList()) : new ArrayList<>();
+
+        List<Product> topRated = allProducts != null ? allProducts.stream()
+                .sorted((a, b) -> Double.compare(
+                        reviewService.getAverageRating(b.getId()),
+                        reviewService.getAverageRating(a.getId())))
+                .limit(5)
+                .collect(Collectors.toList()) : new ArrayList<>();
+
+        List<Product> newArrivals = allProducts != null ? allProducts.stream()
+                .sorted((a, b) -> Integer.compare(b.getId(), a.getId()))
+                .limit(5)
+                .collect(Collectors.toList()) : new ArrayList<>();
+
+        // Only show if we have products
+        if (allProducts == null || allProducts.isEmpty()) {
+            featuredContainer.setVisible(false);
+            featuredContainer.setManaged(false);
+            return featuredContainer;
+        }
+
+        // Best Deals Section
+        if (!bestDeals.isEmpty()) {
+            VBox dealsSection = createFeaturedCategory("🔥 Hot Deals", bestDeals, "#dc3545");
+            featuredContainer.getChildren().add(dealsSection);
+        }
+
+        // Top Rated Section
+        if (!topRated.isEmpty()) {
+            VBox topRatedSection = createFeaturedCategory("⭐ Top Rated", topRated, "#ffc107");
+            featuredContainer.getChildren().add(topRatedSection);
+        }
+
+        // New Arrivals Section
+        if (!newArrivals.isEmpty()) {
+            VBox newSection = createFeaturedCategory("🆕 New Arrivals", newArrivals, "#28a745");
+            featuredContainer.getChildren().add(newSection);
+        }
+
+        return featuredContainer;
+    }
+
+    /**
+     * Create a featured category section with horizontal scroll
+     */
+    private VBox createFeaturedCategory(String title, List<Product> products, String accentColor) {
+        VBox section = new VBox(10);
+
+        // Title
+        Label titleLabel = new Label(title);
+        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: " + accentColor + ";");
+
+        // Horizontal scroll pane for products
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+        scrollPane.setPrefHeight(200);
+
+        HBox productRow = new HBox(15);
+        productRow.setPadding(new Insets(10, 0, 10, 0));
+
+        for (Product p : products) {
+            VBox miniCard = createMiniProductCard(p, accentColor);
+            productRow.getChildren().add(miniCard);
+        }
+
+        scrollPane.setContent(productRow);
+
+        section.getChildren().addAll(titleLabel, scrollPane);
+        return section;
+    }
+
+    /**
+     * Create a compact product card for featured section
+     */
+    private VBox createMiniProductCard(Product p, String accentColor) {
+        VBox card = new VBox(8);
+        card.setAlignment(Pos.TOP_CENTER);
+        card.setPadding(new Insets(12));
+        card.setPrefWidth(180);
+        card.setMaxWidth(180);
+        card.setStyle("-fx-background-color: white; -fx-background-radius: 12; " +
+                "-fx-border-color: #e1e4e8; -fx-border-radius: 12; -fx-border-width: 1; " +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2); " +
+                "-fx-cursor: hand;");
+
+        // Hover effect
+        card.setOnMouseEntered(e -> {
+            card.setStyle("-fx-background-color: white; -fx-background-radius: 12; " +
+                    "-fx-border-color: " + accentColor + "; -fx-border-radius: 12; -fx-border-width: 2; " +
+                    "-fx-effect: dropshadow(gaussian, " + accentColor + "40, 15, 0, 0, 5); " +
+                    "-fx-cursor: hand; -fx-translate-y: -3;");
+        });
+        card.setOnMouseExited(e -> {
+            card.setStyle("-fx-background-color: white; -fx-background-radius: 12; " +
+                    "-fx-border-color: #e1e4e8; -fx-border-radius: 12; -fx-border-width: 1; " +
+                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2); " +
+                    "-fx-cursor: hand;");
+        });
+
+        card.setOnMouseClicked(e -> openProductDetails(p));
+
+        // Image
+        StackPane imageContainer = new StackPane();
+        imageContainer.setPrefSize(120, 120);
+        imageContainer.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 8;");
+
+        ImageView imageView = new ImageView();
+        if (p.getImagePath() != null && !p.getImagePath().isEmpty()) {
+            imageView.setImage(new Image("file:" + p.getImagePath(), 100, 100, true, true));
+        }
+        imageView.setFitWidth(100);
+        imageView.setFitHeight(100);
+        imageView.setPreserveRatio(true);
+        imageContainer.getChildren().add(imageView);
+
+        // Discount badge
+        if (p.getDiscount() > 0) {
+            Label discountBadge = new Label("-" + (int) p.getDiscount() + "%");
+            discountBadge.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; " +
+                    "-fx-padding: 3 6; -fx-background-radius: 6; -fx-font-weight: bold; -fx-font-size: 10px;");
+            StackPane.setAlignment(discountBadge, Pos.TOP_RIGHT);
+            StackPane.setMargin(discountBadge, new Insets(5));
+            imageContainer.getChildren().add(discountBadge);
+        }
+
+        // Product name
+        Label nameLabel = new Label(p.getName());
+        nameLabel.setWrapText(true);
+        nameLabel.setMaxWidth(160);
+        nameLabel.setMaxHeight(35);
+        nameLabel.setStyle("-fx-font-weight: 600; -fx-font-size: 12px; -fx-text-fill: #2c3e50; -fx-text-alignment: center;");
+
+        // Price
+        double finalPrice = p.getPrice() * (1 - p.getDiscount() / 100.0);
+        Label priceLabel = new Label("$" + String.format("%.2f", finalPrice));
+        priceLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: " + accentColor + "; -fx-font-weight: bold;");
+
+        // Rating
+        Label ratingLabel = new Label("⭐ " + String.format("%.1f", reviewService.getAverageRating(p.getId())));
+        ratingLabel.setStyle("-fx-text-fill: #f5b301; -fx-font-weight: 600; -fx-font-size: 11px;");
+
+        card.getChildren().addAll(imageContainer, nameLabel, priceLabel, ratingLabel);
+
+        return card;
+    }
+
     private HBox createSortBar() {
         HBox sortBar = new HBox(15);
         sortBar.setAlignment(Pos.CENTER_LEFT);
@@ -201,15 +374,34 @@ public class CustomerHomeController {
                     .count();
         }
 
-        // Create cards
+        // Create interactive cards with tooltips
         VBox card1 = createStatCard("📦", "Total Products", String.valueOf(totalProducts),
                 cardStyle, iconStyle, labelStyle, valueStyle, "#667eea");
+        card1.setOnMouseClicked(e -> {
+            onReset(); // Show all products
+        });
+        Tooltip.install(card1, new Tooltip("Click to view all products"));
+
         VBox card2 = createStatCard("🎮", "Platforms", String.valueOf(totalPlatforms),
                 cardStyle, iconStyle, labelStyle, valueStyle, "#28a745");
+        card2.setOnMouseClicked(e -> {
+            showPlatformBreakdown();
+        });
+        Tooltip.install(card2, new Tooltip("Click to see platform breakdown"));
+
         VBox card3 = createStatCard("🎯", "Genres", String.valueOf(totalGenres),
                 cardStyle, iconStyle, labelStyle, valueStyle, "#17a2b8");
+        card3.setOnMouseClicked(e -> {
+            showGenreBreakdown();
+        });
+        Tooltip.install(card3, new Tooltip("Click to see genre breakdown"));
+
         VBox card4 = createStatCard("🏷️", "Categories", String.valueOf(totalCategories),
                 cardStyle, iconStyle, labelStyle, valueStyle, "#ffc107");
+        card4.setOnMouseClicked(e -> {
+            showCategoryBreakdown();
+        });
+        Tooltip.install(card4, new Tooltip("Click to see category breakdown"));
 
         statsContainer.getChildren().addAll(card1, card2, card3, card4);
 
@@ -338,67 +530,65 @@ public class CustomerHomeController {
         return topBar;
     }
 
-    private HBox createFilterBar() {
-        HBox filterBar = new HBox(15);
-        filterBar.setAlignment(Pos.CENTER_LEFT);
-        filterBar.setPadding(new Insets(15, 30, 15, 30));
-        filterBar.setStyle("-fx-background-color: white; -fx-border-color: #e1e4e8; -fx-border-width: 0 0 1 0;");
+    private VBox createFilterBar() {
+        VBox filterContainer = new VBox(0);
+        filterContainer.setStyle("-fx-background-color: white; -fx-border-color: #e1e4e8; -fx-border-width: 0 0 1 0;");
+
+        // Row 1: Search and main filters
+        HBox filterRow1 = new HBox(15);
+        filterRow1.setAlignment(Pos.CENTER_LEFT);
+        filterRow1.setPadding(new Insets(15, 30, 10, 30));
+
+        // Search field with icon inside
+        StackPane searchContainer = new StackPane();
+        searchContainer.setPrefWidth(350);
+
+        searchField = new TextField();
+        searchField.setPromptText("Search products by name or category...");
+        searchField.setPrefWidth(350);
+        searchField.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 10; " +
+                "-fx-border-color: #e1e4e8; -fx-border-radius: 10; -fx-padding: 10 15 10 40; -fx-font-size: 14px;");
 
         Label searchIcon = new Label("🔍");
         searchIcon.setStyle("-fx-font-size: 18px;");
+        searchIcon.setMouseTransparent(true);
+        StackPane.setAlignment(searchIcon, Pos.CENTER_LEFT);
+        StackPane.setMargin(searchIcon, new Insets(0, 0, 0, 12));
 
-        searchField = new TextField();
-        searchField.setPromptText("Search products...");
-        searchField.setPrefWidth(300);
-        searchField.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 10; " +
-                "-fx-border-color: #e1e4e8; -fx-border-radius: 10; -fx-padding: 10 15; -fx-font-size: 14px;");
+        searchContainer.getChildren().addAll(searchField, searchIcon);
 
-        Label filterIcon = new Label("🏷️");
-        filterIcon.setStyle("-fx-font-size: 18px;");
+        // Main filters with icons
+        HBox categoryBox = createFilterWithIcon("🏷️", createStyledComboBox(160, "Category"));
+        categoryChoice = (ComboBox<String>) ((HBox) categoryBox.getChildren().get(1)).getChildren().get(0);
 
-        categoryChoice = new ComboBox<>();
-        categoryChoice.setPrefWidth(180);
-        categoryChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
+        HBox platformBox = createFilterWithIcon("🎮", createStyledComboBox(180, "Platform"));
+        platformChoice = (ComboBox<String>) ((HBox) platformBox.getChildren().get(1)).getChildren().get(0);
 
-        Label platformIcon = new Label("🎮");
-        platformIcon.setStyle("-fx-font-size: 18px;");
+        HBox genreBox = createFilterWithIcon("🎯", createStyledComboBox(160, "Genre"));
+        genreChoice = (ComboBox<String>) ((HBox) genreBox.getChildren().get(1)).getChildren().get(0);
 
-        platformChoice = new ComboBox<>();
-        platformChoice.setPrefWidth(200);
-        platformChoice.setPromptText("All Platforms");
-        platformChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
+        filterRow1.getChildren().addAll(searchContainer, categoryBox, platformBox, genreBox);
 
-        Label genreIcon = new Label("🎯");
-        genreIcon.setStyle("-fx-font-size: 18px;");
+        // Row 2: Additional filters and actions
+        HBox filterRow2 = new HBox(15);
+        filterRow2.setAlignment(Pos.CENTER_LEFT);
+        filterRow2.setPadding(new Insets(0, 30, 15, 30));
 
-        genreChoice = new ComboBox<>();
-        genreChoice.setPrefWidth(180);
-        genreChoice.setPromptText("All Genres");
-        genreChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
+        HBox ratingBox = createFilterWithIcon("🔞", createStyledComboBox(140, "Age Rating"));
+        ageRatingChoice = (ComboBox<String>) ((HBox) ratingBox.getChildren().get(1)).getChildren().get(0);
 
-        Label ratingIcon = new Label("🔞");
-        ratingIcon.setStyle("-fx-font-size: 18px;");
+        HBox priceBox = createFilterWithIcon("💰", createStyledComboBox(130, "Price Range"));
+        priceRangeChoice = (ComboBox<String>) ((HBox) priceBox.getChildren().get(1)).getChildren().get(0);
 
-        ageRatingChoice = new ComboBox<>();
-        ageRatingChoice.setPrefWidth(160);
-        ageRatingChoice.setPromptText("All Ratings");
-        ageRatingChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
-
-        Label priceIcon = new Label("💰");
-        priceIcon.setStyle("-fx-font-size: 18px;");
-
-        priceRangeChoice = new ComboBox<>();
-        priceRangeChoice.setPrefWidth(140);
-        priceRangeChoice.setPromptText("All Prices");
-        priceRangeChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
-
-        Button resetBtn = new Button("↺ Reset");
+        // Reset button with better styling
+        Button resetBtn = new Button("↺ Clear All");
+        resetBtn.setPrefHeight(35);
         resetBtn.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; " +
-                "-fx-background-radius: 8; -fx-padding: 8 15; -fx-font-weight: 600;");
+                "-fx-background-radius: 8; -fx-padding: 8 20; -fx-font-weight: 600; -fx-font-size: 13px;");
         resetBtn.setOnMouseEntered(e -> resetBtn.setStyle("-fx-background-color: #5a6268; -fx-text-fill: white; " +
-                "-fx-background-radius: 8; -fx-padding: 8 15; -fx-font-weight: 600;"));
+                "-fx-background-radius: 8; -fx-padding: 8 20; -fx-font-weight: 600; -fx-font-size: 13px; -fx-cursor: hand;"));
         resetBtn.setOnMouseExited(e -> resetBtn.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; " +
-                "-fx-background-radius: 8; -fx-padding: 8 15; -fx-font-weight: 600;"));
+                "-fx-background-radius: 8; -fx-padding: 8 20; -fx-font-weight: 600; -fx-font-size: 13px;"));
         resetBtn.setOnAction(e -> onReset());
 
         // Spacer to push results count to the right
@@ -410,8 +600,40 @@ public class CustomerHomeController {
         resultsCountLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #667eea; " +
                 "-fx-padding: 8 12; -fx-background-color: #f0f3ff; -fx-background-radius: 8;");
 
-        filterBar.getChildren().addAll(searchIcon, searchField, filterIcon, categoryChoice, platformIcon, platformChoice, genreIcon, genreChoice, ratingIcon, ageRatingChoice, priceIcon, priceRangeChoice, resetBtn, spacer, resultsCountLabel);
-        return filterBar;
+        filterRow2.getChildren().addAll(ratingBox, priceBox, resetBtn, spacer, resultsCountLabel);
+
+        filterContainer.getChildren().addAll(filterRow1, filterRow2);
+        return filterContainer;
+    }
+
+    /**
+     * Helper method to create a filter with icon
+     */
+    private HBox createFilterWithIcon(String icon, ComboBox<String> comboBox) {
+        HBox container = new HBox(8);
+        container.setAlignment(Pos.CENTER_LEFT);
+
+        Label iconLabel = new Label(icon);
+        iconLabel.setStyle("-fx-font-size: 16px;");
+
+        HBox comboContainer = new HBox();
+        comboContainer.getChildren().add(comboBox);
+
+        container.getChildren().addAll(iconLabel, comboContainer);
+        return container;
+    }
+
+    /**
+     * Helper method to create a styled combo box
+     */
+    private ComboBox<String> createStyledComboBox(int width, String type) {
+        ComboBox<String> combo = new ComboBox<>();
+        combo.setPrefWidth(width);
+        combo.setPrefHeight(35);
+        combo.setPromptText("All " + type + "s");
+        combo.setStyle("-fx-background-radius: 8; -fx-font-size: 13px; " +
+                "-fx-background-color: #f8f9fa; -fx-border-color: #e1e4e8; -fx-border-radius: 8;");
+        return combo;
     }
 
     private HBox createBottomBar() {
@@ -467,7 +689,7 @@ public class CustomerHomeController {
 
         // Extract rating code from display string (e.g., "M (Mature 17+)" -> "M")
         String ratingCode = null;
-        if (ageRating != null && !ageRating.equals("All Ratings")) {
+        if (ageRating != null && !ageRating.equals("All Age Ratings")) {
             ratingCode = ageRating.split(" ")[0]; // Get first part (E, E10+, T, M, AO)
         }
 
@@ -476,7 +698,7 @@ public class CustomerHomeController {
         // Parse price range
         double minPrice = 0;
         double maxPrice = Double.MAX_VALUE;
-        if (priceRange != null && !priceRange.equals("All Prices")) {
+        if (priceRange != null && !priceRange.equals("All Price Ranges")) {
             if (priceRange.equals("$500+")) {
                 minPrice = 500;
                 maxPrice = Double.MAX_VALUE;
@@ -492,7 +714,7 @@ public class CustomerHomeController {
 
         // FILTER PRODUCTS
         filteredProducts = allProducts.stream()
-                .filter(p -> (category.equals("All") || p.getCategory().equalsIgnoreCase(category)))
+                .filter(p -> (category.equals("All Categories") || p.getCategory().equalsIgnoreCase(category)))
                 .filter(p -> (platform == null || platform.equals("All Platforms") ||
                         p.getPlatforms().contains(platform)))
                 .filter(p -> (genre == null || genre.equals("All Genres") ||
@@ -550,7 +772,7 @@ public class CustomerHomeController {
         if (searchField.getText() != null && !searchField.getText().trim().isEmpty()) {
             activeFilters++;
         }
-        if (categoryChoice.getValue() != null && !categoryChoice.getValue().equals("All")) {
+        if (categoryChoice.getValue() != null && !categoryChoice.getValue().equals("All Categories")) {
             activeFilters++;
         }
         if (platformChoice.getValue() != null && !platformChoice.getValue().equals("All Platforms")) {
@@ -559,10 +781,10 @@ public class CustomerHomeController {
         if (genreChoice.getValue() != null && !genreChoice.getValue().equals("All Genres")) {
             activeFilters++;
         }
-        if (ageRatingChoice.getValue() != null && !ageRatingChoice.getValue().equals("All Ratings")) {
+        if (ageRatingChoice.getValue() != null && !ageRatingChoice.getValue().equals("All Age Ratings")) {
             activeFilters++;
         }
-        if (priceRangeChoice.getValue() != null && !priceRangeChoice.getValue().equals("All Prices")) {
+        if (priceRangeChoice.getValue() != null && !priceRangeChoice.getValue().equals("All Price Ranges")) {
             activeFilters++;
         }
         if (sortChoice.getValue() != null && !sortChoice.getValue().equals("None")) {
@@ -582,11 +804,11 @@ public class CustomerHomeController {
 
     private void onReset() {
         searchField.clear();
-        categoryChoice.setValue("All");
+        categoryChoice.setValue("All Categories");
         platformChoice.setValue("All Platforms");
         genreChoice.setValue("All Genres");
-        ageRatingChoice.setValue("All Ratings");
-        priceRangeChoice.setValue("All Prices");
+        ageRatingChoice.setValue("All Age Ratings");
+        priceRangeChoice.setValue("All Price Ranges");
         sortChoice.setValue("None");
         applyFilters();
     }
@@ -633,10 +855,11 @@ public class CustomerHomeController {
     }
 
     private VBox createProductCard(Product p) {
-        VBox card = new VBox(10);
+        VBox card = new VBox(12);
         card.setAlignment(Pos.TOP_CENTER);
-        card.setPadding(new Insets(15));
-        card.setPrefWidth(240);
+        card.setPadding(new Insets(16));
+        card.setPrefWidth(260);
+        card.setPrefHeight(520);
         card.setStyle("-fx-background-color: white; -fx-background-radius: 16; " +
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 12, 0, 0, 4); " +
@@ -683,108 +906,223 @@ public class CustomerHomeController {
             imageContainer.getChildren().add(discountBadge);
         }
 
-        // Product name
+        // Product name with better spacing
         Label nameLabel = new Label(p.getName());
         nameLabel.setWrapText(true);
-        nameLabel.setMaxWidth(210);
-        nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px; -fx-text-fill: #2c3e50; -fx-text-alignment: center;");
+        nameLabel.setMaxWidth(230);
+        nameLabel.setMinHeight(40);
+        nameLabel.setMaxHeight(40);
+        nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px; -fx-text-fill: #2c3e50; " +
+                "-fx-text-alignment: center; -fx-alignment: center;");
 
-        // Category and Age Rating badges
-        HBox badgeBox = new HBox(6);
-        badgeBox.setAlignment(Pos.CENTER);
+        // Category and Age Rating badges in separate rows for clarity
+        VBox badgeContainer = new VBox(6);
+        badgeContainer.setAlignment(Pos.CENTER);
 
+        HBox categoryRow = new HBox(6);
+        categoryRow.setAlignment(Pos.CENTER);
         Label categoryLabel = new Label(p.getCategory());
-        categoryLabel.setStyle("-fx-background-color: #e9ecef; -fx-text-fill: #495057; " +
-                "-fx-padding: 4 10; -fx-background-radius: 12; -fx-font-size: 11px;");
-        badgeBox.getChildren().add(categoryLabel);
+        categoryLabel.setStyle("-fx-background-color: #667eea; -fx-text-fill: white; " +
+                "-fx-padding: 5 12; -fx-background-radius: 12; -fx-font-size: 11px; -fx-font-weight: 600;");
+        categoryRow.getChildren().add(categoryLabel);
 
         // Age rating badge (only for games with ratings)
         if (p.getAgeRating() != null && !p.getAgeRating().isEmpty()) {
             Label ratingLabel = new Label(p.getAgeRating());
             String ratingColor = getRatingColor(p.getAgeRating());
             ratingLabel.setStyle("-fx-background-color: " + ratingColor + "; -fx-text-fill: white; " +
-                    "-fx-padding: 4 10; -fx-background-radius: 12; -fx-font-size: 11px; -fx-font-weight: bold;");
+                    "-fx-padding: 5 12; -fx-background-radius: 12; -fx-font-size: 11px; -fx-font-weight: bold;");
             ratingLabel.setTooltip(new Tooltip(getRatingDescription(p.getAgeRating())));
-            badgeBox.getChildren().add(ratingLabel);
+            categoryRow.getChildren().add(ratingLabel);
         }
 
-        // Platform tags
-        FlowPane platformTags = new FlowPane();
-        platformTags.setHgap(4);
-        platformTags.setVgap(4);
-        platformTags.setAlignment(Pos.CENTER);
-        platformTags.setMaxWidth(210);
+        badgeContainer.getChildren().add(categoryRow);
 
+        // Platform and Genre tags combined
+        FlowPane allTags = new FlowPane();
+        allTags.setHgap(4);
+        allTags.setVgap(4);
+        allTags.setAlignment(Pos.CENTER);
+        allTags.setMaxWidth(230);
+
+        // Add platform tags (max 2)
         if (p.getPlatforms() != null && !p.getPlatforms().isEmpty()) {
+            int platformCount = 0;
             for (String platform : p.getPlatforms()) {
+                if (platformCount >= 2) break;
                 Label platformLabel = new Label(getplatformIcon(platform));
                 platformLabel.setStyle("-fx-background-color: #667eea; -fx-text-fill: white; " +
-                        "-fx-padding: 3 8; -fx-background-radius: 8; -fx-font-size: 10px; -fx-font-weight: 600;");
+                        "-fx-padding: 4 8; -fx-background-radius: 8; -fx-font-size: 10px; -fx-font-weight: 600;");
                 platformLabel.setTooltip(new Tooltip(platform));
-                platformTags.getChildren().add(platformLabel);
+                allTags.getChildren().add(platformLabel);
+                platformCount++;
+            }
+            if (p.getPlatforms().size() > 2) {
+                Label moreLabel = new Label("+" + (p.getPlatforms().size() - 2) + " more");
+                moreLabel.setStyle("-fx-background-color: #5568d3; -fx-text-fill: white; " +
+                        "-fx-padding: 4 8; -fx-background-radius: 8; -fx-font-size: 9px; -fx-font-weight: 600;");
+                allTags.getChildren().add(moreLabel);
             }
         }
 
-        // Genre tags
-        FlowPane genreTags = new FlowPane();
-        genreTags.setHgap(4);
-        genreTags.setVgap(4);
-        genreTags.setAlignment(Pos.CENTER);
-        genreTags.setMaxWidth(210);
-
+        // Add genre tags (max 2)
         if (p.getGenres() != null && !p.getGenres().isEmpty()) {
             int genreCount = 0;
             for (String genre : p.getGenres()) {
-                if (genreCount >= 3) break; // Show max 3 genres
+                if (genreCount >= 2) break;
                 Label genreLabel = new Label(genre);
                 genreLabel.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; " +
-                        "-fx-padding: 3 8; -fx-background-radius: 8; -fx-font-size: 10px; -fx-font-weight: 600;");
+                        "-fx-padding: 4 8; -fx-background-radius: 8; -fx-font-size: 10px; -fx-font-weight: 600;");
                 genreLabel.setTooltip(new Tooltip(genre));
-                genreTags.getChildren().add(genreLabel);
+                allTags.getChildren().add(genreLabel);
                 genreCount++;
             }
-            if (p.getGenres().size() > 3) {
-                Label moreLabel = new Label("+" + (p.getGenres().size() - 3));
-                moreLabel.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; " +
-                        "-fx-padding: 3 8; -fx-background-radius: 8; -fx-font-size: 10px; -fx-font-weight: 600;");
-                moreLabel.setTooltip(new Tooltip("More genres: " + String.join(", ", p.getGenres().subList(3, p.getGenres().size()))));
-                genreTags.getChildren().add(moreLabel);
+            if (p.getGenres().size() > 2) {
+                Label moreLabel = new Label("+" + (p.getGenres().size() - 2) + " more");
+                moreLabel.setStyle("-fx-background-color: #218838; -fx-text-fill: white; " +
+                        "-fx-padding: 4 8; -fx-background-radius: 8; -fx-font-size: 9px; -fx-font-weight: 600;");
+                allTags.getChildren().add(moreLabel);
             }
         }
 
-        // Price section
-        VBox priceBox = new VBox(3);
+        badgeContainer.getChildren().add(allTags);
+
+        // Separator line
+        Separator separator1 = new Separator();
+        separator1.setMaxWidth(220);
+        separator1.setStyle("-fx-background-color: #e1e4e8;");
+
+        // Price section - more prominent
+        VBox priceBox = new VBox(5);
         priceBox.setAlignment(Pos.CENTER);
+        priceBox.setPadding(new Insets(8, 0, 8, 0));
 
         double finalPrice = p.getPrice() * (1 - p.getDiscount() / 100.0);
         Label priceLabel = new Label("$" + String.format("%.2f", finalPrice));
-        priceLabel.setStyle("-fx-font-size: 20px; -fx-text-fill: #667eea; -fx-font-weight: bold;");
+        priceLabel.setStyle("-fx-font-size: 24px; -fx-text-fill: #667eea; -fx-font-weight: bold;");
 
         if (p.getDiscount() > 0) {
+            HBox oldPriceBox = new HBox(8);
+            oldPriceBox.setAlignment(Pos.CENTER);
             Label oldPrice = new Label("$" + String.format("%.2f", p.getPrice()));
-            oldPrice.setStyle("-fx-text-fill: #6c757d; -fx-font-size: 13px; -fx-strikethrough: true;");
-            priceBox.getChildren().addAll(priceLabel, oldPrice);
+            oldPrice.setStyle("-fx-text-fill: #6c757d; -fx-font-size: 14px; -fx-strikethrough: true;");
+            Label saveLabel = new Label("Save " + (int)p.getDiscount() + "%");
+            saveLabel.setStyle("-fx-text-fill: #dc3545; -fx-font-size: 11px; -fx-font-weight: bold;");
+            oldPriceBox.getChildren().addAll(oldPrice, saveLabel);
+            priceBox.getChildren().addAll(priceLabel, oldPriceBox);
         } else {
             priceBox.getChildren().add(priceLabel);
         }
 
-        // Rating and stock
-        HBox infoBox = new HBox(10);
+        // Rating and stock with better styling
+        HBox infoBox = new HBox(15);
         infoBox.setAlignment(Pos.CENTER);
+        infoBox.setPadding(new Insets(5, 0, 5, 0));
 
+        // Rating
+        VBox ratingBox = new VBox(2);
+        ratingBox.setAlignment(Pos.CENTER);
         Label ratingLabel = new Label("⭐ " + String.format("%.1f", new ReviewService().getAverageRating(p.getId())));
-        ratingLabel.setStyle("-fx-text-fill: #f5b301; -fx-font-weight: bold; -fx-font-size: 13px;");
+        ratingLabel.setStyle("-fx-text-fill: #f5b301; -fx-font-weight: bold; -fx-font-size: 14px;");
+        Label ratingText = new Label("Rating");
+        ratingText.setStyle("-fx-text-fill: #6c757d; -fx-font-size: 10px;");
+        ratingBox.getChildren().addAll(ratingLabel, ratingText);
 
-        Label stockLabel = new Label("📦 " + p.getStock());
-        stockLabel.setStyle("-fx-text-fill: #6c757d; -fx-font-size: 13px;");
+        // Stock with status
+        VBox stockBox = new VBox(2);
+        stockBox.setAlignment(Pos.CENTER);
+        Label stockLabel = new Label(p.getStock() > 0 ? "📦 " + p.getStock() : "Out of Stock");
+        String stockColor = p.getStock() > 10 ? "#28a745" : (p.getStock() > 0 ? "#ffc107" : "#dc3545");
+        stockLabel.setStyle("-fx-text-fill: " + stockColor + "; -fx-font-weight: bold; -fx-font-size: 14px;");
+        Label stockText = new Label("In Stock");
+        stockText.setStyle("-fx-text-fill: #6c757d; -fx-font-size: 10px;");
+        stockBox.getChildren().addAll(stockLabel, stockText);
 
-        infoBox.getChildren().addAll(ratingLabel, new Separator(javafx.geometry.Orientation.VERTICAL), stockLabel);
+        infoBox.getChildren().addAll(ratingBox, new Separator(javafx.geometry.Orientation.VERTICAL), stockBox);
 
-        // Click to view button
-        Label clickHint = new Label("👆 Click to view details");
-        clickHint.setStyle("-fx-text-fill: #667eea; -fx-font-size: 12px; -fx-font-style: italic;");
+        // Another separator
+        Separator separator2 = new Separator();
+        separator2.setMaxWidth(220);
+        separator2.setStyle("-fx-background-color: #e1e4e8;");
 
-        card.getChildren().addAll(imageContainer, nameLabel, badgeBox, platformTags, genreTags, priceBox, infoBox, clickHint);
+        // Quick action buttons with improved styling
+        HBox quickActions = new HBox(8);
+        quickActions.setAlignment(Pos.CENTER);
+        quickActions.setPrefWidth(230);
+
+        // Quick add to cart button
+        Button quickAddBtn = new Button("🛒 Add to Cart");
+        quickAddBtn.setPrefWidth(165);
+        quickAddBtn.setPrefHeight(38);
+        quickAddBtn.setStyle("-fx-background-color: linear-gradient(to right, #667eea, #764ba2); " +
+                "-fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold; " +
+                "-fx-background-radius: 8; -fx-cursor: hand;");
+        quickAddBtn.setOnMouseEntered(e -> {
+            quickAddBtn.setStyle("-fx-background-color: linear-gradient(to right, #5568d3, #653a8b); " +
+                    "-fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold; " +
+                    "-fx-background-radius: 8; -fx-cursor: hand;");
+        });
+        quickAddBtn.setOnMouseExited(e -> {
+            quickAddBtn.setStyle("-fx-background-color: linear-gradient(to right, #667eea, #764ba2); " +
+                    "-fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold; " +
+                    "-fx-background-radius: 8; -fx-cursor: hand;");
+        });
+        quickAddBtn.setOnAction(e -> {
+            e.consume(); // Prevent card click event
+            handleQuickAddToCart(p);
+        });
+
+        // Wishlist toggle button
+        WishlistDao wishlistDao = new WishlistDao();
+        int userId = Session.getUserId();
+        boolean inWishlist = wishlistDao.isInWishlist(userId, p.getId());
+
+        Button wishlistToggle = new Button(inWishlist ? "❤️" : "🤍");
+        wishlistToggle.setPrefWidth(60);
+        wishlistToggle.setPrefHeight(35);
+        String baseWishlistStyle = inWishlist
+                ? "-fx-background-color: #dc3545; -fx-text-fill: white; "
+                : "-fx-background-color: #f8f9fa; -fx-text-fill: #dc3545; -fx-border-color: #dc3545; -fx-border-width: 1; ";
+        wishlistToggle.setStyle(baseWishlistStyle +
+                "-fx-font-size: 16px; -fx-background-radius: 8; -fx-cursor: hand;");
+        wishlistToggle.setOnMouseEntered(e -> {
+            String hoverStyle = inWishlist
+                    ? "-fx-background-color: #c82333; -fx-text-fill: white; "
+                    : "-fx-background-color: #dc3545; -fx-text-fill: white; ";
+            wishlistToggle.setStyle(hoverStyle +
+                    "-fx-font-size: 16px; -fx-background-radius: 8; -fx-cursor: hand;");
+        });
+        wishlistToggle.setOnMouseExited(e -> {
+            wishlistToggle.setStyle(baseWishlistStyle +
+                    "-fx-font-size: 16px; -fx-background-radius: 8; -fx-cursor: hand;");
+        });
+        wishlistToggle.setOnAction(e -> {
+            e.consume(); // Prevent card click event
+            handleQuickWishlistToggle(p, wishlistToggle);
+        });
+
+        quickActions.getChildren().addAll(quickAddBtn, wishlistToggle);
+
+        // Spacer to push actions to bottom
+        Pane spacer = new Pane();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+
+        // Click to view details hint
+        Label clickHint = new Label("Click card for full details");
+        clickHint.setStyle("-fx-text-fill: #6c757d; -fx-font-size: 10px; -fx-font-style: italic;");
+
+        card.getChildren().addAll(
+                imageContainer,
+                nameLabel,
+                badgeContainer,
+                separator1,
+                priceBox,
+                infoBox,
+                separator2,
+                quickActions,
+                spacer,
+                clickHint
+        );
 
         return card;
     }
@@ -1018,6 +1356,52 @@ public class CustomerHomeController {
         return details;
     }
 
+    /**
+     * Quick add to cart from product card (quantity = 1)
+     */
+    private void handleQuickAddToCart(Product p) {
+        if (p.getStock() <= 0) {
+            showStyledAlert("Out of Stock", p.getName() + " is currently unavailable.", Alert.AlertType.ERROR);
+            return;
+        }
+
+        int qty = 1;
+        double finalPrice = p.getPrice() * (1 - p.getDiscount() / 100.0);
+        cartService.addItem(p, qty);
+        ShoppingCart.addItem(p.getId(), finalPrice, qty, p.getStock());
+        productDao.decreaseStock(p.getId(), qty);
+
+        showStyledAlert("Added to Cart! 🎉", p.getName() + " has been added to your cart.", Alert.AlertType.INFORMATION);
+
+        // Refresh the product display to update stock
+        loadProducts();
+    }
+
+    /**
+     * Quick wishlist toggle from product card
+     */
+    private void handleQuickWishlistToggle(Product p, Button button) {
+        WishlistDao wishlistDao = new WishlistDao();
+        int userId = Session.getUserId();
+
+        if (wishlistDao.isInWishlist(userId, p.getId())) {
+            wishlistDao.removeFromWishlist(userId, p.getId());
+            button.setText("🤍");
+            String baseStyle = "-fx-background-color: #f8f9fa; -fx-text-fill: #dc3545; " +
+                    "-fx-border-color: #dc3545; -fx-border-width: 1; " +
+                    "-fx-font-size: 16px; -fx-background-radius: 8; -fx-cursor: hand;";
+            button.setStyle(baseStyle);
+            showStyledAlert("Removed", "Removed from wishlist", Alert.AlertType.INFORMATION);
+        } else {
+            wishlistDao.addToWishlist(userId, p.getId());
+            button.setText("❤️");
+            String baseStyle = "-fx-background-color: #dc3545; -fx-text-fill: white; " +
+                    "-fx-font-size: 16px; -fx-background-radius: 8; -fx-cursor: hand;";
+            button.setStyle(baseStyle);
+            showStyledAlert("Added to Wishlist! ❤️", p.getName() + " has been added to your wishlist.", Alert.AlertType.INFORMATION);
+        }
+    }
+
     private void handleAddToCart(Product p, int qty, Stage stage) {
         if (p.getStock() <= 0) {
             showStyledAlert("Out of Stock", p.getName() + " is currently unavailable.", Alert.AlertType.ERROR);
@@ -1075,6 +1459,201 @@ public class CustomerHomeController {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    /**
+     * Show platform breakdown in a popup
+     */
+    private void showPlatformBreakdown() {
+        if (allPlatforms == null || allPlatforms.isEmpty()) {
+            showStyledAlert("No Data", "No platforms available", Alert.AlertType.INFORMATION);
+            return;
+        }
+
+        Stage stage = new Stage();
+        stage.setTitle("Platform Breakdown");
+        stage.initModality(Modality.APPLICATION_MODAL);
+
+        VBox content = new VBox(15);
+        content.setPadding(new Insets(20));
+        content.setStyle("-fx-background-color: white;");
+
+        Label title = new Label("🎮 Platform Statistics");
+        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+        VBox platformList = new VBox(10);
+        for (Platform platform : allPlatforms) {
+            long count = allProducts.stream()
+                    .filter(p -> p.getPlatforms().contains(platform.getName()))
+                    .count();
+
+            HBox row = new HBox(15);
+            row.setAlignment(Pos.CENTER_LEFT);
+            row.setPadding(new Insets(10));
+            row.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 8; -fx-cursor: hand;");
+
+            Label nameLabel = new Label(platform.getName());
+            nameLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: 600;");
+
+            Pane spacer = new Pane();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+
+            Label countLabel = new Label(count + " products");
+            countLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #6c757d;");
+
+            row.getChildren().addAll(nameLabel, spacer, countLabel);
+
+            // Click to filter
+            row.setOnMouseClicked(e -> {
+                platformChoice.setValue(platform.getName());
+                applyFilters();
+                stage.close();
+            });
+            row.setOnMouseEntered(e -> row.setStyle("-fx-background-color: #667eea; -fx-background-radius: 8; -fx-cursor: hand;"));
+            row.setOnMouseExited(e -> row.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 8; -fx-cursor: hand;"));
+
+            platformList.getChildren().add(row);
+        }
+
+        ScrollPane scrollPane = new ScrollPane(platformList);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPrefHeight(400);
+
+        content.getChildren().addAll(title, new Separator(), scrollPane);
+
+        Scene scene = new Scene(content, 500, 500);
+        stage.setScene(scene);
+        stage.showAndWait();
+    }
+
+    /**
+     * Show genre breakdown in a popup
+     */
+    private void showGenreBreakdown() {
+        if (allGenres == null || allGenres.isEmpty()) {
+            showStyledAlert("No Data", "No genres available", Alert.AlertType.INFORMATION);
+            return;
+        }
+
+        Stage stage = new Stage();
+        stage.setTitle("Genre Breakdown");
+        stage.initModality(Modality.APPLICATION_MODAL);
+
+        VBox content = new VBox(15);
+        content.setPadding(new Insets(20));
+        content.setStyle("-fx-background-color: white;");
+
+        Label title = new Label("🎯 Genre Statistics");
+        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+        VBox genreList = new VBox(10);
+        for (Genre genre : allGenres) {
+            long count = allProducts.stream()
+                    .filter(p -> p.getGenres().contains(genre.getName()))
+                    .count();
+
+            HBox row = new HBox(15);
+            row.setAlignment(Pos.CENTER_LEFT);
+            row.setPadding(new Insets(10));
+            row.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 8; -fx-cursor: hand;");
+
+            Label nameLabel = new Label(genre.getName());
+            nameLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: 600;");
+
+            Pane spacer = new Pane();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+
+            Label countLabel = new Label(count + " products");
+            countLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #6c757d;");
+
+            row.getChildren().addAll(nameLabel, spacer, countLabel);
+
+            // Click to filter
+            row.setOnMouseClicked(e -> {
+                genreChoice.setValue(genre.getName());
+                applyFilters();
+                stage.close();
+            });
+            row.setOnMouseEntered(e -> row.setStyle("-fx-background-color: #17a2b8; -fx-background-radius: 8; -fx-cursor: hand;"));
+            row.setOnMouseExited(e -> row.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 8; -fx-cursor: hand;"));
+
+            genreList.getChildren().add(row);
+        }
+
+        ScrollPane scrollPane = new ScrollPane(genreList);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPrefHeight(400);
+
+        content.getChildren().addAll(title, new Separator(), scrollPane);
+
+        Scene scene = new Scene(content, 500, 500);
+        stage.setScene(scene);
+        stage.showAndWait();
+    }
+
+    /**
+     * Show category breakdown in a popup
+     */
+    private void showCategoryBreakdown() {
+        if (allProducts == null || allProducts.isEmpty()) {
+            showStyledAlert("No Data", "No products available", Alert.AlertType.INFORMATION);
+            return;
+        }
+
+        Stage stage = new Stage();
+        stage.setTitle("Category Breakdown");
+        stage.initModality(Modality.APPLICATION_MODAL);
+
+        VBox content = new VBox(15);
+        content.setPadding(new Insets(20));
+        content.setStyle("-fx-background-color: white;");
+
+        Label title = new Label("🏷️ Category Statistics");
+        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+        // Group products by category
+        Map<String, Long> categoryCount = allProducts.stream()
+                .collect(Collectors.groupingBy(Product::getCategory, Collectors.counting()));
+
+        VBox categoryList = new VBox(10);
+        categoryCount.forEach((category, count) -> {
+            HBox row = new HBox(15);
+            row.setAlignment(Pos.CENTER_LEFT);
+            row.setPadding(new Insets(10));
+            row.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 8; -fx-cursor: hand;");
+
+            Label nameLabel = new Label(category);
+            nameLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: 600;");
+
+            Pane spacer = new Pane();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+
+            Label countLabel = new Label(count + " products");
+            countLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #6c757d;");
+
+            row.getChildren().addAll(nameLabel, spacer, countLabel);
+
+            // Click to filter
+            row.setOnMouseClicked(e -> {
+                categoryChoice.setValue(category);
+                applyFilters();
+                stage.close();
+            });
+            row.setOnMouseEntered(e -> row.setStyle("-fx-background-color: #ffc107; -fx-background-radius: 8; -fx-cursor: hand;"));
+            row.setOnMouseExited(e -> row.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 8; -fx-cursor: hand;"));
+
+            categoryList.getChildren().add(row);
+        });
+
+        ScrollPane scrollPane = new ScrollPane(categoryList);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPrefHeight(400);
+
+        content.getChildren().addAll(title, new Separator(), scrollPane);
+
+        Scene scene = new Scene(content, 500, 500);
+        stage.setScene(scene);
+        stage.showAndWait();
     }
 
     private void showStyledAlert(String title, String message, Alert.AlertType type) {
