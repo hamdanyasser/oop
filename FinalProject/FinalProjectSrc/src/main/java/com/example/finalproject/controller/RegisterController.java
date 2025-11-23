@@ -31,7 +31,7 @@ public class RegisterController {
     public Parent createView() {
         StackPane root = new StackPane();
         root.setPrefSize(900, 700);
-        root.setStyle("-fx-background-color: linear-gradient(135deg, #667eea 0%, #764ba2 100%);");
+        root.setStyle("-fx-background-color: linear-gradient(to bottom right, #667eea, #764ba2);");
 
         VBox outerBox = new VBox();
         outerBox.setAlignment(Pos.CENTER);
