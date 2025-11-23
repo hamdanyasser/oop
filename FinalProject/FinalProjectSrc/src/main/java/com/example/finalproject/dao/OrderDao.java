@@ -69,13 +69,15 @@ public class OrderDao {
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery("SELECT * FROM orders ORDER BY created_at DESC")) {
             while (rs.next()) {
-                list.add(new Order(
+                Order order = new Order(
                         rs.getInt("id"),
                         rs.getInt("user_id"),
                         rs.getDouble("total"),
                         rs.getString("status"),
                         rs.getTimestamp("created_at")
-                ));
+                );
+                order.setItems(findItemsByOrder(order.getId()));
+                list.add(order);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -110,13 +112,15 @@ public class OrderDao {
 
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                list.add(new Order(
+                Order order = new Order(
                         rs.getInt("id"),
                         rs.getInt("user_id"),
                         rs.getDouble("total"),
                         rs.getString("status"),
                         rs.getTimestamp("created_at")
-                ));
+                );
+                order.setItems(findItemsByOrder(order.getId()));
+                list.add(order);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -141,13 +145,15 @@ public class OrderDao {
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return new Order(
+                Order order = new Order(
                         rs.getInt("id"),
                         rs.getInt("user_id"),
                         rs.getDouble("total"),
                         rs.getString("status"),
                         rs.getTimestamp("created_at")
                 );
+                order.setItems(findItemsByOrder(order.getId()));
+                return order;
             }
         } catch (Exception e) {
             e.printStackTrace();
