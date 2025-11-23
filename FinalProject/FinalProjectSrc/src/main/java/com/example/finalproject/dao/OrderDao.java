@@ -29,6 +29,17 @@ public class OrderDao {
                     }
                 }
 
+                // Retrieve created_at timestamp from database
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "SELECT created_at FROM orders WHERE id=?")) {
+                    ps.setInt(1, order.getId());
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            order.setCreatedAt(rs.getTimestamp("created_at"));
+                        }
+                    }
+                }
+
                 // Insert order items
                 try (PreparedStatement itemStmt = conn.prepareStatement(
                         "INSERT INTO order_items(order_id,product_id,quantity,price) VALUES(?,?,?,?)")) {
