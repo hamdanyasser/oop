@@ -240,7 +240,7 @@ public class EmailNotificationService {
                     Need help? Contact our support team anytime at support@shopease.com
                 </p>
             </div>
-            """, user.getUsername());
+            """, user.getName());
 
         return EmailSender.sendHtmlEmail(user.getEmail(), subject, wrapInTemplate(content));
     }
@@ -341,7 +341,7 @@ public class EmailNotificationService {
                 </p>
             </div>
             """,
-            user.getUsername(),
+            user.getName(),
             order.getId(),
             dateFormat.format(order.getCreatedAt()),
             itemsTable.toString()
@@ -402,7 +402,7 @@ public class EmailNotificationService {
                 </p>
             </div>
             """,
-            user.getUsername(),
+            user.getName(),
             order.getId(),
             new SimpleDateFormat("MMM dd, yyyy").format(System.currentTimeMillis()),
             itemsList.toString()
@@ -466,7 +466,7 @@ public class EmailNotificationService {
             </div>
             """,
             statusIcon,
-            user.getUsername(),
+            user.getName(),
             boxClass,
             order.getId(),
             previousStatus,
@@ -506,7 +506,7 @@ public class EmailNotificationService {
             </div>
             """,
             promoTitle,
-            user.getUsername(),
+            user.getName(),
             promoMessage.replace("\n", "<br>")
         );
 
@@ -550,7 +550,7 @@ public class EmailNotificationService {
                 </p>
             </div>
             """,
-            user.getUsername(),
+            user.getName(),
             resetToken
         );
 
