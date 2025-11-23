@@ -1,6 +1,5 @@
 package com.example.finalproject.util;
 
-import com.example.finalproject.service.ThemeManager;
 import javafx.animation.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -145,58 +144,34 @@ public class ToastNotification {
         toast.setMaxWidth(350);
         toast.setMinHeight(50);
 
-        
-        boolean isDark = ThemeManager.getInstance().isDarkMode();
-        if (isDark) {
-            
-            toast.setStyle(String.format(
-                "-fx-background-color: #2d2d2d; " +
-                "-fx-background-radius: 8; " +
-                "-fx-border-color: %s; " +
-                "-fx-border-width: 2; " +
-                "-fx-border-radius: 8; " +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 2); " +
-                "-fx-cursor: hand;",
-                type.color
-            ));
-        } else {
-            
-            toast.setStyle(String.format(
-                "-fx-background-color: %s; " +
-                "-fx-background-radius: 8; " +
-                "-fx-border-color: %s; " +
-                "-fx-border-width: 1; " +
-                "-fx-border-radius: 8; " +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 2); " +
-                "-fx-cursor: hand;",
-                type.bgLight,
-                type.color
-            ));
-        }
 
-        
+        toast.setStyle(String.format(
+            "-fx-background-color: %s; " +
+            "-fx-background-radius: 8; " +
+            "-fx-border-color: %s; " +
+            "-fx-border-width: 1; " +
+            "-fx-border-radius: 8; " +
+            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 2); " +
+            "-fx-cursor: hand;",
+            type.bgLight,
+            type.color
+        ));
+
+
         Label iconLabel = new Label(type.icon);
         iconLabel.setStyle("-fx-font-size: 20px;");
 
-        
+
         Label messageLabel = new Label(message);
         messageLabel.setWrapText(true);
         messageLabel.setMaxWidth(280);
 
-        if (isDark) {
-            messageLabel.setStyle(String.format(
-                "-fx-font-size: 14px; " +
-                "-fx-font-weight: 600; " +
-                "-fx-text-fill: #e0e0e0;"
-            ));
-        } else {
-            messageLabel.setStyle(String.format(
-                "-fx-font-size: 14px; " +
-                "-fx-font-weight: 600; " +
-                "-fx-text-fill: %s;",
-                type.textLight
-            ));
-        }
+        messageLabel.setStyle(String.format(
+            "-fx-font-size: 14px; " +
+            "-fx-font-weight: 600; " +
+            "-fx-text-fill: %s;",
+            type.textLight
+        ));
 
         toast.getChildren().addAll(iconLabel, messageLabel);
 
