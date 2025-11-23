@@ -42,15 +42,15 @@ public class AdminPromotionsController {
         root.setPrefSize(900, 650);
         root.setStyle("-fx-background-color: #f5f7fa;");
 
-        // Top bar with gradient
+        
         HBox topBar = createTopBar();
         root.setTop(topBar);
 
-        // Center content
+        
         VBox centerContent = createCenterContent();
         root.setCenter(centerContent);
 
-        // Load data
+        
         refresh();
 
         return root;
@@ -62,7 +62,7 @@ public class AdminPromotionsController {
         topBar.setAlignment(Pos.CENTER_LEFT);
         topBar.setStyle("-fx-background-color: linear-gradient(to right, #667eea 0%, #764ba2 100%); -fx-padding: 20;");
 
-        // Icon and Title
+        
         Label iconLabel = new Label("📢");
         iconLabel.setStyle("-fx-font-size: 24px;");
 
@@ -101,10 +101,10 @@ public class AdminPromotionsController {
         centerContent.setAlignment(Pos.TOP_CENTER);
         centerContent.setPadding(new Insets(30));
 
-        // Stats card
+        
         HBox statsCard = createStatsCard();
 
-        // Main content container
+        
         VBox contentContainer = new VBox(20);
         contentContainer.setAlignment(Pos.CENTER);
         contentContainer.setPadding(new Insets(25));
@@ -113,16 +113,16 @@ public class AdminPromotionsController {
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
 
-        // Header
+        
         Label tableTitle = new Label("🎯 Active Promotions");
         tableTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
-        // Table
+        
         table = new TableView<>();
         table.setPrefHeight(330);
         table.setStyle("-fx-background-color: transparent; -fx-background-radius: 12;");
 
-        // Columns
+        
         colId = new TableColumn<>("ID");
         colId.setPrefWidth(60);
         colId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getId()).asObject());
@@ -201,7 +201,7 @@ public class AdminPromotionsController {
 
         table.getColumns().addAll(colId, colProductId, colCategory, colDiscount, colStart, colEnd);
 
-        // Action buttons
+        
         HBox actionBar = new HBox(15);
         actionBar.setAlignment(Pos.CENTER);
         actionBar.setPadding(new Insets(10, 0, 0, 0));
@@ -292,7 +292,7 @@ public class AdminPromotionsController {
 
         newStatsCard.getChildren().addAll(totalBox, activeBox, avgBox);
 
-        // Update the stats card in the UI using the instance variable
+        
         if (centerContent != null && centerContent.getChildren().size() > 0) {
             centerContent.getChildren().set(0, newStatsCard);
         }
@@ -334,12 +334,12 @@ public class AdminPromotionsController {
         ButtonType addButtonType = new ButtonType("Add Promotion", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(addButtonType, ButtonType.CANCEL);
 
-        // Style dialog
+        
         DialogPane dialogPane = dialog.getDialogPane();
         dialogPane.setStyle("-fx-background-color: white; -fx-background-radius: 16; " +
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 16;");
 
-        // Fields
+        
         ComboBox<Product> productCombo = new ComboBox<>();
         productCombo.getItems().addAll(new ProductService().getAll());
         productCombo.setPromptText("Select Product (optional)");
@@ -415,11 +415,11 @@ public class AdminPromotionsController {
 
         dialog.getDialogPane().setContent(grid);
 
-        // Convert the result
+        
         dialog.setResultConverter(button -> {
             if (button == addButtonType) {
                 try {
-                    // Validate fields
+                    
                     if (discountSpinner.getValue() <= 0) {
                         showStyledAlert("Invalid Input", "❌ Discount must be greater than 0%", Alert.AlertType.ERROR);
                         return null;
@@ -433,7 +433,7 @@ public class AdminPromotionsController {
                         return null;
                     }
 
-                    // Build promotion
+                    
                     Promotion p = new Promotion();
                     Product selected = productCombo.getValue();
                     if (selected != null) p.setProductId(selected.getId());
@@ -450,7 +450,7 @@ public class AdminPromotionsController {
             return null;
         });
 
-        // Handle result
+        
         dialog.showAndWait().ifPresent(promo -> {
             try {
                 dao.insert(promo);
@@ -469,7 +469,7 @@ public class AdminPromotionsController {
             return;
         }
 
-        // Confirmation dialog
+        
         Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
         confirmation.setTitle("Confirm Delete");
         confirmation.setHeaderText(null);

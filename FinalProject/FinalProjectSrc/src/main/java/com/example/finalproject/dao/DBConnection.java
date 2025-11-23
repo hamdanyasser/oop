@@ -12,11 +12,11 @@ public class DBConnection {
 
     private DBConnection() {}
 
-    /**
-     * Loads database configuration from db.properties file
-     * @return Properties object containing database configuration
-     * @throws SQLException if configuration file cannot be loaded
-     */
+    
+
+
+
+
     private static Properties loadDatabaseConfig() throws SQLException {
         if (dbProperties == null) {
             dbProperties = new Properties();
@@ -32,7 +32,7 @@ public class DBConnection {
 
                 dbProperties.load(input);
 
-                // Validate required properties
+                
                 if (!dbProperties.containsKey("db.url") ||
                     !dbProperties.containsKey("db.username") ||
                     !dbProperties.containsKey("db.password")) {
@@ -48,11 +48,11 @@ public class DBConnection {
         return dbProperties;
     }
 
-    /**
-     * Creates a new database connection.
-     * Each call returns a fresh connection that should be closed by the caller.
-     * Use with try-with-resources: try (Connection conn = DBConnection.getInstance()) {...}
-     */
+    
+
+
+
+
     public static Connection getInstance() throws SQLException {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");

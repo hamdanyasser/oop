@@ -34,11 +34,11 @@ public class CartController {
         root.setPrefSize(1000, 700);
         root.setStyle("-fx-background-color: #f5f7fa;");
 
-        // Top bar
+        
         HBox topBar = createTopBar();
         root.setTop(topBar);
 
-        // Center content
+        
         VBox centerBox = new VBox(20);
         centerBox.setPadding(new Insets(30));
         centerBox.setAlignment(Pos.TOP_CENTER);
@@ -54,7 +54,7 @@ public class CartController {
 
         root.setCenter(scrollPane);
 
-        // Initial data load
+        
         refreshTable();
 
         return root;
@@ -114,7 +114,7 @@ public class CartController {
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
 
-        // Header
+        
         HBox header = new HBox(10);
         header.setAlignment(Pos.CENTER_LEFT);
 
@@ -126,7 +126,7 @@ public class CartController {
 
         header.getChildren().addAll(iconLabel, titleLabel);
 
-        // Table
+        
         cartTable = new TableView<>();
         cartTable.setPrefHeight(350);
         cartTable.setStyle("-fx-background-color: transparent;");
@@ -201,7 +201,7 @@ public class CartController {
 
         cartTable.getColumns().addAll(colName, colPrice, colQty, colTotal);
 
-        // Remove button
+        
         Button removeBtn = new Button("🗑️ Remove Selected Item");
         removeBtn.setPrefWidth(200);
         removeBtn.setPrefHeight(40);
@@ -229,7 +229,7 @@ public class CartController {
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
 
-        // Total section
+        
         VBox totalSection = new VBox(10);
         totalSection.setAlignment(Pos.CENTER);
         totalSection.setPadding(new Insets(20));
@@ -243,7 +243,7 @@ public class CartController {
 
         totalSection.getChildren().addAll(totalTextLabel, totalLabel);
 
-        // Action buttons
+        
         HBox buttonsRow = new HBox(15);
         buttonsRow.setAlignment(Pos.CENTER);
 

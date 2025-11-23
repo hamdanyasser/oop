@@ -40,16 +40,16 @@ public class OrderHistoryController {
         root.setPrefSize(900, 650);
         root.setStyle("-fx-background-color: #f5f7fa;");
 
-        // Top bar with gradient
+        
         HBox topBar = createTopBar();
         root.setTop(topBar);
 
-        // Center content
+        
         StackPane centerStack = new StackPane();
 
         VBox centerContent = createCenterContent();
 
-        // Empty state label
+        
         emptyLabel = new Label("📦 No orders yet\nStart shopping to see your orders here!");
         emptyLabel.setStyle("-fx-font-size: 20px; -fx-text-fill: #6c757d; -fx-text-alignment: center;");
         emptyLabel.setVisible(false);
@@ -57,7 +57,7 @@ public class OrderHistoryController {
         centerStack.getChildren().addAll(centerContent, emptyLabel);
         root.setCenter(centerStack);
 
-        // Initialize data
+        
         loadOrders();
 
         return root;
@@ -69,7 +69,7 @@ public class OrderHistoryController {
         topBar.setAlignment(Pos.CENTER_LEFT);
         topBar.setStyle("-fx-background-color: linear-gradient(to right, #667eea 0%, #764ba2 100%); -fx-padding: 20;");
 
-        // Icon and Title
+        
         Label iconLabel = new Label("📦");
         iconLabel.setStyle("-fx-font-size: 24px;");
 
@@ -108,10 +108,10 @@ public class OrderHistoryController {
         centerContent.setAlignment(Pos.TOP_CENTER);
         centerContent.setPadding(new Insets(30));
 
-        // Stats card
+        
         HBox statsCard = createStatsCard();
 
-        // Table container with modern styling
+        
         VBox tableContainer = new VBox(15);
         tableContainer.setAlignment(Pos.CENTER);
         tableContainer.setPadding(new Insets(25));
@@ -120,16 +120,16 @@ public class OrderHistoryController {
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
 
-        // Table header
+        
         Label tableTitle = new Label("📋 Order History");
         tableTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
-        // Create table
+        
         orderTable = new TableView<>();
         orderTable.setPrefHeight(400);
         orderTable.setStyle("-fx-background-color: transparent; -fx-background-radius: 12;");
 
-        // Create columns with modern styling
+        
         colId = new TableColumn<>("Order #");
         colId.setPrefWidth(100);
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -192,7 +192,7 @@ public class OrderHistoryController {
 
         orderTable.getColumns().addAll(colId, colTotal, colStatus, colDate);
 
-        // Action buttons
+        
         HBox buttonsRow = new HBox(15);
         buttonsRow.setAlignment(Pos.CENTER);
         buttonsRow.setPadding(new Insets(10, 0, 0, 0));
@@ -225,7 +225,7 @@ public class OrderHistoryController {
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
 
-        // These will be populated in loadOrders
+        
         VBox totalOrders = createStatBox("📦", "0", "Total Orders", "#667eea");
         VBox totalSpent = createStatBox("💰", "$0.00", "Total Spent", "#28a745");
         VBox pendingOrders = createStatBox("⏳", "0", "Pending", "#ffc107");
@@ -261,7 +261,7 @@ public class OrderHistoryController {
         int userId = JwtService.getUserId(Session.getToken());
         List<Order> allOrders = orderDao.findAll();
 
-        // Filter only this user's orders
+        
         List<Order> userOrders = allOrders.stream()
                 .filter(o -> o.getUserId() == userId)
                 .collect(Collectors.toList());
@@ -274,7 +274,7 @@ public class OrderHistoryController {
         ObservableList<Order> orders = FXCollections.observableArrayList(userOrders);
         orderTable.setItems(orders);
 
-        // Update stats
+        
         updateStats(userOrders);
     }
 
@@ -285,7 +285,7 @@ public class OrderHistoryController {
                 .filter(o -> "pending".equalsIgnoreCase(o.getStatus()))
                 .count();
 
-        // Update the stats card directly using the instance variable
+        
         if (statsCard != null && statsCard.getChildren().size() == 3) {
             ((Label) ((VBox) statsCard.getChildren().get(0)).getChildren().get(1)).setText(String.valueOf(totalCount));
             ((Label) ((VBox) statsCard.getChildren().get(1)).getChildren().get(1)).setText("$" + String.format("%.2f", totalAmount));

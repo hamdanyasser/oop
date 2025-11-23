@@ -13,7 +13,7 @@ public class OrderDao {
         try (Connection conn = DBConnection.getInstance()) {
             conn.setAutoCommit(false);
             try {
-                // Insert order and get generated ID
+                
                 try (PreparedStatement ps = conn.prepareStatement(
                         "INSERT INTO orders(user_id,total,status) VALUES(?,?,?)",
                         Statement.RETURN_GENERATED_KEYS)) {
@@ -29,7 +29,7 @@ public class OrderDao {
                     }
                 }
 
-                // Retrieve created_at timestamp from database
+                
                 try (PreparedStatement ps = conn.prepareStatement(
                         "SELECT created_at FROM orders WHERE id=?")) {
                     ps.setInt(1, order.getId());
@@ -40,7 +40,7 @@ public class OrderDao {
                     }
                 }
 
-                // Insert order items
+                
                 try (PreparedStatement itemStmt = conn.prepareStatement(
                         "INSERT INTO order_items(order_id,product_id,quantity,price) VALUES(?,?,?,?)")) {
                     for (OrderItem item : order.getItems()) {
@@ -176,9 +176,9 @@ public class OrderDao {
         return list;
     }
 
-    /**
-     * Get all orders for a specific user
-     */
+    
+
+
     public List<Order> getOrdersByUserId(int userId) {
         List<Order> list = new ArrayList<>();
         try (Connection conn = DBConnection.getInstance();
@@ -193,7 +193,7 @@ public class OrderDao {
                         rs.getString("status"),
                         rs.getTimestamp("created_at")
                 );
-                // Load order items
+                
                 order.setItems(findItemsByOrder(order.getId()));
                 list.add(order);
             }
@@ -203,12 +203,12 @@ public class OrderDao {
         return list;
     }
 
-    // ✅ FIXED: When deleting, restore product stock
+    
     public void delete(int id) {
         try (Connection conn = DBConnection.getInstance()) {
             conn.setAutoCommit(false);
 
-            // Get order items before deleting
+            
             List<OrderItem> items = new ArrayList<>();
             try (PreparedStatement ps = conn.prepareStatement("SELECT product_id, quantity FROM order_items WHERE order_id=?")) {
                 ps.setInt(1, id);
@@ -218,7 +218,7 @@ public class OrderDao {
                 }
             }
 
-            // ✅ Restore stock for each product
+            
             try (PreparedStatement ps = conn.prepareStatement("UPDATE products SET stock = stock + ? WHERE id = ?")) {
                 for (OrderItem item : items) {
                     ps.setInt(1, item.getQuantity());
@@ -228,13 +228,13 @@ public class OrderDao {
                 ps.executeBatch();
             }
 
-            // Delete order items first
+            
             try (PreparedStatement ps = conn.prepareStatement("DELETE FROM order_items WHERE order_id=?")) {
                 ps.setInt(1, id);
                 ps.executeUpdate();
             }
 
-            // Delete order
+            
             try (PreparedStatement ps = conn.prepareStatement("DELETE FROM orders WHERE id=?")) {
                 ps.setInt(1, id);
                 ps.executeUpdate();

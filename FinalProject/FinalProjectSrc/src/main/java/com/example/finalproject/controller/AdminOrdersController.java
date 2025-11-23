@@ -44,12 +44,12 @@ public class AdminOrdersController {
         root.setPrefSize(1200, 750);
         root.setStyle("-fx-background-color: #f5f7fa;");
 
-        // Top bar and filter
+        
         VBox topSection = new VBox();
         topSection.getChildren().addAll(createTopBar(), createFilterBar());
         root.setTop(topSection);
 
-        // Center - Table
+        
         VBox centerBox = new VBox(20);
         centerBox.setPadding(new Insets(30));
         centerBox.setAlignment(Pos.TOP_CENTER);
@@ -65,7 +65,7 @@ public class AdminOrdersController {
 
         root.setCenter(scrollPane);
 
-        // Load data
+        
         loadData();
 
         return root;
@@ -147,7 +147,7 @@ public class AdminOrdersController {
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
 
-        // Table
+        
         orderTable = new TableView<>();
         orderTable.setPrefHeight(450);
         orderTable.setStyle("-fx-background-color: transparent;");
@@ -249,7 +249,7 @@ public class AdminOrdersController {
         Label actionsLabel = new Label("⚡ Quick Actions");
         actionsLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
-        // Primary actions row
+        
         HBox primaryActions = new HBox(12);
         primaryActions.setAlignment(Pos.CENTER_LEFT);
 
@@ -271,7 +271,7 @@ public class AdminOrdersController {
         primaryActions.getChildren().addAll(deliverBtn, viewItemsBtn, invoiceBtn, deleteBtn);
 
 
-        // Export actions row
+        
         HBox exportActions = new HBox(12);
         exportActions.setAlignment(Pos.CENTER_LEFT);
 
@@ -349,10 +349,10 @@ public class AdminOrdersController {
         if (confirm.showAndWait().get() == ButtonType.OK) {
             service.markDelivered(selected.getId());
 
-            // Send shipping notification email
+            
             User user = userDao.getUserById(selected.getUserId()).orElse(null);
             if (user != null) {
-                // Update order status in the object for email
+                
                 selected.setStatus("DELIVERED");
                 emailNotificationService.sendShippingNotificationEmail(user, selected);
                 System.out.println("✅ Shipping notification sent to: " + user.getEmail());
@@ -362,11 +362,11 @@ public class AdminOrdersController {
             showStyledAlert("Success", "✅ Order marked as delivered!", Alert.AlertType.INFORMATION);
         }
         try {
-            // Generate invoice
+            
             Path pdf = new InvoiceService().generateInvoice(selected.getId());
             File file = pdf.toFile();
 
-            // Get user email from DB
+            
             String email = userDao.getEmailById(selected.getUserId());
 
             if (email == null) {

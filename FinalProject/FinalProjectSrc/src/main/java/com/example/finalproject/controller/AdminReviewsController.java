@@ -39,15 +39,15 @@ public class AdminReviewsController {
         root.setPrefSize(900, 650);
         root.setStyle("-fx-background-color: #f5f7fa;");
 
-        // Top bar with gradient
+        
         HBox topBar = createTopBar();
         root.setTop(topBar);
 
-        // Center content
+        
         VBox centerContent = createCenterContent();
         root.setCenter(centerContent);
 
-        // Load data
+        
         initializeData();
 
         return root;
@@ -59,7 +59,7 @@ public class AdminReviewsController {
         topBar.setAlignment(Pos.CENTER_LEFT);
         topBar.setStyle("-fx-background-color: linear-gradient(to right, #667eea 0%, #764ba2 100%); -fx-padding: 20;");
 
-        // Icon and Title
+        
         Label iconLabel = new Label("⭐");
         iconLabel.setStyle("-fx-font-size: 24px;");
 
@@ -98,10 +98,10 @@ public class AdminReviewsController {
         centerContent.setAlignment(Pos.TOP_CENTER);
         centerContent.setPadding(new Insets(30));
 
-        // Stats card
+        
         HBox statsCard = createStatsCard();
 
-        // Main content container
+        
         VBox contentContainer = new VBox(20);
         contentContainer.setAlignment(Pos.CENTER);
         contentContainer.setPadding(new Insets(25));
@@ -110,7 +110,7 @@ public class AdminReviewsController {
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
 
-        // Header with search
+        
         HBox headerBox = new HBox(15);
         headerBox.setAlignment(Pos.CENTER_LEFT);
         headerBox.setPadding(new Insets(0, 0, 10, 0));
@@ -121,7 +121,7 @@ public class AdminReviewsController {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // Search bar with icon
+        
         HBox searchBox = new HBox(10);
         searchBox.setAlignment(Pos.CENTER_LEFT);
         searchBox.setPadding(new Insets(8, 15, 8, 15));
@@ -139,12 +139,12 @@ public class AdminReviewsController {
         searchBox.getChildren().addAll(searchIcon, searchField);
         headerBox.getChildren().addAll(tableTitle, spacer, searchBox);
 
-        // Table
+        
         reviewTable = new TableView<>();
         reviewTable.setPrefHeight(380);
         reviewTable.setStyle("-fx-background-color: transparent; -fx-background-radius: 12;");
 
-        // Columns
+        
         colUser = new TableColumn<>("👤 User");
         colUser.setPrefWidth(150);
         colUser.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getUsername()));
@@ -202,7 +202,7 @@ public class AdminReviewsController {
 
         reviewTable.getColumns().addAll(colUser, colProduct, colRating, colComment, colDate);
 
-        // Action buttons
+        
         HBox buttonsRow = new HBox(15);
         buttonsRow.setAlignment(Pos.CENTER);
         buttonsRow.setPadding(new Insets(10, 0, 0, 0));
@@ -269,7 +269,7 @@ public class AdminReviewsController {
 
         statsCard.getChildren().addAll(totalBox, avgBox, fiveStarBox);
 
-        // Update the stats card in the UI
+        
         VBox centerContent = (VBox) ((BorderPane) reviewTable.getParent().getParent().getParent()).getCenter();
         HBox oldStatsCard = (HBox) centerContent.getChildren().get(0);
         centerContent.getChildren().set(0, statsCard);
@@ -298,14 +298,14 @@ public class AdminReviewsController {
     }
 
     private void initializeData() {
-        // Load data
+        
         List<Review> reviews = dao.getAllReviewsForAdmin();
         reviewList = FXCollections.observableArrayList(reviews);
 
-        // Update stats
+        
         updateStatsCard(reviews);
 
-        // Enable search filtering
+        
         FilteredList<Review> filteredList = new FilteredList<>(reviewList, b -> true);
 
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
@@ -331,7 +331,7 @@ public class AdminReviewsController {
             return;
         }
 
-        // Confirmation dialog
+        
         Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
         confirmation.setTitle("Confirm Delete");
         confirmation.setHeaderText(null);

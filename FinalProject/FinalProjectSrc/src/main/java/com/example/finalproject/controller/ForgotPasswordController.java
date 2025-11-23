@@ -32,11 +32,11 @@ public class ForgotPasswordController {
         root.setPrefSize(900, 650);
         root.setStyle("-fx-background-color: #f5f7fa;");
 
-        // Top bar with gradient
+        
         HBox topBar = createTopBar();
         root.setTop(topBar);
 
-        // Center content
+        
         StackPane centerStack = new StackPane();
         centerStack.setAlignment(Pos.CENTER);
 
@@ -54,7 +54,7 @@ public class ForgotPasswordController {
         topBar.setStyle("-fx-background-color: linear-gradient(to right, #667eea 0%, #764ba2 100%); -fx-padding: 20;");
         topBar.setAlignment(Pos.CENTER_LEFT);
 
-        // Icon and Title
+        
         Label iconLabel = new Label("🔐");
         iconLabel.setStyle("-fx-font-size: 24px;");
 
@@ -87,7 +87,7 @@ public class ForgotPasswordController {
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 20; -fx-border-width: 1; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 25, 0, 0, 10);");
 
-        // Header section
+        
         VBox headerSection = new VBox(10);
         headerSection.setAlignment(Pos.CENTER);
 
@@ -105,7 +105,7 @@ public class ForgotPasswordController {
 
         headerSection.getChildren().addAll(headerIcon, headerTitle, headerSubtitle);
 
-        // Email section
+        
         VBox emailSection = new VBox(8);
         emailSection.setPrefWidth(400);
 
@@ -139,18 +139,18 @@ public class ForgotPasswordController {
 
         emailSection.getChildren().addAll(emailLabel, emailField, sendOtpBtn);
 
-        // Separator
+        
         Separator separator = new Separator();
         separator.setPrefWidth(400);
         separator.setStyle("-fx-padding: 10 0;");
 
-        // OTP and Password section (initially hidden)
+        
         otpSection = new VBox(20);
         otpSection.setPrefWidth(400);
         otpSection.setVisible(false);
         otpSection.setManaged(false);
 
-        // OTP field
+        
         VBox otpBox = new VBox(8);
         Label otpLabel = new Label("🔢 Verification Code");
         otpLabel.setStyle("-fx-font-weight: 600; -fx-font-size: 14px; -fx-text-fill: #495057;");
@@ -170,7 +170,7 @@ public class ForgotPasswordController {
 
         otpBox.getChildren().addAll(otpLabel, otpField);
 
-        // New password field
+        
         VBox passwordBox = new VBox(8);
         Label passwordLabel = new Label("🔒 New Password");
         passwordLabel.setStyle("-fx-font-weight: 600; -fx-font-size: 14px; -fx-text-fill: #495057;");
@@ -190,7 +190,7 @@ public class ForgotPasswordController {
 
         passwordBox.getChildren().addAll(passwordLabel, newPasswordField);
 
-        // Reset button
+        
         resetBtn = new Button("✅ Reset Password");
         resetBtn.setPrefWidth(400);
         resetBtn.setPrefHeight(45);
@@ -205,7 +205,7 @@ public class ForgotPasswordController {
 
         otpSection.getChildren().addAll(otpBox, passwordBox, resetBtn);
 
-        // Message label
+        
         messageLabel = new Label();
         messageLabel.setWrapText(true);
         messageLabel.setMaxWidth(400);
@@ -245,7 +245,7 @@ public class ForgotPasswordController {
         if (sent) {
             showMessage("✅ Verification code sent to your email!", "success");
 
-            // Show OTP section with animation
+            
             otpSection.setVisible(true);
             otpSection.setManaged(true);
 
@@ -254,7 +254,7 @@ public class ForgotPasswordController {
             fade.setToValue(1.0);
             fade.play();
 
-            // Disable email field and send button
+            
             emailField.setDisable(true);
             sendOtpBtn.setDisable(true);
         } else {
@@ -283,7 +283,7 @@ public class ForgotPasswordController {
         showStyledAlert("Success", "✅ Password reset successfully!\n\nYou can now login with your new password.",
                 Alert.AlertType.INFORMATION);
 
-        // Navigate back to login
+        
         onBack();
     }
 

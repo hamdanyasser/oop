@@ -9,7 +9,7 @@ import java.util.Date;
 
 public class JwtService {
     private static final String SECRET = "your-secret-key";
-    private static final long EXPIRATION_TIME = 1000L * 60 * 60 * 24; // 24h
+    private static final long EXPIRATION_TIME = 1000L * 60 * 60 * 24; 
 
     public static String issueToken(int userId, String role, String email) {
         return JWT.create()
@@ -26,18 +26,18 @@ public class JwtService {
     }
 
     public static DecodedJWT verify(String token) {
-        return JWT.require(Algorithm.HMAC256(SECRET)).build().verify(token); // throws if expired/invalid
+        return JWT.require(Algorithm.HMAC256(SECRET)).build().verify(token); 
     }
 
     public static boolean isExpired(String token) {
         try {
-            DecodedJWT jwt = verify(token); // throws if expired
+            DecodedJWT jwt = verify(token); 
             Date exp = jwt.getExpiresAt();
             return exp == null || exp.before(new Date());
         } catch (TokenExpiredException ex) {
             return true;
         } catch (Exception ex) {
-            // invalid token = treat as expired/invalid
+            
             return true;
         }
     }

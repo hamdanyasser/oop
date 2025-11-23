@@ -32,7 +32,7 @@ public class OrderItemsPopupController {
         root.setStyle("-fx-background-color: #f5f7fa;");
         root.setPrefSize(750, 650);
 
-        // Header
+        
         HBox header = new HBox(15);
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(20));
@@ -47,7 +47,7 @@ public class OrderItemsPopupController {
 
         header.getChildren().addAll(iconLabel, titleLabel);
 
-        // Table container
+        
         VBox tableBox = new VBox(15);
         tableBox.setPadding(new Insets(20));
         tableBox.setStyle("-fx-background-color: white; -fx-background-radius: 12; " +
@@ -56,11 +56,11 @@ public class OrderItemsPopupController {
         Label tableTitle = new Label("Order Items");
         tableTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
-        // Create table
+        
         itemTable = new TableView<>();
         itemTable.setPrefHeight(280);
 
-        // Product column
+        
         TableColumn<OrderItem, String> colProduct = new TableColumn<>("Product");
         colProduct.setPrefWidth(250);
         colProduct.setCellValueFactory(cellData -> {
@@ -68,7 +68,7 @@ public class OrderItemsPopupController {
             return new javafx.beans.property.SimpleStringProperty(name != null ? name : "");
         });
 
-        // Quantity column
+        
         TableColumn<OrderItem, Integer> colQty = new TableColumn<>("Quantity");
         colQty.setPrefWidth(100);
         colQty.setCellValueFactory(cellData -> {
@@ -76,7 +76,7 @@ public class OrderItemsPopupController {
         });
         colQty.setStyle("-fx-alignment: CENTER;");
 
-        // Price column
+        
         TableColumn<OrderItem, String> colPrice = new TableColumn<>("Unit Price");
         colPrice.setPrefWidth(120);
         colPrice.setCellValueFactory(cellData -> {
@@ -85,7 +85,7 @@ public class OrderItemsPopupController {
         });
         colPrice.setStyle("-fx-alignment: CENTER;");
 
-        // Subtotal column
+        
         TableColumn<OrderItem, String> colSubtotal = new TableColumn<>("Subtotal");
         colSubtotal.setPrefWidth(120);
         colSubtotal.setCellValueFactory(cellData -> {
@@ -99,14 +99,14 @@ public class OrderItemsPopupController {
 
         tableBox.getChildren().addAll(tableTitle, itemTable);
 
-        // Summary section
+        
         HBox summaryBox = new HBox(20);
         summaryBox.setAlignment(Pos.CENTER);
         summaryBox.setPadding(new Insets(20));
         summaryBox.setStyle("-fx-background-color: white; -fx-background-radius: 12; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 3);");
 
-        // Status card
+        
         VBox statusCard = new VBox(8);
         statusCard.setAlignment(Pos.CENTER);
         statusCard.setPadding(new Insets(15));
@@ -122,7 +122,7 @@ public class OrderItemsPopupController {
 
         statusCard.getChildren().addAll(statusTitle, statusValue);
 
-        // Total card
+        
         VBox totalCard = new VBox(8);
         totalCard.setAlignment(Pos.CENTER);
         totalCard.setPadding(new Insets(15));
@@ -140,14 +140,14 @@ public class OrderItemsPopupController {
 
         summaryBox.getChildren().addAll(statusCard, totalCard);
 
-        // Digital codes section (will be populated in loadOrderData)
+        
         digitalCodesBox = new VBox(15);
         digitalCodesBox.setPadding(new Insets(20));
         digitalCodesBox.setStyle("-fx-background-color: white; -fx-background-radius: 12; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 3);");
-        digitalCodesBox.setVisible(false); // Hidden by default, shown only if there are codes
+        digitalCodesBox.setVisible(false); 
 
-        // Close button
+        
         Button closeBtn = new Button("Close");
         closeBtn.setPrefWidth(200);
         closeBtn.setPrefHeight(40);
@@ -177,7 +177,7 @@ public class OrderItemsPopupController {
         String status = "";
 
         try (Connection conn = DBConnection.getInstance()) {
-            // Get order info
+            
             PreparedStatement psOrder = conn.prepareStatement("SELECT total, status FROM orders WHERE id=?");
             psOrder.setInt(1, orderId);
             ResultSet rsOrder = psOrder.executeQuery();
@@ -186,7 +186,7 @@ public class OrderItemsPopupController {
                 status = rsOrder.getString("status");
             }
 
-            // Get order items
+            
             PreparedStatement ps = conn.prepareStatement(
                     "SELECT oi.*, p.name FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?");
             ps.setInt(1, orderId);
@@ -208,11 +208,11 @@ public class OrderItemsPopupController {
             e.printStackTrace();
         }
 
-        // Update table
+        
         ObservableList<OrderItem> data = FXCollections.observableArrayList(items);
         itemTable.setItems(data);
 
-        // Update summary
+        
         VBox root = (VBox) itemTable.getParent().getParent();
         HBox summaryBox = (HBox) root.getChildren().get(2);
 
@@ -222,10 +222,10 @@ public class OrderItemsPopupController {
         VBox totalCard = (VBox) summaryBox.getChildren().get(1);
         Label totalValue = (Label) totalCard.lookup("#totalValue");
 
-        // Update total
+        
         totalValue.setText(String.format("$%.2f", total));
 
-        // Update status with styling
+        
         String upperStatus = status.toUpperCase();
         statusValue.setText(upperStatus);
 
@@ -252,7 +252,7 @@ public class OrderItemsPopupController {
                         "-fx-padding: 8 20; -fx-background-radius: 15;");
         }
 
-        // Load and display digital codes
+        
         loadDigitalCodes();
     }
 
@@ -264,10 +264,10 @@ public class OrderItemsPopupController {
             return;
         }
 
-        // Clear previous content
+        
         digitalCodesBox.getChildren().clear();
 
-        // Title
+        
         HBox titleBox = new HBox(10);
         titleBox.setAlignment(Pos.CENTER_LEFT);
         Label icon = new Label("🎟️");
@@ -278,7 +278,7 @@ public class OrderItemsPopupController {
 
         digitalCodesBox.getChildren().add(titleBox);
 
-        // Add each code
+        
         for (DigitalCode code : codes) {
             HBox codeRow = createCodeRow(code);
             digitalCodesBox.getChildren().add(codeRow);
@@ -299,12 +299,12 @@ public class OrderItemsPopupController {
                 "-fx-background-radius: 8; -fx-border-color: " + borderColor + "; " +
                 "-fx-border-radius: 8; -fx-border-width: 2;");
 
-        // Code type icon
+        
         String typeIcon = code.getCodeType().equals("GiftCard") ? "🎁" : "💾";
         Label iconLabel = new Label(typeIcon);
         iconLabel.setStyle("-fx-font-size: 24px;");
 
-        // Code information
+        
         VBox codeInfo = new VBox(5);
         Label codeLabel = new Label(code.getCode());
         codeLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1565c0; " +
@@ -324,7 +324,7 @@ public class OrderItemsPopupController {
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // Copy button
+        
         Button copyBtn = new Button("📋 Copy Code");
         copyBtn.setPrefHeight(35);
         copyBtn.setStyle("-fx-background-color: #667eea; -fx-text-fill: white; " +
@@ -340,7 +340,7 @@ public class OrderItemsPopupController {
             content.putString(code.getCode());
             clipboard.setContent(content);
 
-            // Visual feedback
+            
             copyBtn.setText("✅ Copied!");
             copyBtn.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; " +
                     "-fx-background-radius: 6; -fx-padding: 8 20; -fx-font-weight: 600; -fx-font-size: 13px;");

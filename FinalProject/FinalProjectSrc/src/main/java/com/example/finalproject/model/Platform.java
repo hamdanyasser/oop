@@ -3,7 +3,7 @@ package com.example.finalproject.model;
 public class Platform {
     private int id;
     private String name;
-    private String type; // CONSOLE, PC, HANDHELD, MOBILE
+    private String type; 
     private String manufacturer;
     private String iconPath;
 
@@ -17,7 +17,7 @@ public class Platform {
         this.iconPath = iconPath;
     }
 
-    // Getters and Setters
+    
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 

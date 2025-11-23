@@ -14,18 +14,18 @@ public class Product {
 
     private double discount;
 
-    // Platform compatibility
+    
     private List<String> platforms;
     private List<Integer> platformIds;
 
-    // Genre tags
+    
     private List<String> genres;
     private List<Integer> genreIds;
 
-    // Age rating (ESRB: E, E10+, T, M, AO or PEGI: 3, 7, 12, 16, 18)
+    
     private String ageRating;
 
-    // Product type (Physical, Digital, GiftCard)
+    
     private String productType;
 
     public Product() {
@@ -49,7 +49,7 @@ public class Product {
         this.genreIds = new ArrayList<>();
     }
 
-    // --- Getters & Setters ---
+    
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 

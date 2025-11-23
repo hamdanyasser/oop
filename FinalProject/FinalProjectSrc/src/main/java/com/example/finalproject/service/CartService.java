@@ -21,7 +21,7 @@ public class CartService {
 
     public void addItem(Product p) {
         int currentQty = items.getOrDefault(p, 0);
-        // Don't exceed available stock
+        
         if (currentQty < p.getStock()) {
             items.put(p, currentQty + 1);
         }

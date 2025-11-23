@@ -6,14 +6,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Data Access Object for managing digital codes (gift cards and digital downloads)
- */
+
+
+
 public class DigitalCodeDao {
 
-    /**
-     * Insert a new digital code into the database
-     */
+    
+
+
     public void insert(DigitalCode digitalCode) {
         String sql = """
             INSERT INTO digital_codes (order_id, order_item_id, product_id, user_id, code, code_type, is_redeemed, sent_at, original_value, balance)
@@ -36,7 +36,7 @@ public class DigitalCodeDao {
 
             ps.executeUpdate();
 
-            // Get generated ID
+            
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
                 digitalCode.setId(rs.getInt(1));
@@ -47,9 +47,9 @@ public class DigitalCodeDao {
         }
     }
 
-    /**
-     * Get all digital codes for a specific user
-     */
+    
+
+
     public List<DigitalCode> getCodesByUserId(int userId) {
         List<DigitalCode> codes = new ArrayList<>();
         String sql = """
@@ -75,9 +75,9 @@ public class DigitalCodeDao {
         return codes;
     }
 
-    /**
-     * Get all digital codes for a specific order
-     */
+    
+
+
     public List<DigitalCode> getCodesByOrderId(int orderId) {
         List<DigitalCode> codes = new ArrayList<>();
         String sql = """
@@ -103,9 +103,9 @@ public class DigitalCodeDao {
         return codes;
     }
 
-    /**
-     * Check if a code exists and is valid
-     */
+    
+
+
     public boolean isCodeValid(String code) {
         String sql = "SELECT is_redeemed FROM digital_codes WHERE code = ?";
 
@@ -126,9 +126,9 @@ public class DigitalCodeDao {
         return false;
     }
 
-    /**
-     * Mark a code as redeemed
-     */
+    
+
+
     public void redeemCode(String code) {
         String sql = "UPDATE digital_codes SET is_redeemed = TRUE, redeemed_at = CURRENT_TIMESTAMP WHERE code = ?";
 
@@ -143,9 +143,9 @@ public class DigitalCodeDao {
         }
     }
 
-    /**
-     * Get a digital code by its code string
-     */
+    
+
+
     public Optional<DigitalCode> getByCode(String code) {
         String sql = "SELECT * FROM digital_codes WHERE code = ?";
 
@@ -166,9 +166,9 @@ public class DigitalCodeDao {
         return Optional.empty();
     }
 
-    /**
-     * Update gift card balance
-     */
+    
+
+
     public void updateGiftCardBalance(int codeId, double newBalance) {
         String sql = "UPDATE digital_codes SET balance = ? WHERE id = ?";
 
@@ -184,9 +184,9 @@ public class DigitalCodeDao {
         }
     }
 
-    /**
-     * Map ResultSet to DigitalCode object
-     */
+    
+
+
     private DigitalCode mapResultSet(ResultSet rs) throws SQLException {
         DigitalCode code = new DigitalCode(
             rs.getInt("id"),
@@ -202,7 +202,7 @@ public class DigitalCodeDao {
             rs.getTimestamp("created_at")
         );
 
-        // Set gift card balance fields
+        
         code.setOriginalValue(rs.getDouble("original_value"));
         code.setBalance(rs.getDouble("balance"));
 

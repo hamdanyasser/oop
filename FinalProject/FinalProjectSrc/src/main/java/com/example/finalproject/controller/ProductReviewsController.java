@@ -23,11 +23,11 @@ public class ProductReviewsController {
         root.setPrefSize(750, 650);
         root.setStyle("-fx-background-color: white; -fx-background-radius: 16;");
 
-        // Header
+        
         VBox header = createHeader();
         root.setTop(header);
 
-        // Scrollable reviews
+        
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
         scrollPane.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
@@ -49,17 +49,17 @@ public class ProductReviewsController {
         header.setStyle("-fx-background-color: linear-gradient(to right, #667eea, #764ba2); " +
                 "-fx-background-radius: 16 16 0 0;");
 
-        // Icon
+        
         Label iconLabel = new Label("⭐");
         iconLabel.setStyle("-fx-font-size: 48px;");
 
-        // Product title
+        
         productTitle = new Label();
         productTitle.setWrapText(true);
         productTitle.setMaxWidth(650);
         productTitle.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: white; -fx-text-alignment: center;");
 
-        // Rating summary box
+        
         HBox ratingBox = new HBox(30);
         ratingBox.setAlignment(Pos.CENTER);
         ratingBox.setPadding(new Insets(15));
@@ -104,7 +104,7 @@ public class ProductReviewsController {
 
         var reviews = dao.getReviewsByProductWithUser(productId);
 
-        // Calculate stats
+        
         if (reviews.isEmpty()) {
             avgRatingLabel.setText("N/A");
             totalReviewsLabel.setText("0");
@@ -120,7 +120,7 @@ public class ProductReviewsController {
         avgRatingLabel.setText(String.format("%.1f", avgRating));
         totalReviewsLabel.setText(String.valueOf(reviews.size()));
 
-        // Display reviews
+        
         for (Review review : reviews) {
             reviewsContainer.getChildren().add(createReviewCard(review));
         }
@@ -133,17 +133,17 @@ public class ProductReviewsController {
         card.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 12; " +
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 12; -fx-border-width: 1;");
 
-        // Header with user and rating
+        
         HBox header = new HBox();
         header.setAlignment(Pos.CENTER_LEFT);
         header.setSpacing(15);
 
-        // User avatar
+        
         Label avatarLabel = new Label("👤");
         avatarLabel.setStyle("-fx-font-size: 32px; -fx-background-color: white; " +
                 "-fx-padding: 8; -fx-background-radius: 50%;");
 
-        // User info box
+        
         VBox userBox = new VBox(4);
 
         Label userName = new Label(review.getUsername());
@@ -157,7 +157,7 @@ public class ProductReviewsController {
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // Star rating
+        
         HBox starsBox = new HBox(3);
         starsBox.setAlignment(Pos.CENTER);
 
@@ -169,7 +169,7 @@ public class ProductReviewsController {
 
         header.getChildren().addAll(avatarLabel, userBox, spacer, starsBox);
 
-        // Comment
+        
         Label commentLabel = new Label(review.getComment());
         commentLabel.setWrapText(true);
         commentLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #495057; -fx-padding: 10 0 0 0;");

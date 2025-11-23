@@ -9,17 +9,17 @@ import com.example.finalproject.util.EmailSender;
 
 import java.text.SimpleDateFormat;
 
-/**
- * Centralized service for sending modern HTML email notifications to users
- */
+
+
+
 public class EmailNotificationService {
 
     private final ProductDao productDao = new ProductDao();
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy 'at' HH:mm");
 
-    /**
-     * Base HTML template wrapper for all emails
-     */
+    
+
+
     private String wrapInTemplate(String content) {
         return String.format("""
             <!DOCTYPE html>
@@ -199,9 +199,9 @@ public class EmailNotificationService {
             """, content);
     }
 
-    /**
-     * Send welcome email to newly registered users
-     */
+    
+
+
     public boolean sendWelcomeEmail(User user) {
         String subject = "Welcome to ShopEase - Your Gaming Store! 🎮";
 
@@ -245,9 +245,9 @@ public class EmailNotificationService {
         return EmailSender.sendHtmlEmail(user.getEmail(), subject, wrapInTemplate(content));
     }
 
-    /**
-     * Send order confirmation email with full order details
-     */
+    
+
+
     public boolean sendOrderConfirmationEmail(User user, Order order) {
         String subject = "Order Confirmation #" + order.getId() + " - ShopEase";
 
@@ -350,9 +350,9 @@ public class EmailNotificationService {
         return EmailSender.sendHtmlEmail(user.getEmail(), subject, wrapInTemplate(content));
     }
 
-    /**
-     * Send shipping notification when order is marked as delivered
-     */
+    
+
+
     public boolean sendShippingNotificationEmail(User user, Order order) {
         String subject = "Your Order #" + order.getId() + " Has Been Delivered! 📦";
 
@@ -411,9 +411,9 @@ public class EmailNotificationService {
         return EmailSender.sendHtmlEmail(user.getEmail(), subject, wrapInTemplate(content));
     }
 
-    /**
-     * Send order status update email
-     */
+    
+
+
     public boolean sendOrderStatusUpdateEmail(User user, Order order, String previousStatus) {
         String subject = "Order #" + order.getId() + " Status Update";
 
@@ -477,9 +477,9 @@ public class EmailNotificationService {
         return EmailSender.sendHtmlEmail(user.getEmail(), subject, wrapInTemplate(content));
     }
 
-    /**
-     * Send promotional email (requires user opt-in)
-     */
+    
+
+
     public boolean sendPromotionalEmail(User user, String promoTitle, String promoMessage) {
         String subject = "Special Offer from ShopEase - " + promoTitle;
 
@@ -513,9 +513,9 @@ public class EmailNotificationService {
         return EmailSender.sendHtmlEmail(user.getEmail(), subject, wrapInTemplate(content));
     }
 
-    /**
-     * Send password reset email
-     */
+    
+
+
     public boolean sendPasswordResetEmail(User user, String resetToken) {
         String subject = "Password Reset Request - ShopEase";
 
@@ -557,9 +557,9 @@ public class EmailNotificationService {
         return EmailSender.sendHtmlEmail(user.getEmail(), subject, wrapInTemplate(content));
     }
 
-    /**
-     * Send low stock alert to admin
-     */
+    
+
+
     public boolean sendLowStockAlertEmail(String adminEmail, Product product) {
         String subject = "⚠️ Low Stock Alert - " + product.getName();
 

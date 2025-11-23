@@ -2,9 +2,9 @@ package com.example.finalproject.model;
 
 import java.sql.Timestamp;
 
-/**
- * Represents a digital code (gift card or digital download code) sent to a customer
- */
+
+
+
 public class DigitalCode {
     private int id;
     private int orderId;
@@ -12,15 +12,15 @@ public class DigitalCode {
     private int productId;
     private int userId;
     private String code;
-    private String codeType; // GiftCard or DigitalDownload
+    private String codeType; 
     private boolean isRedeemed;
     private Timestamp redeemedAt;
     private Timestamp sentAt;
     private Timestamp createdAt;
-    private double originalValue; // Original gift card value
-    private double balance; // Current gift card balance
+    private double originalValue; 
+    private double balance; 
 
-    // Constructors
+    
     public DigitalCode() {}
 
     public DigitalCode(int id, int orderId, int orderItemId, int productId, int userId,
@@ -39,7 +39,7 @@ public class DigitalCode {
         this.createdAt = createdAt;
     }
 
-    // Getters and Setters
+    
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
