@@ -55,6 +55,12 @@ public class CustomerHomeController {
     private final ReviewService reviewService = new ReviewService();
     private final LoyaltyService loyaltyService = new LoyaltyService();
 
+    // Statistics card labels (to update after data loads)
+    private Label statsProductsValue;
+    private Label statsPlatformsValue;
+    private Label statsGenresValue;
+    private Label statsCategoriesValue;
+
     public Parent createView() {
         AuthGuard.requireLogin();
 
@@ -101,6 +107,7 @@ public class CustomerHomeController {
         loadProducts();
         loadPlatforms();
         loadGenres();
+        updateStatistics(); // Update statistics after data is loaded
         categoryChoice.getItems().addAll("All Categories", "Console", "PC", "Accessory", "Game", "Controller");
         categoryChoice.setValue("All Categories");
 
@@ -381,28 +388,32 @@ public class CustomerHomeController {
         }
 
         // Create interactive compact cards with tooltips
-        HBox card1 = createCompactStatCard("📦", "Products", String.valueOf(totalProducts),
+        statsProductsValue = new Label(String.valueOf(totalProducts));
+        HBox card1 = createCompactStatCard("📦", "Products", statsProductsValue,
                 cardStyle, iconStyle, labelStyle, valueStyle, "#667eea");
         card1.setOnMouseClicked(e -> {
             onReset(); // Show all products
         });
         Tooltip.install(card1, new Tooltip("Click to view all products"));
 
-        HBox card2 = createCompactStatCard("🎮", "Platforms", String.valueOf(totalPlatforms),
+        statsPlatformsValue = new Label(String.valueOf(totalPlatforms));
+        HBox card2 = createCompactStatCard("🎮", "Platforms", statsPlatformsValue,
                 cardStyle, iconStyle, labelStyle, valueStyle, "#28a745");
         card2.setOnMouseClicked(e -> {
             showPlatformBreakdown();
         });
         Tooltip.install(card2, new Tooltip("Click to see platform breakdown"));
 
-        HBox card3 = createCompactStatCard("🎯", "Genres", String.valueOf(totalGenres),
+        statsGenresValue = new Label(String.valueOf(totalGenres));
+        HBox card3 = createCompactStatCard("🎯", "Genres", statsGenresValue,
                 cardStyle, iconStyle, labelStyle, valueStyle, "#17a2b8");
         card3.setOnMouseClicked(e -> {
             showGenreBreakdown();
         });
         Tooltip.install(card3, new Tooltip("Click to see genre breakdown"));
 
-        HBox card4 = createCompactStatCard("🏷️", "Categories", String.valueOf(totalCategories),
+        statsCategoriesValue = new Label(String.valueOf(totalCategories));
+        HBox card4 = createCompactStatCard("🏷️", "Categories", statsCategoriesValue,
                 cardStyle, iconStyle, labelStyle, valueStyle, "#ffc107");
         card4.setOnMouseClicked(e -> {
             showCategoryBreakdown();
@@ -417,7 +428,7 @@ public class CustomerHomeController {
     /**
      * Helper method to create compact horizontal stat card
      */
-    private HBox createCompactStatCard(String icon, String label, String value,
+    private HBox createCompactStatCard(String icon, String label, Label valueLabel,
                                         String cardStyle, String iconStyle,
                                         String labelStyle, String valueStyle,
                                         String accentColor) {
@@ -434,8 +445,7 @@ public class CustomerHomeController {
         VBox infoBox = new VBox(2);
         infoBox.setAlignment(Pos.CENTER_LEFT);
 
-        // Value
-        Label valueLabel = new Label(value);
+        // Value (passed in as parameter to allow updates)
         valueLabel.setStyle(valueStyle + " -fx-text-fill: " + accentColor + ";");
 
         // Label
@@ -814,6 +824,37 @@ public class CustomerHomeController {
         priceRangeChoice.setValue("All Price Ranges");
         sortChoice.setValue("None");
         applyFilters();
+    }
+
+    /**
+     * Update statistics cards with current data
+     */
+    private void updateStatistics() {
+        if (statsProductsValue != null) {
+            int totalProducts = allProducts != null ? allProducts.size() : 0;
+            statsProductsValue.setText(String.valueOf(totalProducts));
+        }
+
+        if (statsPlatformsValue != null) {
+            int totalPlatforms = allPlatforms != null ? allPlatforms.size() : 0;
+            statsPlatformsValue.setText(String.valueOf(totalPlatforms));
+        }
+
+        if (statsGenresValue != null) {
+            int totalGenres = allGenres != null ? allGenres.size() : 0;
+            statsGenresValue.setText(String.valueOf(totalGenres));
+        }
+
+        if (statsCategoriesValue != null) {
+            long totalCategories = 0;
+            if (allProducts != null) {
+                totalCategories = allProducts.stream()
+                        .map(p -> p.getCategory())
+                        .distinct()
+                        .count();
+            }
+            statsCategoriesValue.setText(String.valueOf(totalCategories));
+        }
     }
 
     private void loadProducts() {
