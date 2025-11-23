@@ -1,6 +1,6 @@
 package com.example.finalproject.service;
 
-import com.example.finalproject.util.DatabaseUtil;
+import com.example.finalproject.dao.DBConnection;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -28,7 +28,7 @@ public class LoyaltyService {
     public int getPoints(int userId) {
         String query = "SELECT loyalty_points FROM users WHERE id = ?";
 
-        try (Connection conn = DatabaseUtil.getConnection();
+        try (Connection conn = DBConnection.getInstance();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
             stmt.setInt(1, userId);
@@ -67,7 +67,7 @@ public class LoyaltyService {
                 "(user_id, order_id, points, transaction_type, description) " +
                 "VALUES (?, ?, ?, 'EARNED', ?)";
 
-        try (Connection conn = DatabaseUtil.getConnection()) {
+        try (Connection conn = DBConnection.getInstance()) {
             // Update points balance
             try (PreparedStatement stmt = conn.prepareStatement(updateQuery)) {
                 stmt.setInt(1, pointsEarned);
@@ -124,7 +124,7 @@ public class LoyaltyService {
                 "(user_id, order_id, points, transaction_type, description) " +
                 "VALUES (?, ?, ?, 'REDEEMED', ?)";
 
-        try (Connection conn = DatabaseUtil.getConnection()) {
+        try (Connection conn = DBConnection.getInstance()) {
             // Deduct points
             try (PreparedStatement stmt = conn.prepareStatement(updateQuery)) {
                 stmt.setInt(1, pointsToRedeem);
