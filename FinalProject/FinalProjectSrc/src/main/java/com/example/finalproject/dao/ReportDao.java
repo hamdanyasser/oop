@@ -63,9 +63,9 @@ public class ReportDao {
         return list;
     }
 
-    /**
-     * Get sales breakdown by product category for pie chart
-     */
+    
+
+
     public List<CategorySale> getCategorySales() {
         List<CategorySale> list = new ArrayList<>();
         String sql = """
@@ -91,9 +91,9 @@ public class ReportDao {
         return list;
     }
 
-    /**
-     * Get total number of orders
-     */
+    
+
+
     public int getTotalOrders() {
         String sql = "SELECT COUNT(*) FROM orders WHERE status='DELIVERED'";
         try (Connection conn = DBConnection.getInstance();
@@ -104,9 +104,9 @@ public class ReportDao {
         return 0;
     }
 
-    /**
-     * Get total number of customers
-     */
+    
+
+
     public int getTotalCustomers() {
         String sql = "SELECT COUNT(DISTINCT user_id) FROM orders WHERE status='DELIVERED'";
         try (Connection conn = DBConnection.getInstance();

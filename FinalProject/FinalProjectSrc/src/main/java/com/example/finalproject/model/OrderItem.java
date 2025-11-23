@@ -13,7 +13,7 @@ public class OrderItem {
         this.quantity=quantity; this.price=price;
     }
 
-    // Getters & setters
+    
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public int getOrderId() { return orderId; }

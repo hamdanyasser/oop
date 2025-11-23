@@ -7,8 +7,8 @@ import java.io.File;
 
 public class EmailSender {
 
-    private static final String FROM_EMAIL = "ronyabouezzi@gmail.com"; // change me
-    private static final String APP_PASSWORD = "qtbf tops lvth caks";  // 16-char Gmail App Password
+    private static final String FROM_EMAIL = "ronyabouezzi@gmail.com"; 
+    private static final String APP_PASSWORD = "qtbf tops lvth caks";  
 
     public static boolean sendEmail(String toEmail, String subject, String body) {
         Properties props = new Properties();
@@ -39,9 +39,9 @@ public class EmailSender {
         }
     }
 
-    /**
-     * Send HTML email with modern styling
-     */
+    
+
+
     public static boolean sendHtmlEmail(String toEmail, String subject, String htmlBody) {
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
@@ -89,11 +89,11 @@ public class EmailSender {
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
             message.setSubject(subject);
 
-            // TEXT BODY
+            
             MimeBodyPart textPart = new MimeBodyPart();
             textPart.setText(body);
 
-            // ATTACHMENT
+            
             MimeBodyPart attachPart = new MimeBodyPart();
             attachPart.attachFile(attachment);
 

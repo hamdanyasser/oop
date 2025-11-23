@@ -41,7 +41,7 @@ public class LoginController {
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 30, 0, 0, 10);");
         authCard.setPadding(new Insets(45, 40, 45, 40));
 
-        // Header section
+        
         VBox headerBox = new VBox(12);
         headerBox.setAlignment(Pos.CENTER);
 
@@ -56,20 +56,20 @@ public class LoginController {
 
         headerBox.getChildren().addAll(iconLabel, titleLabel, subtitleLabel);
 
-        // Form fields
+        
         VBox formBox = new VBox(18);
         formBox.setAlignment(Pos.CENTER);
 
-        // Email field
+        
         VBox emailBox = createFieldBox("📧 Email Address", "john@example.com");
         emailField = (TextField) ((VBox) emailBox.getChildren().get(1)).getChildren().get(0);
 
-        // Password field
+        
         VBox passBox = createPasswordBox();
 
         formBox.getChildren().addAll(emailBox, passBox);
 
-        // Forgot password link
+        
         HBox forgotBox = new HBox();
         forgotBox.setAlignment(Pos.CENTER_RIGHT);
         forgotBox.setPadding(new Insets(0, 0, 5, 0));
@@ -79,7 +79,7 @@ public class LoginController {
         forgotPasswordLink.setOnAction(e -> onForgotPassword());
         forgotBox.getChildren().add(forgotPasswordLink);
 
-        // Login button
+        
         Button loginBtn = new Button("Sign In");
         loginBtn.setPrefWidth(340);
         loginBtn.setPrefHeight(50);
@@ -97,18 +97,18 @@ public class LoginController {
                 "-fx-effect: dropshadow(gaussian, rgba(102,126,234,0.5), 15, 0, 0, 5);"));
         loginBtn.setOnAction(e -> onLogin());
 
-        // Progress indicator
+        
         progressIndicator = new ProgressIndicator();
         progressIndicator.setPrefSize(30, 30);
         progressIndicator.setVisible(false);
 
-        // Message label
+        
         msgLabel = new Label();
         msgLabel.setWrapText(true);
         msgLabel.setMaxWidth(340);
         msgLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: 600;");
 
-        // Footer with register link
+        
         HBox footerBox = new HBox(5);
         footerBox.setAlignment(Pos.CENTER);
 
@@ -121,7 +121,7 @@ public class LoginController {
 
         footerBox.getChildren().addAll(footerText, registerLink);
 
-        // Separator
+        
         Separator separator = new Separator();
         separator.setMaxWidth(340);
         separator.setPadding(new Insets(15, 0, 5, 0));
@@ -140,11 +140,11 @@ public class LoginController {
         outerBox.getChildren().add(authCard);
         root.getChildren().add(outerBox);
 
-        // Add loading overlay
+        
         loadingOverlay = new LoadingOverlay();
         root.getChildren().add(loadingOverlay.getOverlay());
 
-        // Add fade-in animation
+        
         FadeTransition fadeIn = new FadeTransition(Duration.millis(500), authCard);
         fadeIn.setFromValue(0.0);
         fadeIn.setToValue(1.0);
@@ -226,7 +226,7 @@ public class LoginController {
         String email = emailField.getText().trim();
         String password = passwordField.getText().trim();
 
-        // Client-side validation
+        
         if (email.isEmpty() || password.isEmpty()) {
             msgLabel.setText("⚠️ Please enter both email and password");
             ToastNotification.error("All fields are required");

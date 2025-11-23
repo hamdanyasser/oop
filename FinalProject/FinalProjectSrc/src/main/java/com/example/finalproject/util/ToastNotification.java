@@ -11,11 +11,11 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
-/**
- * Modern toast notification system
- * Shows non-intrusive notifications that auto-dismiss
- * Supports: Success, Error, Info, Warning types
- */
+
+
+
+
+
 public class ToastNotification {
 
     public enum Type {
@@ -41,9 +41,9 @@ public class ToastNotification {
     private static final int MAX_TOASTS = 5;
     private static final Duration SHOW_DURATION = Duration.seconds(3);
 
-    /**
-     * Initialize toast container (call once when app starts)
-     */
+    
+
+
     public static void initialize(Scene scene) {
         if (toastContainer == null) {
             toastContainer = new VBox(10);
@@ -52,7 +52,7 @@ public class ToastNotification {
             toastContainer.setMouseTransparent(true);
             toastContainer.setPickOnBounds(false);
 
-            // Add to scene root
+            
             if (scene.getRoot() instanceof StackPane) {
                 StackPane root = (StackPane) scene.getRoot();
                 root.getChildren().add(toastContainer);
@@ -61,57 +61,57 @@ public class ToastNotification {
         }
     }
 
-    /**
-     * Show success toast
-     */
+    
+
+
     public static void success(String message) {
         show(message, Type.SUCCESS);
     }
 
-    /**
-     * Show error toast
-     */
+    
+
+
     public static void error(String message) {
         show(message, Type.ERROR);
     }
 
-    /**
-     * Show info toast
-     */
+    
+
+
     public static void info(String message) {
         show(message, Type.INFO);
     }
 
-    /**
-     * Show warning toast
-     */
+    
+
+
     public static void warning(String message) {
         show(message, Type.WARNING);
     }
 
-    /**
-     * Show toast notification
-     */
+    
+
+
     public static void show(String message, Type type) {
         if (toastContainer == null) {
             System.err.println("ToastNotification not initialized. Call initialize(scene) first.");
             return;
         }
 
-        // Limit number of toasts
+        
         if (toastContainer.getChildren().size() >= MAX_TOASTS) {
             toastContainer.getChildren().remove(0);
         }
 
-        // Create toast
+        
         HBox toast = createToast(message, type);
         toast.setMouseTransparent(false);
         toast.setPickOnBounds(true);
 
-        // Add to container
+        
         toastContainer.getChildren().add(toast);
 
-        // Slide in animation
+        
         TranslateTransition slideIn = new TranslateTransition(Duration.millis(300), toast);
         slideIn.setFromX(400);
         slideIn.setToX(0);
@@ -123,21 +123,21 @@ public class ToastNotification {
         ParallelTransition showTransition = new ParallelTransition(slideIn, fadeIn);
         showTransition.play();
 
-        // Auto-dismiss after delay
+        
         PauseTransition delay = new PauseTransition(SHOW_DURATION);
         delay.setOnFinished(e -> dismiss(toast));
         delay.play();
 
-        // Click to dismiss
+        
         toast.setOnMouseClicked(e -> {
             delay.stop();
             dismiss(toast);
         });
     }
 
-    /**
-     * Create toast UI element
-     */
+    
+
+
     private static HBox createToast(String message, Type type) {
         HBox toast = new HBox(12);
         toast.setAlignment(Pos.CENTER_LEFT);
@@ -145,10 +145,10 @@ public class ToastNotification {
         toast.setMaxWidth(350);
         toast.setMinHeight(50);
 
-        // Apply theme-aware styling
+        
         boolean isDark = ThemeManager.getInstance().isDarkMode();
         if (isDark) {
-            // Dark theme
+            
             toast.setStyle(String.format(
                 "-fx-background-color: #2d2d2d; " +
                 "-fx-background-radius: 8; " +
@@ -160,7 +160,7 @@ public class ToastNotification {
                 type.color
             ));
         } else {
-            // Light theme
+            
             toast.setStyle(String.format(
                 "-fx-background-color: %s; " +
                 "-fx-background-radius: 8; " +
@@ -174,11 +174,11 @@ public class ToastNotification {
             ));
         }
 
-        // Icon
+        
         Label iconLabel = new Label(type.icon);
         iconLabel.setStyle("-fx-font-size: 20px;");
 
-        // Message
+        
         Label messageLabel = new Label(message);
         messageLabel.setWrapText(true);
         messageLabel.setMaxWidth(280);
@@ -203,9 +203,9 @@ public class ToastNotification {
         return toast;
     }
 
-    /**
-     * Dismiss toast with animation
-     */
+    
+
+
     private static void dismiss(HBox toast) {
         FadeTransition fadeOut = new FadeTransition(Duration.millis(200), toast);
         fadeOut.setFromValue(1.0);
@@ -219,9 +219,9 @@ public class ToastNotification {
         hideTransition.play();
     }
 
-    /**
-     * Clear all toasts
-     */
+    
+
+
     public static void clearAll() {
         if (toastContainer != null) {
             toastContainer.getChildren().clear();

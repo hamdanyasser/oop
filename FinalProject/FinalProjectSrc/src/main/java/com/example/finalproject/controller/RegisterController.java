@@ -46,7 +46,7 @@ public class RegisterController {
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 30, 0, 0, 10);");
         authCard.setPadding(new Insets(40, 40, 40, 40));
 
-        // Header section
+        
         VBox headerBox = new VBox(10);
         headerBox.setAlignment(Pos.CENTER);
 
@@ -61,28 +61,28 @@ public class RegisterController {
 
         headerBox.getChildren().addAll(iconLabel, titleLabel, subtitleLabel);
 
-        // Form fields with labels
+        
         VBox formBox = new VBox(15);
         formBox.setAlignment(Pos.CENTER);
 
-        // Name field
+        
         VBox nameBox = createFieldBox("👤 Full Name", "John Doe");
         nameField = (TextField) ((VBox) nameBox.getChildren().get(1)).getChildren().get(0);
 
-        // Email field
+        
         VBox emailBox = createFieldBox("📧 Email Address", "john@example.com");
         emailField = (TextField) ((VBox) emailBox.getChildren().get(1)).getChildren().get(0);
 
-        // Password field with strength indicator
+        
         VBox passBox = createPasswordBox();
 
-        // Address field
+        
         VBox addressBox = createFieldBox("🏠 Address", "123 Main Street");
         addressField = (TextField) ((VBox) addressBox.getChildren().get(1)).getChildren().get(0);
 
         formBox.getChildren().addAll(nameBox, emailBox, passBox, addressBox);
 
-        // Register button
+        
         Button registerBtn = new Button("Create Account");
         registerBtn.setPrefWidth(370);
         registerBtn.setPrefHeight(50);
@@ -100,18 +100,18 @@ public class RegisterController {
                 "-fx-effect: dropshadow(gaussian, rgba(102,126,234,0.5), 15, 0, 0, 5);"));
         registerBtn.setOnAction(e -> onRegister());
 
-        // Progress indicator (hidden initially)
+        
         progressIndicator = new ProgressIndicator();
         progressIndicator.setPrefSize(30, 30);
         progressIndicator.setVisible(false);
 
-        // Message label
+        
         msgLabel = new Label();
         msgLabel.setWrapText(true);
         msgLabel.setMaxWidth(370);
         msgLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: 600; -fx-text-alignment: center;");
 
-        // Footer with login link
+        
         HBox footerBox = new HBox(5);
         footerBox.setAlignment(Pos.CENTER);
 
@@ -124,7 +124,7 @@ public class RegisterController {
 
         footerBox.getChildren().addAll(footerText, loginLink);
 
-        // Separator
+        
         Separator separator = new Separator();
         separator.setMaxWidth(370);
         separator.setPadding(new Insets(10, 0, 10, 0));
@@ -142,11 +142,11 @@ public class RegisterController {
         outerBox.getChildren().add(authCard);
         root.getChildren().add(outerBox);
 
-        // Add loading overlay
+        
         loadingOverlay = new LoadingOverlay();
         root.getChildren().add(loadingOverlay.getOverlay());
 
-        // Add fade-in animation
+        
         FadeTransition fadeIn = new FadeTransition(Duration.millis(500), authCard);
         fadeIn.setFromValue(0.0);
         fadeIn.setToValue(1.0);
@@ -215,7 +215,7 @@ public class RegisterController {
             }
         });
 
-        // Password strength hint
+        
         Label hintLabel = new Label("Must contain: uppercase, lowercase, number & special character");
         hintLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #6c757d;");
         hintLabel.setWrapText(true);
@@ -235,7 +235,7 @@ public class RegisterController {
         String password = passwordField.getText().trim();
         String address = addressField.getText().trim();
 
-        // Validation
+        
         if (name.isEmpty() || email.isEmpty() || password.isEmpty() || address.isEmpty()) {
             showError("⚠️ All fields are required");
             return;
@@ -253,7 +253,7 @@ public class RegisterController {
             return;
         }
 
-        // Show loading
+        
         loadingOverlay.show("Creating your account...");
 
         try {
@@ -264,7 +264,7 @@ public class RegisterController {
             msgLabel.setStyle("-fx-text-fill: #28a745; -fx-font-size: 13px; -fx-font-weight: 600;");
             msgLabel.setText("✅ Account created successfully!");
 
-            // Send welcome email
+            
             int userId = JwtService.getUserId(token);
             User newUser = userDao.getUserById(userId).orElse(null);
             if (newUser != null) {
@@ -272,7 +272,7 @@ public class RegisterController {
                 System.out.println("✅ Welcome email sent to: " + newUser.getEmail());
             }
 
-            // Delay for user to see success message
+            
             javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(Duration.seconds(1));
             pause.setOnFinished(e -> {
                 loadingOverlay.hide();

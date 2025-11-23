@@ -32,7 +32,7 @@ public class UserDao {
             ps.setString(5, user.getAddress());
             ps.executeUpdate();
 
-            // Get generated ID and update the user object
+            
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
                 user.setId(rs.getInt(1));

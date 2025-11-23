@@ -43,11 +43,11 @@ public class AdminReportsController {
         root.setPrefSize(1100, 750);
         root.setStyle("-fx-background-color: #f5f7fa;");
 
-        // Header
+        
         HBox topBar = createTopBar();
         root.setTop(topBar);
 
-        // Center content with scroll
+        
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
         scrollPane.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
@@ -56,37 +56,37 @@ public class AdminReportsController {
         centerBox.setAlignment(Pos.TOP_CENTER);
         centerBox.setPadding(new Insets(30));
 
-        // Stats cards row
+        
         HBox statsRow = createStatsCards();
 
-        // Charts row - Line chart and Pie chart side by side
+        
         HBox chartsRow = new HBox(20);
         chartsRow.setAlignment(Pos.CENTER);
         VBox lineChartCard = createLineChartCard();
         VBox pieChartCard = createPieChartCard();
         chartsRow.getChildren().addAll(lineChartCard, pieChartCard);
 
-        // Bar chart card (existing)
+        
         VBox barChartCard = createBarChartCard();
 
-        // Top products card
+        
         VBox productsCard = createProductsCard();
 
-        // Action buttons
+        
         HBox actionBar = createActionBar();
 
         centerBox.getChildren().addAll(statsRow, chartsRow, barChartCard, productsCard, actionBar);
         scrollPane.setContent(centerBox);
         root.setCenter(scrollPane);
 
-        // Wrap in StackPane for loading overlay
+        
         StackPane wrapper = new StackPane(root);
 
-        // Add loading overlay
+        
         loadingOverlay = new LoadingOverlay();
         wrapper.getChildren().add(loadingOverlay.getOverlay());
 
-        // Load data with loading spinner
+        
         loadingOverlay.show("Loading analytics data...");
         javafx.application.Platform.runLater(() -> {
             loadData();
@@ -142,13 +142,13 @@ public class AdminReportsController {
         HBox statsRow = new HBox(20);
         statsRow.setAlignment(Pos.CENTER);
 
-        // Total Revenue Card
+        
         VBox revenueCard = createStatCard("💰", "Total Revenue", "$0.00", "#667eea", "revenue");
 
-        // Total Orders Card
+        
         VBox ordersCard = createStatCard("📦", "Total Orders", "0", "#28a745", "orders");
 
-        // Total Customers Card
+        
         VBox customersCard = createStatCard("👥", "Total Customers", "0", "#ffc107", "customers");
 
         statsRow.getChildren().addAll(revenueCard, ordersCard, customersCard);
@@ -170,11 +170,11 @@ public class AdminReportsController {
         Label titleLabel = new Label(title);
         titleLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #6c757d; -fx-font-weight: 600;");
 
-        // Create and store reference to value label based on type
+        
         Label valueLabel = new Label(value);
         valueLabel.setStyle("-fx-font-size: 32px; -fx-text-fill: " + color + "; -fx-font-weight: bold;");
 
-        // Store references
+        
         switch (type) {
             case "revenue": totalRevenueLabel = valueLabel; break;
             case "orders": totalOrdersLabel = valueLabel; break;
@@ -193,7 +193,7 @@ public class AdminReportsController {
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
 
-        // Header
+        
         HBox header = new HBox(10);
         header.setAlignment(Pos.CENTER_LEFT);
 
@@ -205,10 +205,10 @@ public class AdminReportsController {
 
         header.getChildren().addAll(iconLabel, titleLabel);
 
-        // Chart
+        
         CategoryAxis xAxis = new CategoryAxis();
         xAxis.setLabel("Date");
-        xAxis.setTickLabelRotation(45); // Rotate labels for better readability
+        xAxis.setTickLabelRotation(45); 
         xAxis.setTickLabelGap(5);
 
         NumberAxis yAxis = new NumberAxis();
@@ -224,7 +224,7 @@ public class AdminReportsController {
         salesChart.setLegendVisible(false);
         salesChart.setStyle("-fx-background-color: transparent;");
 
-        // Set chart title to show date range
+        
         salesChart.setTitle("Sales by Date");
 
         card.getChildren().addAll(header, salesChart);
@@ -239,7 +239,7 @@ public class AdminReportsController {
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
 
-        // Header
+        
         HBox header = new HBox(10);
         header.setAlignment(Pos.CENTER_LEFT);
 
@@ -251,7 +251,7 @@ public class AdminReportsController {
 
         header.getChildren().addAll(iconLabel, titleLabel);
 
-        // Chart
+        
         CategoryAxis xAxis = new CategoryAxis();
         xAxis.setLabel("Date");
         xAxis.setTickLabelRotation(45);
@@ -277,7 +277,7 @@ public class AdminReportsController {
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
 
-        // Header
+        
         HBox header = new HBox(10);
         header.setAlignment(Pos.CENTER_LEFT);
 
@@ -289,7 +289,7 @@ public class AdminReportsController {
 
         header.getChildren().addAll(iconLabel, titleLabel);
 
-        // Chart
+        
         categoryPieChart = new PieChart();
         categoryPieChart.setPrefHeight(300);
         categoryPieChart.setLegendVisible(true);
@@ -307,7 +307,7 @@ public class AdminReportsController {
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
 
-        // Header
+        
         HBox header = new HBox(10);
         header.setAlignment(Pos.CENTER_LEFT);
 
@@ -319,7 +319,7 @@ public class AdminReportsController {
 
         header.getChildren().addAll(iconLabel, titleLabel);
 
-        // Table
+        
         topProductsTable = new TableView<>();
         topProductsTable.setPrefHeight(250);
         topProductsTable.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
@@ -385,33 +385,33 @@ public class AdminReportsController {
     }
 
     private void loadData() {
-        // Total revenue
+        
         double total = dao.getTotalRevenue();
         totalRevenueLabel.setText("$" + String.format("%.2f", total));
 
-        // Total orders
+        
         int totalOrders = dao.getTotalOrders();
         totalOrdersLabel.setText(String.valueOf(totalOrders));
 
-        // Total customers
+        
         int totalCustomers = dao.getTotalCustomers();
         totalCustomersLabel.setText(String.valueOf(totalCustomers));
 
-        // Daily sales bar chart
+        
         salesChart.getData().clear();
         XYChart.Series<String, Number> series = new XYChart.Series<>();
         dao.getDailySales().forEach(s -> series.getData().add(new XYChart.Data<>(s.getDate(), s.getRevenue())));
         series.setName("Daily Revenue");
         salesChart.getData().add(series);
 
-        // Revenue line chart
+        
         revenueLineChart.getData().clear();
         XYChart.Series<String, Number> lineSeries = new XYChart.Series<>();
         dao.getDailySales().forEach(s -> lineSeries.getData().add(new XYChart.Data<>(s.getDate(), s.getRevenue())));
         lineSeries.setName("Revenue Trend");
         revenueLineChart.getData().add(lineSeries);
 
-        // Category pie chart
+        
         categoryPieChart.getData().clear();
         dao.getCategorySales().forEach(cs ->
             categoryPieChart.getData().add(new PieChart.Data(
@@ -420,7 +420,7 @@ public class AdminReportsController {
             ))
         );
 
-        // Top-selling products
+        
         topProductsTable.setItems(FXCollections.observableArrayList(dao.getTopSellingProducts()));
     }
 

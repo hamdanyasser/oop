@@ -1,17 +1,9 @@
-/* ========================================
-   MODERN JAVAFX DARK THEME STYLESHEET
-   ======================================== */
-
-/* Root & Base */
 .root {
     -fx-font-family: "Segoe UI", Arial, sans-serif;
     -fx-font-size: 14px;
     -fx-background-color: #1a1a1a;
 }
 
-/* ========================================
-   AUTHENTICATION CARDS
-   ======================================== */
 .auth-card {
     -fx-background-color: #2d2d2d;
     -fx-background-radius: 16px;
@@ -27,9 +19,6 @@
     -fx-text-fill: #e0e0e0;
 }
 
-/* ========================================
-   INPUT FIELDS
-   ======================================== */
 .text-field, .password-field, .text-area {
     -fx-background-color: #3a3a3a;
     -fx-background-radius: 8px;
@@ -53,9 +42,6 @@
     -fx-pref-height: 100px;
 }
 
-/* ========================================
-   BUTTONS
-   ======================================== */
 .button {
     -fx-background-color: #4a9eff;
     -fx-text-fill: white;
@@ -81,7 +67,6 @@
     -fx-scale-x: 0.98;
 }
 
-/* Secondary Button */
 .button.secondary {
     -fx-background-color: #5a5a5a;
 }
@@ -90,7 +75,6 @@
     -fx-background-color: #6a6a6a;
 }
 
-/* Success Button */
 .button.success {
     -fx-background-color: #2ecc71;
 }
@@ -99,7 +83,6 @@
     -fx-background-color: #27ae60;
 }
 
-/* Danger Button */
 .button.danger {
     -fx-background-color: #e74c3c;
 }
@@ -108,7 +91,6 @@
     -fx-background-color: #c0392b;
 }
 
-/* Warning Button */
 .button.warning {
     -fx-background-color: #f39c12;
     -fx-text-fill: #212529;
@@ -118,9 +100,6 @@
     -fx-background-color: #e67e22;
 }
 
-/* ========================================
-   HYPERLINKS
-   ======================================== */
 .hyperlink {
     -fx-text-fill: #4a9eff;
     -fx-border-color: transparent;
@@ -137,9 +116,6 @@
     -fx-text-fill: #4a9eff;
 }
 
-/* ========================================
-   LABELS
-   ======================================== */
 .label {
     -fx-text-fill: #e0e0e0;
 }
@@ -156,9 +132,6 @@
     -fx-font-weight: 600;
 }
 
-/* ========================================
-   TABLES
-   ======================================== */
 .table-view {
     -fx-background-color: #2d2d2d;
     -fx-background-radius: 12px;
@@ -212,9 +185,6 @@
     -fx-text-fill: #e0e0e0;
 }
 
-/* ========================================
-   CHOICE BOX & COMBO BOX
-   ======================================== */
 .choice-box, .combo-box {
     -fx-background-color: #3a3a3a;
     -fx-background-radius: 8px;
@@ -233,9 +203,6 @@
     -fx-text-fill: #e0e0e0;
 }
 
-/* ========================================
-   SPINNER
-   ======================================== */
 .spinner {
     -fx-background-color: #3a3a3a;
     -fx-background-radius: 8px;
@@ -264,9 +231,6 @@
     -fx-background-color: #5a5a5a;
 }
 
-/* ========================================
-   SCROLL PANE
-   ======================================== */
 .scroll-pane {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
@@ -293,9 +257,6 @@
     -fx-background-color: transparent;
 }
 
-/* ========================================
-   PRODUCT CARDS
-   ======================================== */
 .product-card {
     -fx-background-color: #2d2d2d;
     -fx-background-radius: 12px;
@@ -311,9 +272,6 @@
     -fx-translate-y: -3px;
 }
 
-/* ========================================
-   TOP BAR / HEADER
-   ======================================== */
 .top-bar {
     -fx-background-color: linear-gradient(to right, #2d5f8d, #1e4566);
     -fx-padding: 15px 20px;
@@ -336,9 +294,6 @@
     -fx-background-color: rgba(255, 255, 255, 0.25);
 }
 
-/* ========================================
-   BADGES & TAGS
-   ======================================== */
 .badge {
     -fx-background-color: #4a9eff;
     -fx-text-fill: white;
@@ -365,9 +320,6 @@
     -fx-background-color: #3498db;
 }
 
-/* ========================================
-   DATE PICKER
-   ======================================== */
 .date-picker {
     -fx-background-color: #3a3a3a;
     -fx-background-radius: 8px;
@@ -385,9 +337,6 @@
     -fx-text-fill: #e0e0e0;
 }
 
-/* ========================================
-   ALERTS & DIALOGS
-   ======================================== */
 .dialog-pane {
     -fx-background-color: #2d2d2d;
     -fx-background-radius: 12px;
@@ -414,9 +363,6 @@
     -fx-padding: 8px 16px;
 }
 
-/* ========================================
-   CHARTS
-   ======================================== */
 .chart {
     -fx-background-color: #2d2d2d;
     -fx-background-radius: 12px;
@@ -450,9 +396,6 @@
     -fx-text-fill: #b0b0b0;
 }
 
-/* ========================================
-   PAGINATION
-   ======================================== */
 .pagination-bar {
     -fx-background-color: #2d2d2d;
     -fx-padding: 15px;
@@ -471,9 +414,6 @@
     -fx-text-fill: #b0b0b0;
 }
 
-/* ========================================
-   TOOLTIPS
-   ======================================== */
 .tooltip {
     -fx-background-color: #3a3a3a;
     -fx-text-fill: #e0e0e0;
@@ -483,9 +423,6 @@
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.6), 8, 0, 0, 2);
 }
 
-/* ========================================
-   PROGRESS INDICATORS
-   ======================================== */
 .progress-bar {
     -fx-background-color: #3a3a3a;
     -fx-background-radius: 8px;
@@ -496,9 +433,6 @@
     -fx-background-radius: 8px;
 }
 
-/* ========================================
-   RESPONSIVE ADJUSTMENTS
-   ======================================== */
 .compact .text-field,
 .compact .password-field,
 .compact .button {
@@ -506,9 +440,6 @@
     -fx-pref-height: 35px;
 }
 
-/* ========================================
-   ANIMATIONS (CSS-based)
-   ======================================== */
 @keyframes fadeIn {
     from { -fx-opacity: 0; }
     to { -fx-opacity: 1; }

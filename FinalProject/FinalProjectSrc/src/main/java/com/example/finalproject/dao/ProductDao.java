@@ -50,11 +50,11 @@ public class ProductDao {
         return list;
     }
 
-    /**
-     * Get products filtered by platform
-     * @param platformId The platform ID to filter by (null for all products)
-     * @return List of products available on the specified platform
-     */
+    
+
+
+
+
     public List<Product> getProductsByPlatform(Integer platformId) {
         if (platformId == null) {
             return getAllProducts();
@@ -104,11 +104,11 @@ public class ProductDao {
         return list;
     }
 
-    /**
-     * Get products filtered by genre
-     * @param genreId The genre ID to filter by (null for all products)
-     * @return List of products in the specified genre
-     */
+    
+
+
+
+
     public List<Product> getProductsByGenre(Integer genreId) {
         if (genreId == null) {
             return getAllProducts();
@@ -158,9 +158,9 @@ public class ProductDao {
         return list;
     }
 
-    /**
-     * Load platforms for a product
-     */
+    
+
+
     private void loadPlatformsForProduct(Product product, Connection conn) {
         String sql = """
             SELECT pl.id, pl.name
@@ -182,9 +182,9 @@ public class ProductDao {
         }
     }
 
-    /**
-     * Get all available platforms
-     */
+    
+
+
     public List<Platform> getAllPlatforms() {
         List<Platform> platforms = new ArrayList<>();
         String sql = "SELECT * FROM platforms ORDER BY type, name";
@@ -210,9 +210,9 @@ public class ProductDao {
         return platforms;
     }
 
-    /**
-     * Load genres for a product
-     */
+    
+
+
     private void loadGenresForProduct(Product product, Connection conn) {
         String sql = """
             SELECT g.id, g.name
@@ -234,9 +234,9 @@ public class ProductDao {
         }
     }
 
-    /**
-     * Get all available genres
-     */
+    
+
+
     public List<Genre> getAllGenres() {
         List<Genre> genres = new ArrayList<>();
         String sql = "SELECT * FROM genres ORDER BY name";
@@ -302,18 +302,18 @@ public class ProductDao {
             ps.setString(8, p.getProductType() != null ? p.getProductType() : "Physical");
             ps.executeUpdate();
 
-            // Get generated product ID
+            
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
                 int productId = rs.getInt(1);
                 p.setId(productId);
 
-                // Save platform associations
+                
                 if (p.getPlatformIds() != null && !p.getPlatformIds().isEmpty()) {
                     savePlatformAssociations(productId, p.getPlatformIds(), conn);
                 }
 
-                // Save genre associations
+                
                 if (p.getGenreIds() != null && !p.getGenreIds().isEmpty()) {
                     saveGenreAssociations(productId, p.getGenreIds(), conn);
                 }
@@ -342,13 +342,13 @@ public class ProductDao {
             ps.setInt(9, p.getId());
             ps.executeUpdate();
 
-            // Update platform associations
+            
             deletePlatformAssociations(p.getId(), conn);
             if (p.getPlatformIds() != null && !p.getPlatformIds().isEmpty()) {
                 savePlatformAssociations(p.getId(), p.getPlatformIds(), conn);
             }
 
-            // Update genre associations
+            
             deleteGenreAssociations(p.getId(), conn);
             if (p.getGenreIds() != null && !p.getGenreIds().isEmpty()) {
                 saveGenreAssociations(p.getId(), p.getGenreIds(), conn);
@@ -381,9 +381,9 @@ public class ProductDao {
         }
     }
 
-    /**
-     * Save platform associations for a product
-     */
+    
+
+
     private void savePlatformAssociations(int productId, List<Integer> platformIds, Connection conn) throws SQLException {
         String sql = "INSERT INTO product_platforms (product_id, platform_id) VALUES (?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -395,9 +395,9 @@ public class ProductDao {
         }
     }
 
-    /**
-     * Delete all platform associations for a product
-     */
+    
+
+
     private void deletePlatformAssociations(int productId, Connection conn) throws SQLException {
         String sql = "DELETE FROM product_platforms WHERE product_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -406,9 +406,9 @@ public class ProductDao {
         }
     }
 
-    /**
-     * Save genre associations for a product
-     */
+    
+
+
     private void saveGenreAssociations(int productId, List<Integer> genreIds, Connection conn) throws SQLException {
         String sql = "INSERT INTO product_genres (product_id, genre_id) VALUES (?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -420,9 +420,9 @@ public class ProductDao {
         }
     }
 
-    /**
-     * Delete all genre associations for a product
-     */
+    
+
+
     private void deleteGenreAssociations(int productId, Connection conn) throws SQLException {
         String sql = "DELETE FROM product_genres WHERE product_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {

@@ -19,12 +19,12 @@ public class AuthGuard {
         }
     }
 
-    /**
-     * Require admin role - prevents privilege escalation
-     * CRITICAL: Call this in all admin controllers!
-     */
+    
+
+
+
     public static void requireAdmin() {
-        // First check if logged in
+        
         if (!Session.isAuthenticated()) {
             Platform.runLater(() -> {
                 Alert a = new Alert(Alert.AlertType.WARNING);
@@ -36,7 +36,7 @@ public class AuthGuard {
             return;
         }
 
-        // Then check if user has admin role
+        
         String token = Session.getToken();
         String role = JwtService.getRole(token);
 

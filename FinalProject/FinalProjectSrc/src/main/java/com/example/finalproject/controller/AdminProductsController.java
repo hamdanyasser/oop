@@ -40,17 +40,17 @@ public class AdminProductsController {
         root.setPrefSize(1200, 750);
         root.setStyle("-fx-background-color: #f5f7fa;");
 
-        // Top bar
+        
         VBox topSection = new VBox();
         topSection.getChildren().addAll(createTopBar(), createToolbar());
         root.setTop(topSection);
 
-        // Center - Table
+        
         VBox centerBox = new VBox(15);
         centerBox.setPadding(new Insets(20));
         centerBox.setAlignment(Pos.TOP_CENTER);
 
-        // Table card
+        
         VBox tableCard = new VBox(15);
         tableCard.setMaxWidth(1100);
         tableCard.setPadding(new Insets(20));
@@ -58,7 +58,7 @@ public class AdminProductsController {
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 16; -fx-border-width: 1; " +
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 5);");
 
-        // Search bar
+        
         HBox searchBar = new HBox(10);
         searchBar.setAlignment(Pos.CENTER_LEFT);
 
@@ -75,7 +75,7 @@ public class AdminProductsController {
 
         searchBar.getChildren().addAll(searchIcon, searchField);
 
-        // Table
+        
         table = new TableView<>();
         table.setPrefHeight(500);
         table.setStyle("-fx-background-color: transparent;");
@@ -167,7 +167,7 @@ public class AdminProductsController {
         table.getColumns().addAll(colId, colImage, colName, colCategory, colPrice, colStock);
         table.setItems(productList);
 
-        // Message label
+        
         msgLabel = new Label();
         msgLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: 600;");
 
@@ -180,7 +180,7 @@ public class AdminProductsController {
 
         root.setCenter(scrollPane);
 
-        // Load data
+        
         refresh();
 
         return root;
@@ -270,8 +270,8 @@ public class AdminProductsController {
     }
 
     private String adjustBrightness(String hex, int amount) {
-        // Simple color adjustment (you can implement proper color manipulation)
-        return hex; // Simplified for now
+        
+        return hex; 
     }
 
     private void filterTable(String query) {

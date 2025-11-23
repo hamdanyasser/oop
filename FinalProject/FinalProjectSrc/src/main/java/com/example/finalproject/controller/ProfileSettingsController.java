@@ -31,11 +31,11 @@ public class ProfileSettingsController {
         root.setPrefSize(900, 700);
         root.setStyle(getBackgroundStyle());
 
-        // Top bar
+        
         HBox topBar = createTopBar();
         root.setTop(topBar);
 
-        // Center content
+        
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
         scrollPane.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
@@ -44,16 +44,16 @@ public class ProfileSettingsController {
         centerBox.setAlignment(Pos.TOP_CENTER);
         centerBox.setPadding(new Insets(40, 20, 40, 20));
 
-        // Profile header
+        
         VBox headerBox = createHeaderBox();
 
-        // Profile card
+        
         VBox profileCard = createProfileCard();
 
-        // Security card
+        
         VBox securityCard = createSecurityCard();
 
-        // Preferences card
+        
         VBox preferencesCard = createPreferencesCard();
 
         centerBox.getChildren().addAll(headerBox, profileCard, securityCard, preferencesCard);
@@ -126,7 +126,7 @@ public class ProfileSettingsController {
         card.setPadding(new Insets(30));
         card.setStyle(getCardStyle());
 
-        // Section header
+        
         HBox header = new HBox(10);
         header.setAlignment(Pos.CENTER_LEFT);
 
@@ -138,17 +138,17 @@ public class ProfileSettingsController {
 
         header.getChildren().addAll(iconLabel, sectionLabel);
 
-        // Name field
+        
         VBox nameBox = createInputField("Full Name", "name");
         nameField = (TextField) ((HBox) nameBox.getChildren().get(1)).getChildren().get(0);
 
-        // Email field (read-only)
+        
         VBox emailBox = createInputField("Email Address", "email");
         emailField = (TextField) ((HBox) emailBox.getChildren().get(1)).getChildren().get(0);
         emailField.setEditable(false);
         emailField.setStyle(emailField.getStyle() + " -fx-opacity: 0.7;");
 
-        // Address field
+        
         VBox addressBox = createInputField("Address", "address");
         addressField = (TextField) ((HBox) addressBox.getChildren().get(1)).getChildren().get(0);
 
@@ -163,7 +163,7 @@ public class ProfileSettingsController {
         card.setPadding(new Insets(30));
         card.setStyle(getCardStyle());
 
-        // Section header
+        
         HBox header = new HBox(10);
         header.setAlignment(Pos.CENTER_LEFT);
 
@@ -175,20 +175,20 @@ public class ProfileSettingsController {
 
         header.getChildren().addAll(iconLabel, sectionLabel);
 
-        // Old password
+        
         VBox oldPassBox = createPasswordField("Current Password", "oldpass");
         oldPassField = (PasswordField) ((HBox) oldPassBox.getChildren().get(1)).getChildren().get(0);
 
-        // New password
+        
         VBox newPassBox = createPasswordField("New Password (optional)", "newpass");
         newPassField = (PasswordField) ((HBox) newPassBox.getChildren().get(1)).getChildren().get(0);
 
-        // Password hint
+        
         Label hintLabel = new Label("💡 Leave new password blank if you don't want to change it");
         hintLabel.setWrapText(true);
         hintLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #6c757d; -fx-padding: 0 0 0 10;");
 
-        // Save button
+        
         Button saveBtn = new Button("💾 Save Changes");
         saveBtn.setPrefWidth(200);
         saveBtn.setPrefHeight(45);
@@ -206,7 +206,7 @@ public class ProfileSettingsController {
                 "-fx-effect: dropshadow(gaussian, rgba(102,126,234,0.4), 12, 0, 0, 4);"));
         saveBtn.setOnAction(e -> onSave());
 
-        // Message label
+        
         msgLabel = new Label();
         msgLabel.setWrapText(true);
         msgLabel.setMaxWidth(540);
@@ -227,7 +227,7 @@ public class ProfileSettingsController {
         card.setPadding(new Insets(30));
         card.setStyle(getCardStyle());
 
-        // Section header
+        
         HBox header = new HBox(10);
         header.setAlignment(Pos.CENTER_LEFT);
 
@@ -239,7 +239,7 @@ public class ProfileSettingsController {
 
         header.getChildren().addAll(iconLabel, sectionLabel);
 
-        // Dark mode toggle
+        
         HBox themeRow = new HBox(20);
         themeRow.setAlignment(Pos.CENTER_LEFT);
         themeRow.setPadding(new Insets(10));
@@ -256,7 +256,7 @@ public class ProfileSettingsController {
         themeInfo.getChildren().addAll(themeLabel, themeDesc);
         HBox.setHgrow(themeInfo, Priority.ALWAYS);
 
-        // Toggle button
+        
         ThemeManager themeManager = ThemeManager.getInstance();
         Button toggleBtn = new Button(themeManager.isDarkMode() ? "🌞 Light" : "🌙 Dark");
         toggleBtn.setPrefWidth(100);
@@ -271,7 +271,7 @@ public class ProfileSettingsController {
 
         themeRow.getChildren().addAll(themeInfo, toggleBtn);
 
-        // Info message
+        
         Label infoLabel = new Label("💡 Theme preference is saved automatically and will persist across sessions");
         infoLabel.setWrapText(true);
         infoLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #6c757d; -fx-padding: 0 0 0 10;");
@@ -469,7 +469,7 @@ public class ProfileSettingsController {
         HelloApplication.setRoot(new LoginController());
     }
 
-    // Theme-aware style helpers
+    
     private String getBackgroundStyle() {
         boolean isDark = ThemeManager.getInstance().isDarkMode();
         return isDark ? "-fx-background-color: #1a1a1a;" : "-fx-background-color: #f5f7fa;";

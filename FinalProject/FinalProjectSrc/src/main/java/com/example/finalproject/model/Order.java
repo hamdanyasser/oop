@@ -17,7 +17,7 @@ public class Order {
         this.status = status; this.createdAt = createdAt;
     }
 
-    // Getters & setters
+    
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public int getUserId() { return userId; }

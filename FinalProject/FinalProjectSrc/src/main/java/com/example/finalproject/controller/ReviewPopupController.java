@@ -31,7 +31,7 @@ public class ReviewPopupController {
         root.setPrefWidth(450);
         root.setStyle("-fx-background-color: white; -fx-background-radius: 16;");
 
-        // Header with icon
+        
         VBox header = new VBox(8);
         header.setAlignment(Pos.CENTER);
 
@@ -43,13 +43,13 @@ public class ReviewPopupController {
 
         header.getChildren().addAll(iconLabel, titleLabel);
 
-        // Product label
+        
         productLabel = new Label();
         productLabel.setWrapText(true);
         productLabel.setMaxWidth(380);
         productLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #6c757d; -fx-text-alignment: center;");
 
-        // Star rating section
+        
         VBox ratingSection = new VBox(12);
         ratingSection.setAlignment(Pos.CENTER);
 
@@ -60,7 +60,7 @@ public class ReviewPopupController {
 
         ratingSection.getChildren().addAll(ratingLabel, starRating);
 
-        // Comment section
+        
         VBox commentSection = new VBox(8);
         commentSection.setAlignment(Pos.TOP_LEFT);
 
@@ -102,7 +102,7 @@ public class ReviewPopupController {
 
         commentSection.getChildren().addAll(commentLabel, commentField);
 
-        // Buttons
+        
         HBox buttonBox = new HBox(12);
         buttonBox.setAlignment(Pos.CENTER);
 
@@ -134,7 +134,7 @@ public class ReviewPopupController {
 
         buttonBox.getChildren().addAll(cancelBtn, submitBtn);
 
-        // Separator
+        
         Separator separator = new Separator();
         separator.setPadding(new Insets(10, 0, 0, 0));
 

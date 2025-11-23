@@ -51,7 +51,7 @@ public class ProductFormController {
         root.setPrefSize(600, 900);
         root.setStyle("-fx-background-color: white;");
 
-        // Header
+        
         VBox header = new VBox(10);
         header.setAlignment(Pos.CENTER);
         header.setPadding(new Insets(25, 20, 20, 20));
@@ -66,7 +66,7 @@ public class ProductFormController {
         header.getChildren().addAll(iconLabel, formTitle);
         root.setTop(header);
 
-        // Form content
+        
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
         scrollPane.setStyle("-fx-background: white; -fx-background-color: white;");
@@ -75,16 +75,16 @@ public class ProductFormController {
         formBox.setPadding(new Insets(30));
         formBox.setAlignment(Pos.TOP_CENTER);
 
-        // Image section
+        
         VBox imageSection = createImageSection();
 
-        // Form fields
+        
         VBox fieldsSection = createFieldsSection();
 
-        // Buttons
+        
         HBox buttonBox = createButtonBox();
 
-        // Message label
+        
         msgLabel = new Label();
         msgLabel.setWrapText(true);
         msgLabel.setMaxWidth(450);
@@ -139,7 +139,7 @@ public class ProductFormController {
 
         categoryRow.getChildren().addAll(categoryLabel, categoryBox);
 
-        // Product Type dropdown
+        
         HBox productTypeRow = new HBox(10);
         productTypeRow.setAlignment(Pos.CENTER_LEFT);
         Label productTypeLabel = new Label("Product Type:");
@@ -157,7 +157,7 @@ public class ProductFormController {
         priceField = createStyledTextField("Price (USD)");
         stockField = createStyledTextField("Stock Quantity");
 
-        // Age Rating dropdown
+        
         HBox ageRatingRow = new HBox(10);
         ageRatingRow.setAlignment(Pos.CENTER_LEFT);
         Label ageRatingLabel = new Label("Age Rating:");
@@ -179,10 +179,10 @@ public class ProductFormController {
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 10; -fx-border-width: 1; " +
                 "-fx-padding: 12; -fx-font-size: 14px;");
 
-        // Platforms section
+        
         VBox platformsSection = createPlatformsSection();
 
-        // Genres section
+        
         VBox genresSection = createGenresSection();
 
         section.getChildren().addAll(nameField, categoryRow, productTypeRow, priceField, stockField,
@@ -201,7 +201,7 @@ public class ProductFormController {
 
         platformCheckboxContainer = new VBox(5);
 
-        // Load platforms from database
+        
         List<Platform> platforms = productDao.getAllPlatforms();
         for (Platform platform : platforms) {
             CheckBox cb = new CheckBox(platform.getName());
@@ -225,7 +225,7 @@ public class ProductFormController {
 
         genreCheckboxContainer = new VBox(5);
 
-        // Load genres from database
+        
         List<Genre> genres = productDao.getAllGenres();
         for (Genre genre : genres) {
             CheckBox cb = new CheckBox(genre.getName());
@@ -297,19 +297,19 @@ public class ProductFormController {
             stockField.setText(String.valueOf(product.getStock()));
             selectedImagePath = product.getImagePath();
 
-            // Set product type
+            
             if (product.getProductType() != null && !product.getProductType().isEmpty()) {
                 productTypeBox.setValue(product.getProductType());
             } else {
                 productTypeBox.setValue("Physical");
             }
 
-            // Set age rating
+            
             if (product.getAgeRating() != null && !product.getAgeRating().isEmpty()) {
                 ageRatingBox.setValue(product.getAgeRating());
             }
 
-            // Set platform checkboxes
+            
             if (product.getPlatformIds() != null) {
                 for (Integer platformId : product.getPlatformIds()) {
                     CheckBox cb = platformCheckboxes.get(platformId);
@@ -319,7 +319,7 @@ public class ProductFormController {
                 }
             }
 
-            // Set genre checkboxes
+            
             if (product.getGenreIds() != null) {
                 for (Integer genreId : product.getGenreIds()) {
                     CheckBox cb = genreCheckboxes.get(genreId);
@@ -378,7 +378,7 @@ public class ProductFormController {
             double price = Double.parseDouble(priceField.getText().trim());
             int stock = Integer.parseInt(stockField.getText().trim());
 
-            // Validate price and stock
+            
             if (price < 0) {
                 showMessage("⚠️ Price cannot be negative.", false);
                 return;
@@ -389,19 +389,19 @@ public class ProductFormController {
                 return;
             }
 
-            // Collect product type
+            
             String productType = productTypeBox.getValue();
             if (productType == null || productType.isEmpty()) {
                 productType = "Physical";
             }
 
-            // Collect age rating
+            
             String ageRating = ageRatingBox.getValue();
             if (ageRating != null && ageRating.isEmpty()) {
                 ageRating = null;
             }
 
-            // Collect selected platforms
+            
             List<Integer> selectedPlatformIds = new ArrayList<>();
             for (Map.Entry<Integer, CheckBox> entry : platformCheckboxes.entrySet()) {
                 if (entry.getValue().isSelected()) {
@@ -409,7 +409,7 @@ public class ProductFormController {
                 }
             }
 
-            // Collect selected genres
+            
             List<Integer> selectedGenreIds = new ArrayList<>();
             for (Map.Entry<Integer, CheckBox> entry : genreCheckboxes.entrySet()) {
                 if (entry.getValue().isSelected()) {

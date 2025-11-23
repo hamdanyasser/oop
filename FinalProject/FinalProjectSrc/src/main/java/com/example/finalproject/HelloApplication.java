@@ -57,7 +57,7 @@ public class HelloApplication extends Application {
             }
 
             if (root != null) {
-                // Wrap root in StackPane if not already one (for toast notifications)
+                
                 Parent finalRoot = root;
                 if (!(root instanceof StackPane)) {
                     StackPane wrapper = new StackPane(root);
@@ -65,9 +65,9 @@ public class HelloApplication extends Application {
                 }
 
                 Scene scene = new Scene(finalRoot);
-                // Apply theme using ThemeManager (automatically loads saved preference)
+                
                 ThemeManager.getInstance().setScene(scene);
-                // Initialize toast notification system
+                
                 ToastNotification.initialize(scene);
                 mainStage.setScene(scene);
                 mainStage.centerOnScreen();

@@ -16,35 +16,35 @@ public class InvoiceService {
     private final OrderDao orderDao = new OrderDao();
 
     public Path generateInvoice(int orderId) throws Exception {
-        // 🔹 Get order and its items
+        
         Order order = orderDao.findById(orderId);
         List<OrderItem> items = orderDao.findItemsByOrder(orderId);
 
         if (order == null)
             throw new SQLException("Order not found for ID " + orderId);
 
-        // 🔹 File path
+        
         Path pdfPath = Path.of(System.getProperty("user.dir"), "invoice_" + orderId + ".pdf");
 
         Document document = new Document(PageSize.A4, 50, 50, 50, 50);
         PdfWriter.getInstance(document, new FileOutputStream(pdfPath.toFile()));
         document.open();
 
-        // 🔹 Title
+        
         Font titleFont = new Font(Font.FontFamily.HELVETICA, 20, Font.BOLD, BaseColor.BLUE);
         Paragraph title = new Paragraph("Invoice for Order #" + orderId, titleFont);
         title.setAlignment(Element.ALIGN_CENTER);
         document.add(title);
         document.add(Chunk.NEWLINE);
 
-        // 🔹 Customer and Order Info
+        
         Font infoFont = new Font(Font.FontFamily.HELVETICA, 12, Font.NORMAL);
         document.add(new Paragraph("Customer ID: " + order.getUserId(), infoFont));
         document.add(new Paragraph("Status: " + order.getStatus(), infoFont));
         document.add(new Paragraph("Created At: " + order.getCreatedAt(), infoFont));
         document.add(Chunk.NEWLINE);
 
-        // 🔹 Items Table
+        
         PdfPTable table = new PdfPTable(4);
         table.setWidthPercentage(100);
         table.setWidths(new int[]{4, 2, 2, 2});
@@ -64,7 +64,7 @@ public class InvoiceService {
         document.add(table);
         document.add(Chunk.NEWLINE);
 
-        // 🔹 Total
+        
         Font totalFont = new Font(Font.FontFamily.HELVETICA, 14, Font.BOLD);
         Paragraph totalP = new Paragraph("Total: $" + String.format("%.2f", total), totalFont);
         totalP.setAlignment(Element.ALIGN_RIGHT);
