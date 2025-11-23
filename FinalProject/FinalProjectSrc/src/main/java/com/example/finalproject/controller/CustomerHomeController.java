@@ -175,7 +175,7 @@ public class CustomerHomeController {
 
         // Best Deals Section
         if (!bestDeals.isEmpty()) {
-            VBox dealsSection = createFeaturedCategory("★ Hot Deals", bestDeals, "#dc3545");
+            VBox dealsSection = createFeaturedCategory("🔥 Hot Deals", bestDeals, "#dc3545");
             contentContainer.getChildren().add(dealsSection);
         }
 
@@ -187,7 +187,7 @@ public class CustomerHomeController {
 
         // New Arrivals Section
         if (!newArrivals.isEmpty()) {
-            VBox newSection = createFeaturedCategory("• New Arrivals", newArrivals, "#28a745");
+            VBox newSection = createFeaturedCategory("🆕 New Arrivals", newArrivals, "#28a745");
             contentContainer.getChildren().add(newSection);
         }
 
@@ -349,7 +349,7 @@ public class CustomerHomeController {
 
         // Create interactive compact cards with tooltips
         statsProductsValue = new Label(String.valueOf(totalProducts));
-        HBox card1 = createCompactStatCard("▣", "Products", statsProductsValue,
+        HBox card1 = createCompactStatCard("📦", "Products", statsProductsValue,
                 cardStyle, iconStyle, labelStyle, valueStyle, "#667eea");
         card1.setOnMouseClicked(e -> {
             onReset(); // Show all products
@@ -357,7 +357,7 @@ public class CustomerHomeController {
         Tooltip.install(card1, new Tooltip("Click to view all products"));
 
         statsPlatformsValue = new Label(String.valueOf(totalPlatforms));
-        HBox card2 = createCompactStatCard("◎", "Platforms", statsPlatformsValue,
+        HBox card2 = createCompactStatCard("🎮", "Platforms", statsPlatformsValue,
                 cardStyle, iconStyle, labelStyle, valueStyle, "#28a745");
         card2.setOnMouseClicked(e -> {
             showPlatformBreakdown();
@@ -365,7 +365,7 @@ public class CustomerHomeController {
         Tooltip.install(card2, new Tooltip("Click to see platform breakdown"));
 
         statsGenresValue = new Label(String.valueOf(totalGenres));
-        HBox card3 = createCompactStatCard("◈", "Genres", statsGenresValue,
+        HBox card3 = createCompactStatCard("🎯", "Genres", statsGenresValue,
                 cardStyle, iconStyle, labelStyle, valueStyle, "#17a2b8");
         card3.setOnMouseClicked(e -> {
             showGenreBreakdown();
@@ -373,7 +373,7 @@ public class CustomerHomeController {
         Tooltip.install(card3, new Tooltip("Click to see genre breakdown"));
 
         statsCategoriesValue = new Label(String.valueOf(totalCategories));
-        HBox card4 = createCompactStatCard("▦", "Categories", statsCategoriesValue,
+        HBox card4 = createCompactStatCard("🏪", "Categories", statsCategoriesValue,
                 cardStyle, iconStyle, labelStyle, valueStyle, "#ffc107");
         card4.setOnMouseClicked(e -> {
             showCategoryBreakdown();
@@ -432,7 +432,7 @@ public class CustomerHomeController {
         topBar.setPadding(new Insets(20));
         topBar.setStyle("-fx-background-color: linear-gradient(to right, #667eea, #764ba2);");
 
-        Label iconLabel = new Label("◉");
+        Label iconLabel = new Label("🎮");
         iconLabel.setStyle("-fx-font-size: 28px;");
 
         Label titleLabel = new Label("ShopEase");
@@ -451,7 +451,7 @@ public class CustomerHomeController {
                 "-fx-background-radius: 20; -fx-border-color: rgba(255,255,255,0.3); " +
                 "-fx-border-width: 1; -fx-border-radius: 20;");
 
-        Label pointsIcon = new Label("◆");
+        Label pointsIcon = new Label("💎");
         pointsIcon.setStyle("-fx-font-size: 18px;");
 
         Label pointsLabel = new Label(String.format("%,d Points", userPoints));
@@ -478,19 +478,19 @@ public class CustomerHomeController {
                     "-fx-border-width: 1; -fx-border-radius: 20;");
         });
 
-        Button cartBtn = createHeaderButton("◘ Cart");
+        Button cartBtn = createHeaderButton("🛒 Cart");
         cartBtn.setOnAction(e -> onViewCart());
 
         Button wishlistBtn = createHeaderButton("❤ Wishlist");
         wishlistBtn.setOnAction(e -> onWishlist());
 
-        Button ordersBtn = createHeaderButton("▣ Orders");
+        Button ordersBtn = createHeaderButton("📦 Orders");
         ordersBtn.setOnAction(e -> onViewOrders());
 
-        Button profileBtn = createHeaderButton("◉ Profile");
+        Button profileBtn = createHeaderButton("👤 Profile");
         profileBtn.setOnAction(e -> onProfile());
 
-        Button logoutBtn = createHeaderButton("◄ Logout");
+        Button logoutBtn = createHeaderButton("🚪 Logout");
         logoutBtn.setStyle("-fx-background-color: rgba(220,53,69,0.3); -fx-text-fill: white; " +
                 "-fx-background-radius: 8; -fx-padding: 10 20; -fx-font-weight: 600;");
         logoutBtn.setOnMouseEntered(e -> logoutBtn.setStyle("-fx-background-color: rgba(220,53,69,0.5); -fx-text-fill: white; " +
@@ -522,7 +522,7 @@ public class CustomerHomeController {
         searchField.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 10; " +
                 "-fx-border-color: #e1e4e8; -fx-border-radius: 10; -fx-padding: 10 15 10 40; -fx-font-size: 14px;");
 
-        Label searchIcon = new Label("◈");
+        Label searchIcon = new Label("🔍");
         searchIcon.setStyle("-fx-font-size: 18px;");
         searchIcon.setMouseTransparent(true);
         StackPane.setAlignment(searchIcon, Pos.CENTER_LEFT);
@@ -531,13 +531,13 @@ public class CustomerHomeController {
         searchContainer.getChildren().addAll(searchField, searchIcon);
 
         // Main filters with icons
-        HBox categoryBox = createFilterWithIcon("▦", createStyledComboBox(160, "Category"));
+        HBox categoryBox = createFilterWithIcon("🏪", createStyledComboBox(160, "Category"));
         categoryChoice = (ComboBox<String>) ((HBox) categoryBox.getChildren().get(1)).getChildren().get(0);
 
-        HBox platformBox = createFilterWithIcon("◎", createStyledComboBox(180, "Platform"));
+        HBox platformBox = createFilterWithIcon("🎮", createStyledComboBox(180, "Platform"));
         platformChoice = (ComboBox<String>) ((HBox) platformBox.getChildren().get(1)).getChildren().get(0);
 
-        HBox genreBox = createFilterWithIcon("◈", createStyledComboBox(160, "Genre"));
+        HBox genreBox = createFilterWithIcon("🎯", createStyledComboBox(160, "Genre"));
         genreChoice = (ComboBox<String>) ((HBox) genreBox.getChildren().get(1)).getChildren().get(0);
 
         filterRow1.getChildren().addAll(searchContainer, categoryBox, platformBox, genreBox);
@@ -547,10 +547,10 @@ public class CustomerHomeController {
         filterRow2.setAlignment(Pos.CENTER_LEFT);
         filterRow2.setPadding(new Insets(0, 30, 15, 30));
 
-        HBox ratingBox = createFilterWithIcon("◇", createStyledComboBox(140, "Age Rating"));
+        HBox ratingBox = createFilterWithIcon("🔞", createStyledComboBox(140, "Age Rating"));
         ageRatingChoice = (ComboBox<String>) ((HBox) ratingBox.getChildren().get(1)).getChildren().get(0);
 
-        HBox priceBox = createFilterWithIcon("$", createStyledComboBox(130, "Price Range"));
+        HBox priceBox = createFilterWithIcon("💰", createStyledComboBox(130, "Price Range"));
         priceRangeChoice = (ComboBox<String>) ((HBox) priceBox.getChildren().get(1)).getChildren().get(0);
 
         // Sort By dropdown
@@ -594,7 +594,7 @@ public class CustomerHomeController {
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         // Active filters indicator
-        activeFiltersLabel = new Label("◈ 0 Filters Active");
+        activeFiltersLabel = new Label("🎯 0 Filters Active");
         activeFiltersLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #28a745; " +
                 "-fx-padding: 6 10; -fx-background-color: #e8f5e9; -fx-background-radius: 8;");
         activeFiltersLabel.setVisible(false); // Hidden by default
@@ -797,7 +797,7 @@ public class CustomerHomeController {
 
         // Update label visibility and text
         if (activeFilters > 0) {
-            activeFiltersLabel.setText(String.format("◈ %d Filter%s Active",
+            activeFiltersLabel.setText(String.format("🎯 %d Filter%s Active",
                     activeFilters, activeFilters == 1 ? "" : "s"));
             activeFiltersLabel.setVisible(true);
         } else {
@@ -1066,7 +1066,7 @@ public class CustomerHomeController {
         // Stock with status
         VBox stockBox = new VBox(2);
         stockBox.setAlignment(Pos.CENTER);
-        Label stockLabel = new Label(p.getStock() > 0 ? "▣ " + p.getStock() : "Out of Stock");
+        Label stockLabel = new Label(p.getStock() > 0 ? "📦 " + p.getStock() : "Out of Stock");
         String stockColor = p.getStock() > 10 ? "#28a745" : (p.getStock() > 0 ? "#ffc107" : "#dc3545");
         stockLabel.setStyle("-fx-text-fill: " + stockColor + "; -fx-font-weight: bold; -fx-font-size: 14px;");
         Label stockText = new Label("In Stock");
@@ -1086,7 +1086,7 @@ public class CustomerHomeController {
         quickActions.setPrefWidth(230);
 
         // Quick add to cart button
-        Button quickAddBtn = new Button("◘ Add to Cart");
+        Button quickAddBtn = new Button("🛒 Add to Cart");
         quickAddBtn.setPrefWidth(165);
         quickAddBtn.setPrefHeight(38);
         quickAddBtn.setStyle("-fx-background-color: linear-gradient(to right, #667eea, #764ba2); " +
@@ -1304,7 +1304,7 @@ public class CustomerHomeController {
 
         VBox stockBox = new VBox(5);
         stockBox.setAlignment(Pos.CENTER);
-        Label stockIcon = new Label("▣");
+        Label stockIcon = new Label("📦");
         stockIcon.setStyle("-fx-font-size: 24px;");
         Label stockLabel = new Label(p.getStock() + " in stock");
         stockLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #6c757d;");
@@ -1339,7 +1339,7 @@ public class CustomerHomeController {
         buttonBox.setAlignment(Pos.CENTER);
         buttonBox.setMaxWidth(400);
 
-        Button addToCartBtn = new Button("◘ Add to Cart");
+        Button addToCartBtn = new Button("🛒 Add to Cart");
         addToCartBtn.setPrefWidth(350);
         addToCartBtn.setPrefHeight(50);
         addToCartBtn.setStyle("-fx-background-color: linear-gradient(to right, #667eea, #764ba2); " +
@@ -1369,14 +1369,14 @@ public class CustomerHomeController {
             }
         });
 
-        Button reviewBtn = new Button("★ Leave a Review");
+        Button reviewBtn = new Button("✍️ Leave a Review");
         reviewBtn.setPrefWidth(350);
         reviewBtn.setPrefHeight(45);
         reviewBtn.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; " +
                 "-fx-font-size: 15px; -fx-font-weight: 600; -fx-background-radius: 10;");
         reviewBtn.setOnAction(e -> openReviewPopup(p));
 
-        Button viewReviewsBtn = new Button("◉ View All Reviews");
+        Button viewReviewsBtn = new Button("👀 View All Reviews");
         viewReviewsBtn.setPrefWidth(350);
         viewReviewsBtn.setPrefHeight(45);
         viewReviewsBtn.setStyle("-fx-background-color: #17a2b8; -fx-text-fill: white; " +
@@ -1513,7 +1513,7 @@ public class CustomerHomeController {
         content.setPadding(new Insets(20));
         content.setStyle("-fx-background-color: white;");
 
-        Label title = new Label("◎ Platform Statistics");
+        Label title = new Label("🎮 Platform Statistics");
         title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
         VBox platformList = new VBox(10);
@@ -1578,7 +1578,7 @@ public class CustomerHomeController {
         content.setPadding(new Insets(20));
         content.setStyle("-fx-background-color: white;");
 
-        Label title = new Label("◈ Genre Statistics");
+        Label title = new Label("🎯 Genre Statistics");
         title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
         VBox genreList = new VBox(10);
@@ -1643,7 +1643,7 @@ public class CustomerHomeController {
         content.setPadding(new Insets(20));
         content.setStyle("-fx-background-color: white;");
 
-        Label title = new Label("▦ Category Statistics");
+        Label title = new Label("🏪 Category Statistics");
         title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
         // Group products by category
