@@ -70,7 +70,7 @@ public class CustomerHomeController {
 
         // Top bar
         VBox topSection = new VBox();
-        topSection.getChildren().addAll(createTopBar(), createFilterBar(), createSortBar(), createStatisticsCards());
+        topSection.getChildren().addAll(createTopBar(), createFilterBar(), createStatisticsCards());
 
         root.setTop(topSection);
 
@@ -316,46 +316,6 @@ public class CustomerHomeController {
         return card;
     }
 
-    private HBox createSortBar() {
-        HBox sortBar = new HBox(15);
-        sortBar.setAlignment(Pos.CENTER_LEFT);
-        sortBar.setPadding(new Insets(5, 30, 10, 30));
-        sortBar.setStyle("-fx-background-color: white; -fx-border-color: #e1e4e8; -fx-border-width: 0 0 1 0;");
-
-        Label sortLabel = new Label("Sort By:");
-        sortLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #6c757d; -fx-font-weight: 600;");
-
-        sortChoice = new ComboBox<>();
-        sortChoice.setPrefWidth(200);
-        sortChoice.getItems().addAll(
-                "None",
-                "Price: Low → High",
-                "Price: High → Low",
-                "Rating: High → Low",
-                "Newest → Oldest",
-                "Oldest → Newest"
-        );
-
-        sortChoice.setValue("None");
-        sortChoice.setStyle("-fx-background-radius: 10; -fx-font-size: 14px;");
-
-        sortChoice.getSelectionModel().selectedItemProperty()
-                .addListener((obs, oldVal, newVal) -> applyFilters());
-
-        // Spacer to push active filters badge to the right
-        Pane spacer = new Pane();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        // Active filters indicator
-        activeFiltersLabel = new Label("🎯 0 Filters Active");
-        activeFiltersLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #28a745; " +
-                "-fx-padding: 8 12; -fx-background-color: #e8f5e9; -fx-background-radius: 8;");
-        activeFiltersLabel.setVisible(false); // Hidden by default
-
-        sortBar.getChildren().addAll(sortLabel, sortChoice, spacer, activeFiltersLabel);
-
-        return sortBar;
-    }
 
     /**
      * Create statistics cards showing key metrics - COMPACT VERSION
@@ -593,6 +553,31 @@ public class CustomerHomeController {
         HBox priceBox = createFilterWithIcon("💰", createStyledComboBox(130, "Price Range"));
         priceRangeChoice = (ComboBox<String>) ((HBox) priceBox.getChildren().get(1)).getChildren().get(0);
 
+        // Sort By dropdown
+        Label sortLabel = new Label("Sort:");
+        sortLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #6c757d; -fx-font-weight: 600;");
+
+        sortChoice = new ComboBox<>();
+        sortChoice.setPrefWidth(160);
+        sortChoice.setPrefHeight(35);
+        sortChoice.getItems().addAll(
+                "None",
+                "Price: Low → High",
+                "Price: High → Low",
+                "Rating: High → Low",
+                "Newest → Oldest",
+                "Oldest → Newest"
+        );
+        sortChoice.setValue("None");
+        sortChoice.setStyle("-fx-background-radius: 8; -fx-font-size: 13px; " +
+                "-fx-background-color: #f8f9fa; -fx-border-color: #e1e4e8; -fx-border-radius: 8;");
+        sortChoice.getSelectionModel().selectedItemProperty()
+                .addListener((obs, oldVal, newVal) -> applyFilters());
+
+        HBox sortBox = new HBox(8);
+        sortBox.setAlignment(Pos.CENTER_LEFT);
+        sortBox.getChildren().addAll(sortLabel, sortChoice);
+
         // Reset button with better styling
         Button resetBtn = new Button("↺ Clear All");
         resetBtn.setPrefHeight(35);
@@ -604,16 +589,22 @@ public class CustomerHomeController {
                 "-fx-background-radius: 8; -fx-padding: 8 20; -fx-font-weight: 600; -fx-font-size: 13px;"));
         resetBtn.setOnAction(e -> onReset());
 
-        // Spacer to push results count to the right
+        // Spacer to push results count and active filters to the right
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        // Active filters indicator
+        activeFiltersLabel = new Label("🎯 0 Filters Active");
+        activeFiltersLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #28a745; " +
+                "-fx-padding: 6 10; -fx-background-color: #e8f5e9; -fx-background-radius: 8;");
+        activeFiltersLabel.setVisible(false); // Hidden by default
 
         // Results count label
         resultsCountLabel = new Label("Showing 0 of 0 products");
         resultsCountLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #667eea; " +
                 "-fx-padding: 8 12; -fx-background-color: #f0f3ff; -fx-background-radius: 8;");
 
-        filterRow2.getChildren().addAll(ratingBox, priceBox, resetBtn, spacer, resultsCountLabel);
+        filterRow2.getChildren().addAll(ratingBox, priceBox, sortBox, resetBtn, spacer, activeFiltersLabel, resultsCountLabel);
 
         filterContainer.getChildren().addAll(filterRow1, filterRow2);
         return filterContainer;
